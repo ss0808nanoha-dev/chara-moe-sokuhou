@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>キャラ萌え速報</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#fff4f0;color:#222;font:13px/1.7 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif;min-height:100vh}
+a{color:#c00;text-decoration:underline;cursor:pointer}
+button{cursor:pointer;font:inherit;border:none;background:none;color:inherit}
+input,textarea,select{font:inherit;border:1px solid #ccc;padding:5px 8px;background:#fff;border-radius:2px;outline:none}
+input:focus,textarea:focus,select:focus{border-color:#e05a00}
+
+/* ===ヘッダー=== */
+#hd{background:#e05a00;padding:0;border-bottom:3px solid #c04a00}
+#hd-top{max-width:780px;margin:0 auto;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+#logo-btn{display:flex;flex-direction:column;gap:1px}
+#logo{font-size:20px;font-weight:900;color:#fff;letter-spacing:1px;font-family:'Hiragino Mincho ProN','Yu Mincho',serif;line-height:1}
+#logo-tagline{font-size:10px;color:rgba(255,255,255,.8);letter-spacing:.5px}
+#hd-r{display:flex;align-items:center;gap:8px;flex-shrink:0}
+#r18tag{font-size:10px;background:#900;color:#fff;padding:1px 6px;border-radius:2px;display:none}
+#new-btn{background:#fff;color:#e05a00;font-size:12px;font-weight:900;padding:5px 13px;border-radius:2px;border:none}
+#new-btn:hover{background:#ffe0d0}
+
+/* カテゴリナビ */
+#catnav{background:#c04a00;overflow-x:auto;-webkit-overflow-scrolling:touch;border-bottom:1px solid #a03a00}
+#catnav::-webkit-scrollbar{display:none}
+#catnav-in{max-width:780px;margin:0 auto;display:flex;padding:0 8px}
+.cnav{padding:6px 12px;font-size:11px;font-weight:700;color:rgba(255,255,255,.7);white-space:nowrap;border-right:1px solid rgba(255,255,255,.15)}
+.cnav:first-child{border-left:1px solid rgba(255,255,255,.15)}
+.cnav.on{color:#fff;background:rgba(0,0,0,.2)}
+.cnav:hover:not(.on){color:#fff}
+
+/* パンくず */
+#bc{font-size:11px;color:#888;padding:4px 12px;border-bottom:1px solid #e0c8b8;background:#fff9f5;display:none}
+#bc-in{max-width:780px;margin:0 auto}
+
+/* メイン */
+#wrap{max-width:780px;margin:0 auto;padding:10px 10px 80px}
+
+/* お知らせボックス */
+#notice{background:#fff;border:1px solid #e0c0a0;border-left:4px solid #e05a00;padding:10px 12px;margin-bottom:10px;font-size:12px;line-height:1.8}
+#notice .ntitle{font-weight:700;color:#e05a00;margin-bottom:4px;font-size:13px}
+
+/* スレ立て方ガイド */
+#guide{background:#fff;border:1px solid #e0c0a0;padding:10px 12px;margin-bottom:10px;font-size:12px}
+#guide .gtitle{font-weight:700;color:#e05a00;margin-bottom:6px;font-size:12px}
+#guide ol{padding-left:18px;line-height:2}
+#guide .gnote{color:#888;margin-top:4px;font-size:11px}
+
+/* スレ立てフォーム */
+#fwrap{background:#fff;border:1px solid #e0c0a0;border-top:3px solid #e05a00;padding:12px;margin-bottom:10px;display:none}
+#fwrap.on{display:block}
+#fwrap h2{font-size:12px;font-weight:700;color:#e05a00;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #f0d0c0}
+#fwrap input,#fwrap textarea,#fwrap select{width:100%;margin-bottom:7px;display:block}
+#fwrap textarea{height:100px}
+.ptags{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:5px}
+.ptag{font-size:11px;border:1px solid #ccc;padding:2px 8px;background:#fff;color:#555;border-radius:2px}
+.ptag.on{background:#e05a00;color:#fff;border-color:#e05a00;font-weight:700}
+.ctag-row{display:flex;gap:5px;margin-bottom:5px}
+.ctag-row input{flex:1;margin-bottom:0}
+.ctag-add{border:1px solid #aaa;padding:5px 10px;font-size:11px;background:#fff;color:#555;flex-shrink:0;width:auto;border-radius:2px}
+.ctag-add:hover{background:#e05a00;color:#fff;border-color:#e05a00}
+#sel-tags{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:5px}
+.tag-lbl{font-size:10px;font-weight:700;padding:1px 6px;color:#fff;border-radius:2px}
+.r18w{font-size:11px;color:#c00;margin-bottom:5px;display:none}
+.field-err{font-size:11px;color:#c00;margin:-4px 0 6px;display:none}
+.field-err.show{display:block}
+input.err,textarea.err,select.err{border-color:#c00 !important}
+.suggest-list{border:1px solid #f0c8a0;border-radius:2px;background:#fff;margin-bottom:6px;display:none;max-height:120px;overflow-y:auto}
+.suggest-item{padding:5px 10px;font-size:12px;cursor:pointer;border-bottom:1px solid #fff4ec}
+.suggest-item:hover{background:#fff3e8}
+.suggest-item:last-child{border-bottom:none}
+.form-foot{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+.ccount{font-size:10px;color:#bbb}
+.sub-btn{background:#e05a00;color:#fff;font-size:12px;font-weight:700;padding:7px 22px;border-radius:2px}
+.sub-btn:hover{background:#c04a00}
+
+/* ランキング */
+.rank-wrap{display:flex;gap:8px;margin-bottom:10px}
+.rank-box{flex:1;background:#fff;border:1px solid #e0c0a0;overflow:hidden;min-width:0}
+.rank-hdr{background:#e05a00;color:#fff;font-size:11px;font-weight:700;padding:4px 10px}
+.rank-item{display:flex;align-items:baseline;gap:6px;padding:4px 10px;border-bottom:1px solid #fff4f0;font-size:11px}
+.rank-item:last-child{border-bottom:none}
+.rank-no{font-weight:900;color:#e05a00;width:16px;flex-shrink:0;font-size:12px}
+.rank-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank-val{color:#aaa;flex-shrink:0;font-size:10px}
+
+/* スレ一覧 */
+#thread-list{display:flex;flex-direction:column;gap:1px}
+.th-item{background:#fff;border:1px solid #e8d0c0;padding:8px 10px;display:block;width:100%;text-align:left}
+.th-item:hover{border-color:#e05a00;background:#fff9f5}
+.th-badges{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:4px;align-items:center}
+.th-cat{font-size:10px;font-weight:700;background:#e05a00;color:#fff;padding:1px 6px;border-radius:2px}
+.th-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.th-title{font-size:14px;font-weight:700;color:#222;line-height:1.4;text-align:left}
+.th-title.blur{color:#bbb}
+.th-res{font-size:11px;color:#e05a00;border:1px solid #e0c0a0;padding:1px 7px;white-space:nowrap;flex-shrink:0;font-weight:700;border-radius:2px}
+.th-syno{font-size:11px;color:#777;margin-top:3px}
+.th-meta{font-size:10px;color:#bbb;margin-top:3px}
+.kanso-badge{font-size:10px;background:#e05a00;color:#fff;padding:1px 6px;margin-left:4px;border-radius:2px;font-weight:700}
+.empty{text-align:center;color:#bbb;padding:40px;font-size:13px;line-height:2;background:#fff;border:1px solid #e8d0c0}
+
+
+/* ===スレビュー=== */
+#tv-hdr{background:#fff;border:1px solid #e8d0c0;border-top:3px solid #e05a00;padding:10px 12px;margin-bottom:6px}
+.tv-badges{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:6px}
+.tv-title{font-size:16px;font-weight:900;color:#222;line-height:1.4;margin-bottom:3px}
+.tv-syno{font-size:12px;color:#777;border-left:3px solid #e05a00;padding-left:8px;margin-bottom:5px}
+.tv-meta{font-size:11px;color:#aaa}
+.kanso-op-btn{font-size:11px;border:1px solid #e05a00;color:#e05a00;padding:2px 10px;border-radius:2px;margin-top:6px;display:inline-block}
+.kanso-op-btn:hover{background:#e05a00;color:#fff}
+.kanso-done-label{font-size:11px;color:#e05a00;font-weight:700;margin-top:5px;display:inline-block}
+
+/* 投稿 */
+#posts-wrap{background:#fff;border:1px solid #e8d0c0;margin-bottom:8px}
+.post{padding:8px 12px;border-bottom:1px solid #fff4f0}
+.post:nth-child(even){background:#fffaf7}
+.post:last-child{border-bottom:none}
+.post.medal-post{background:#fffbe6;border-left:3px solid #e8a800}
+.pmeta{font-size:12px;color:#888;margin-bottom:3px;line-height:1.5}
+.pno{color:#e05a00;font-weight:700;margin-right:5px}
+.pname{color:#228b22;font-weight:700;margin-right:5px}
+.pname.op{color:#e05a00}
+.opbg{background:#fff4ec;color:#e05a00;font-size:10px;border-radius:2px;padding:0 5px;margin-right:4px}
+.pdate{margin-right:5px}
+.pid{color:#ccc;font-family:monospace;font-size:11px}
+.pbody{font-size:13px;line-height:1.85;white-space:pre-wrap;color:#222;padding-left:4px;margin-top:2px}
+.like-row{display:flex;align-items:center;gap:6px;margin-top:5px;padding-left:4px}
+.like-btn{font-size:11px;border:1px solid #ddd;padding:2px 10px;color:#aaa;border-radius:2px;background:#fff}
+.like-btn.liked{border-color:#e05a00;color:#e05a00;font-weight:700}
+.like-cnt{font-size:11px;color:#aaa}
+
+/* 返信フォーム */
+#reply-box{background:#fff;border:1px solid #e8d0c0;border-top:3px solid #e05a00;padding:12px}
+#reply-box h3{font-size:12px;font-weight:700;color:#e05a00;margin-bottom:8px}
+#reply-box input,#reply-box textarea{width:100%;display:block;margin-bottom:7px}
+#reply-box textarea{height:100px}
+.back-btn{display:inline-block;font-size:11px;color:#e05a00;margin-bottom:8px}
+
+/* 検索バー */
+#search-bar{background:#fff;border:1px solid #e8d0c0;border-top:3px solid #e05a00;padding:8px 10px;margin-bottom:10px;display:flex;gap:6px;align-items:center}
+#search-bar input{flex:1;padding:6px 10px;border:1px solid #ccc;border-radius:2px;font-size:13px}
+#search-bar input:focus{border-color:#e05a00}
+#search-bar button{background:#e05a00;color:#fff;font-size:12px;font-weight:700;padding:6px 14px;border-radius:2px;flex-shrink:0}
+#search-bar button:hover{background:#c04a00}
+.search-clear{font-size:11px;color:#e05a00;flex-shrink:0;cursor:pointer}
+.search-note{font-size:12px;color:#888;margin-bottom:6px;padding:4px 2px}
+
+/* R18ロック */
+.r18lock{background:#fff;border:1px solid #ffcdd2;padding:32px;text-align:center;margin-bottom:8px}
+.r18lock-btn{border:1px solid #c00;color:#c00;padding:7px 22px;font-size:12px;font-weight:700;border-radius:2px;background:#fff}
+.r18lock-btn:hover{background:#c00;color:#fff}
+
+/* 検索バー */
+
+
+
+
+
+.search-clear{font-size:11px;color:#e05a00;flex-shrink:0}
+.search-result-note{font-size:12px;color:#888;margin-bottom:6px;padding:4px 2px}
+.search-hit{background:#fff9f0}
+
+/* R18モーダル */
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:999;display:none;align-items:center;justify-content:center;padding:20px}
+#modal.on{display:flex}
+.mbox{background:#fff;border-radius:3px;padding:24px;max-width:280px;width:100%;text-align:center;border-top:3px solid #c00}
+.mbtns{display:flex;gap:8px;margin-top:16px}
+.mng{flex:1;padding:8px;border:1px solid #ccc;background:#f5f5f5;font-size:12px;color:#555;border-radius:2px}
+.mok{flex:1;padding:8px;background:#c00;font-size:12px;color:#fff;font-weight:700;border-radius:2px}
+.field-err{font-size:11px;color:#c00;margin:-4px 0 6px;display:none}
+.field-err.show{display:block}
+input.err,textarea.err,select.err{border-color:#c00 !important;background:#fff8f8}
+
+.rank-toggle{display:flex;gap:8px;margin-bottom:10px}
+.rtog-item{flex:1;min-width:0}
+.rtog-hdr{background:#e05a00;color:#fff;font-size:11px;font-weight:700;padding:5px 10px;cursor:pointer;user-select:none}
+.rtog-hdr:hover{background:#c04a00}
+
+#sort-bar{display:flex;gap:4px;margin-bottom:8px}
+.sort-btn{font-size:11px;padding:4px 10px;border:1px solid #e0c0a0;border-radius:2px;background:#fff;color:#888;cursor:pointer}
+.sort-btn.on{background:#e05a00;color:#fff;border-color:#e05a00;font-weight:700}
+.sort-btn:hover:not(.on){background:#fff3e8}
+</style>
+</head>
+<body>
+
+<div id="modal">
+  <div class="mbox">
+    <div style="font-size:28px;margin-bottom:8px">🔞</div>
+    <div style="font-size:14px;font-weight:900;color:#c00;margin-bottom:6px">成人向けコンテンツ</div>
+    <div style="font-size:12px;color:#666;line-height:1.8">R18の表現が含まれます。<br>18歳以上ですか？</div>
+    <div class="mbtns">
+      <button class="mng" onclick="A.closeModal()">いいえ</button>
+      <button class="mok" onclick="A.okR18()">はい（18歳以上）</button>
+    </div>
+  </div>
+</div>
+
+<div id="hd">
+  <div id="hd-top">
+    <button id="logo-btn" onclick="A.top()">
+      <div id="logo">キャラ萌え速報</div>
+      <div id="logo-tagline">キャラへの萌え・解釈を語る匿名掲示板</div>
+    </button>
+    <div id="hd-r">
+      <span id="r18tag">🔞解除中</span>
+      <button id="new-btn" onclick="A.toggleForm()">＋ スレを立てる</button>
+    </div>
+  </div>
+  <div id="catnav"><div id="catnav-in"></div></div>
+</div>
+
+<div id="bc"><div id="bc-in"></div></div>
+
+<div id="wrap">
+
+  <!-- スレ立てフォーム -->
+  <div id="fwrap" style="display:none">
+    <h2>■ 新しいスレッドを立てる</h2>
+    <div style="font-size:11px;color:#888;margin-bottom:8px">カテゴリ・タイトル・本文は必須です</div>
+    <select id="f-cat">
+      <option value="">カテゴリを選択してください（必須）</option>
+      <option>キャラ萌え</option>
+      <option>解釈・考察</option>
+      <option>作品語り</option>
+      <option>雑談</option>
+    </select>
+    <div style="font-size:11px;color:#888;margin-bottom:4px">掲載誌（選択）</div>
+    <div class="ptags" id="preset-tags"></div>
+    <div id="sel-tags" style="margin-bottom:8px"></div>
+    <div style="font-size:11px;color:#888;margin-bottom:4px">作品名（入力後にキャラ名を追加できます）</div>
+    <div class="ctag-row" style="margin-bottom:4px">
+      <input id="work-inp" placeholder="作品名（例：ブルーロック）" maxlength="20" style="margin-bottom:0"
+        oninput="A.showSuggest('work-inp','work-suggest')"
+        onkeydown="if(event.key==='Enter'){A.setWork();event.preventDefault()}">
+      <button class="ctag-add" onclick="A.setWork()">追加</button>
+    </div>
+    <div id="work-suggest" class="suggest-list"></div>
+    <div id="chara-row" style="display:none">
+      <div style="font-size:11px;color:#888;margin:6px 0 4px">キャラクター名（任意）</div>
+      <div class="ctag-row">
+        <input id="chara-inp" placeholder="キャラ名（例：山田太郎）" maxlength="20" style="margin-bottom:0"
+          oninput="A.showSuggest('chara-inp','chara-suggest')"
+          onkeydown="if(event.key==='Enter'){A.setChara();event.preventDefault()}">
+        <button class="ctag-add" onclick="A.setChara()">追加</button>
+      </div>
+      <div id="chara-suggest" class="suggest-list"></div>
+    </div>
+    <div class="r18w" id="r18w">⚠️ R18タグには年齢確認が必要です</div>
+    <input id="f-title" placeholder="スレタイ（必須・40文字以内）" maxlength="40">
+    <div class="field-err" id="err-title">スレタイを入力してください</div>
+    <input id="f-name" placeholder="名前（省略可・匿名になります）">
+    <textarea id="f-body" placeholder="本文（必須・1000文字以内）" maxlength="1000"
+      oninput="document.getElementById('fcc').textContent=this.value.length+'/1000'"></textarea>
+    <div class="form-foot">
+      <span class="ccount" id="fcc">0/1000</span>
+      <button class="sub-btn" onclick="A.submit()">スレを立てる</button>
+    </div>
+  </div>
+
+  <div id="main"></div>
+</div>
+
+<script>
+var A=(function(){
+var CATS=["すべて","キャラ萌え","解釈・考察","作品語り","雑談"];
+var MAGS=["週刊少年ジャンプ","週刊少年マガジン","週刊少年サンデー","少年チャンピオン","ジャンプ＋","その他漫画","アニメ","ゲーム"];
+var TC={"週刊少年ジャンプ":"#cc0000","週刊少年マガジン":"#1a56a0","週刊少年サンデー":"#2e7d32","少年チャンピオン":"#e65100","ジャンプ＋":"#880044","その他漫画":"#555","アニメ":"#6a1a6a","ゲーム":"#1565c0"};
+var KANSO=200;
+var st={thread:null,cat:"すべて",q:"",sort:"new"};
+var th=[],likes={},likedBy={},hideMedal={};
+var fMag="",fWork="",fChara="";
+
+function p(n){return("0"+n).slice(-2);}
+var wday=["日","月","火","水","木","金","土"];
+function fmt(ts){var d=new Date(ts);return d.getFullYear()+"/"+p(d.getMonth()+1)+"/"+p(d.getDate())+"("+wday[d.getDay()]+") "+p(d.getHours())+":"+p(d.getMinutes())+":"+p(d.getSeconds());}
+function nid(){return Math.random().toString(36).slice(2,10).toUpperCase();}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function ls(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}}
+function lw(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+function tcol(t){return TC[t]||"#888";}
+var myIp=(function(){var v=ls("kmh_ip");if(!v){v=Math.random().toString(36).slice(2,10).toUpperCase();lw("kmh_ip",v);}return v;})();
+
+/* ===タグUI=== */
+function renderTagUI(){
+  var pt=document.getElementById("preset-tags");
+  if(pt){
+    pt.innerHTML=MAGS.map(function(t){
+      var on=fMag===t;
+      var s=on?' style="background:'+tcol(t)+';border-color:'+tcol(t)+'"':'';
+      return '<button class="ptag'+(on?" on":"")+'"'+s+' onclick="A.selectMag(this.dataset.t)" data-t="'+esc(t)+'">'+esc(t)+'</button>';
+    }).join("");
+  }
+  var s2=document.getElementById("sel-tags");
+  if(s2){
+    var tags=[];
+    if(fMag) tags.push('<span class="tag-lbl" style="background:'+tcol(fMag)+'">'+esc(fMag)+' <span onclick="A.clearMag()" style="cursor:pointer">✕</span></span>');
+    if(fWork) tags.push('<span class="tag-lbl" style="background:#444">'+esc(fWork)+' <span onclick="A.clearWork()" style="cursor:pointer">✕</span></span>');
+    if(fChara) tags.push('<span class="tag-lbl" style="background:#666">'+esc(fChara)+' <span onclick="A.clearChara()" style="cursor:pointer">✕</span></span>');
+    s2.innerHTML=tags.join(" ");
+  }
+  var wr=document.getElementById("work-row");
+  if(wr) wr.style.display=fWork?"none":"block";
+  var cr=document.getElementById("chara-row");
+  if(cr) cr.style.display=(fWork&&!fChara)?"block":"none";
+}
+function selectMag(t){fMag=t;renderTagUI();}
+function clearMag(){fMag="";renderTagUI();}
+function clearWork(){fWork="";fChara="";renderTagUI();}
+function clearChara(){fChara="";renderTagUI();}
+function setWork(){
+  var inp=document.getElementById("work-inp");
+  if(!inp||!inp.value.trim())return;
+  fWork=inp.value.trim().slice(0,20);inp.value="";
+  var s=document.getElementById("work-suggest");if(s)s.style.display="none";
+  renderTagUI();
+}
+function setChara(){
+  var inp=document.getElementById("chara-inp");
+  if(!inp||!inp.value.trim())return;
+  fChara=inp.value.trim().slice(0,20);inp.value="";
+  var s=document.getElementById("chara-suggest");if(s)s.style.display="none";
+  renderTagUI();
+}
+
+/* ===サジェスト=== */
+function getAllTags(){
+  var all={};
+  th.forEach(function(t){(t.tags||[]).forEach(function(tg){if(MAGS.indexOf(tg)<0)all[tg]=(all[tg]||0)+1;});});
+  return Object.keys(all).sort(function(a,b){return all[b]-all[a];});
+}
+function showSuggest(inpId,listId){
+  var inp=document.getElementById(inpId),list=document.getElementById(listId);
+  if(!inp||!list)return;
+  var val=inp.value.trim().toLowerCase();
+  if(val.length<1){list.style.display="none";return;}
+  var all=getAllTags().filter(function(tg){return tg.toLowerCase().indexOf(val)>=0;});
+  if(!all.length){list.style.display="none";return;}
+  list.innerHTML=all.slice(0,6).map(function(tg){
+    return '<div class="suggest-item" onclick="A.pickSuggest(this)" data-inp="'+esc(inpId)+'" data-list="'+esc(listId)+'" data-v="'+esc(tg)+'">'+esc(tg)+'</div>';
+  }).join("");
+  list.style.display="block";
+}
+function pickSuggest(el){
+  var inp=document.getElementById(el.getAttribute("data-inp"));
+  if(inp)inp.value=el.getAttribute("data-v");
+  var list=document.getElementById(el.getAttribute("data-list"));
+  if(list)list.style.display="none";
+}
+
+/* ===フォーム=== */
+function toggleForm(){
+  var fw=document.getElementById("fwrap"),nb=document.getElementById("new-btn");
+  var open=fw.style.display==="block";
+  fw.style.display=open?"none":"block";
+  if(nb)nb.textContent=open?"\uff0b \u30b9\u30ec\u3092\u7acb\u3066\u308b":"\u25b2 \u9589\u3058\u308b";
+  if(!open){fMag="";fWork="";fChara="";renderTagUI();}
+}
+function showErr(id,show){
+  var el=document.getElementById(id);if(!el)return;
+  el.className="field-err"+(show?" show":"");
+}
+function submit(){
+  var title=(document.getElementById("f-title")||{}).value||"";
+  var body=(document.getElementById("f-body")||{}).value||"";
+  var c=(document.getElementById("f-cat")||{}).value||"";
+  var ok=true;
+  showErr("err-cat",!c);if(!c)ok=false;
+  showErr("err-title",!title.trim());if(!title.trim())ok=false;
+  showErr("err-body",!body.trim());if(!body.trim())ok=false;
+  var catEl=document.getElementById("f-cat");if(catEl)catEl.className=!c?"err":"";
+  var titEl=document.getElementById("f-title");if(titEl)titEl.className=!title.trim()?"err":"";
+  var bodEl=document.getElementById("f-body");if(bodEl)bodEl.className=!body.trim()?"err":"";
+  if(!ok){var first=document.querySelector(".field-err.show");if(first)first.scrollIntoView({behavior:"smooth",block:"center"});return;}
+  var name=(document.getElementById("f-name")||{}).value||"";
+  var tags=[];if(fMag)tags.push(fMag);if(fWork)tags.push(fWork);if(fChara)tags.push(fChara);
+  var t={id:nid(),title:title.trim(),cat:c,tags:tags,workTag:fWork,charaTag:fChara,kanso:false,
+    posts:[{id:nid(),name:name.trim(),body:body.trim(),ts:Date.now(),uid:myIp}]};
+  th.unshift(t);lw("kmh",th);
+  fMag="";fWork="";fChara="";
+  ["f-title","f-name","f-body"].forEach(function(id){var el=document.getElementById(id);if(el){el.value="";el.className="";}});
+  var fcat=document.getElementById("f-cat");if(fcat){fcat.value="";fcat.className="";}
+  ["err-cat","err-title","err-body"].forEach(function(id){showErr(id,false);});
+  document.getElementById("fwrap").style.display="none";
+  var nb=document.getElementById("new-btn");if(nb)nb.textContent="\uff0b \u30b9\u30ec\u3092\u7acb\u3066\u308b";
+  st.thread=null;render();
+}
+
+/* ===カテゴリ・検索=== */
+function renderCats(){
+  document.getElementById("catnav-in").innerHTML=CATS.map(function(c){
+    var on=st.cat===c&&!st.thread;
+    return '<button class="cnav'+(on?" on":"")+'" onclick="A.cat(this.dataset.c)" data-c="'+esc(c)+'">'+esc(c)+'</button>';
+  }).join("");
+}
+function renderBc(){
+  var bc=document.getElementById("bc");
+  if(!st.thread){bc.style.display="none";return;}
+  bc.style.display="block";
+  document.getElementById("bc-in").innerHTML='<a onclick="A.top()">TOP</a> &raquo; <span>'+esc(st.thread.title)+'</span>';
+}
+function updateTitle(){document.title=st.thread?st.thread.title+" - キャラ萌え速報":"キャラ萌え速報";}
+function render(){renderCats();renderBc();updateTitle();document.getElementById("main").innerHTML=st.thread?renderThread():renderList();window.scrollTo(0,0);}
+function doSearch(){var inp=document.getElementById("sq");if(inp){st.q=inp.value.trim();render();}}
+function clearSearch(){st.q="";var inp=document.getElementById("sq");if(inp)inp.value="";render();}
+function searchKey(e){if(e.key==="Enter")doSearch();}
+
+/* ===ランキング=== */
+function calcRanks(){
+  var thRank=th.slice().sort(function(a,b){return b.posts.length-a.posts.length;}).slice(0,5);
+  // 作品ランキング
+  var workMap={};
+  th.forEach(function(t){
+    var w=t.workTag||((t.tags||[]).filter(function(tg){return MAGS.indexOf(tg)<0;})[0]);
+    if(w)workMap[w]=(workMap[w]||0)+1;
+  });
+  var workRank=Object.keys(workMap).map(function(k){return{name:k,val:workMap[k]};}).sort(function(a,b){return b.val-a.val;}).slice(0,5);
+  // キャラランキング
+  var charaMap={};
+  th.forEach(function(t){
+    var c=t.charaTag||((t.tags||[]).filter(function(tg){return MAGS.indexOf(tg)<0;})[1]);
+    if(c)charaMap[c]=(charaMap[c]||0)+1;
+  });
+  var charaRank=Object.keys(charaMap).map(function(k){return{name:k,val:charaMap[k]};}).sort(function(a,b){return b.val-a.val;}).slice(0,5);
+  return{thRank:thRank,workRank:workRank,charaRank:charaRank};
+}
+
+/* ===バッジ=== */
+function makeBadges(tags,cat){
+  var html="";
+  if(cat) html+='<span class="th-cat">'+esc(cat)+'</span>';
+  (tags||[]).forEach(function(tg){html+='<span class="tag-lbl" style="background:'+tcol(tg)+'">'+esc(tg)+'</span>';});
+  return html;
+}
+
+/* ===スレ一覧=== */
+function sortBy(s){st.sort=s;render();}
+
+function renderList(){
+  var base=st.cat==="すべて"?th.slice():th.filter(function(t){return t.cat===st.cat;});
+  var list=st.q?base.filter(function(t){
+    var q=st.q.toLowerCase();
+    return t.title.toLowerCase().indexOf(q)>=0||(t.tags&&t.tags.some(function(tg){return tg.toLowerCase().indexOf(q)>=0;}));
+  }):base;
+
+  // ソート
+  var now=Date.now();
+  list=list.slice().sort(function(a,b){
+    if(st.sort==="hot"){
+      // 人気：いいね合計+レス数
+      var sa=(a.posts||[]).reduce(function(s,p){return s+(likes[p.id]||0);},0)+a.posts.length;
+      var sb=(b.posts||[]).reduce(function(s,p){return s+(likes[p.id]||0);},0)+b.posts.length;
+      return sb-sa;
+    } else if(st.sort==="rising"){
+      // 急上昇：直近1時間のいいね+レス数
+      var ha=(a.posts||[]).filter(function(p){return now-p.ts<3600000;}).length;
+      var hb=(b.posts||[]).filter(function(p){return now-p.ts<3600000;}).length;
+      return hb-ha;
+    }
+    // new（デフォルト）
+    return b.posts[b.posts.length-1].ts - a.posts[a.posts.length-1].ts;
+  });
+
+  var sorts=[["new","🕐 新着"],["hot","🔥 人気"],["rising","⚡ 急上昇"]];
+  var sortBtns='<div id="sort-bar">'+sorts.map(function(s){
+    return '<button class="sort-btn'+(st.sort===s[0]?" on":"")+'" onclick="A.sortBy(this.dataset.s)" data-s="'+s[0]+'">'+s[1]+'</button>';
+  }).join("")+'</div>';
+
+  var top='<div id="search-bar"><input id="sq" type="text" placeholder="キャラ名・作品名で検索..." onkeydown="A.searchKey(event)"><button onclick="A.doSearch()">🔍</button>'+(st.q?'<span class="search-clear" onclick="A.clearSearch()">✕</span>':"")+' </div>';
+  top+=sortBtns;
+  if(st.cat==="すべて"&&th.length>0){
+    var r=calcRanks();
+    var thH=r.thRank.length?r.thRank.map(function(t,i){
+      return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span><span class="rank-name"><a onclick="A.openT(this.dataset.id)" data-id="'+esc(t.id)+'">'+esc(t.title)+'</a></span><span class="rank-val">'+t.posts.length+'res</span></div>';
+    }).join(""):'<div class="rank-item" style="color:#bbb;font-size:11px">データなし</div>';
+    var wkH=r.workRank.length?r.workRank.map(function(x,i){
+      return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span><span class="rank-name">'+esc(x.name)+'</span><span class="rank-val">'+x.val+'スレ</span></div>';
+    }).join(""):'<div class="rank-item" style="color:#bbb;font-size:11px">データなし</div>';
+    var chH=r.charaRank.length?r.charaRank.map(function(x,i){
+      return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span><span class="rank-name">'+esc(x.name)+'</span><span class="rank-val">'+x.val+'スレ</span></div>';
+    }).join(""):'<div class="rank-item" style="color:#bbb;font-size:11px">データなし</div>';
+    top+='<div class="rank-wrap"><div class="rank-box"><div class="rank-hdr">📣 話題スレ TOP5</div>'+thH+'</div></div>';
+    top+='<div class="rank-toggle">'+
+      '<div class="rtog-item">'+
+      '<div class="rtog-hdr" onclick="A.toggleRank(this)">▽ 話題作品 TOP5</div>'+
+      '<div class="rank-box" id="rank-work" style="display:none">'+wkH+'</div></div>'+
+      '<div class="rtog-item">'+
+      '<div class="rtog-hdr" onclick="A.toggleRank(this)">▽ 話題キャラ TOP5</div>'+
+      '<div class="rank-box" id="rank-chara" style="display:none">'+chH+'</div></div>'+
+      '</div>';
+  }
+  if(!list.length)return top+'<div class="empty">まだスレッドがありません。最初のスレを立ててみよう！</div>';
+  return top+'<div id="thread-list">'+list.map(function(t){
+    var last=t.posts[t.posts.length-1];
+    var isK=t.kanso||t.posts.length>=KANSO;
+    var badges=makeBadges(t.tags,t.cat);
+    return '<button class="th-item" onclick="A.openT(this.dataset.id)" data-id="'+esc(t.id)+'">'+
+      (badges?'<div class="th-badges">'+badges+'</div>':"")+
+      '<div class="th-top"><div class="th-title">'+esc(t.title)+(isK?'<span class="kanso-badge">完走</span>':"")+
+      '</div><span class="th-res">'+t.posts.length+'res</span></div>'+
+      '<div class="th-meta">'+fmt(last.ts)+'</div></button>';
+  }).join("")+'</div>';
+}
+
+/* ===メダル=== */
+function getMedalPost(t){
+  if(!t.kanso&&t.posts.length<KANSO)return null;
+  var best=null,bc=-1;
+  t.posts.forEach(function(pst){var c=likes[pst.id]||0;if(c>bc){bc=c;best=pst;}});
+  return bc>0?best:null;
+}
+
+/* ===スレビュー=== */
+function renderThread(){
+  var t=st.thread;
+  var isK=t.kanso||t.posts.length>=KANSO;
+  var medalPost=getMedalPost(t);
+  var isOP=t.posts.length>0&&t.posts[0].uid===myIp;
+  var badges=makeBadges(t.tags,t.cat);
+  var posts=t.posts.map(function(pst,i){
+    if(pst.deleted)return '<div class="post"><div class="pmeta"><span class="pno">'+(i+1)+'</span></div><div class="pbody" style="color:#bbb;font-size:12px">このレスは削除されています</div></div>';
+    var name=pst.name||"萌えてる匿名さん";
+    var isOPp=i===0;
+    var isMedal=medalPost&&medalPost.id===pst.id;
+    var showMedal=isMedal&&!hideMedal[pst.id];
+    var likeCnt=likes[pst.id]||0;
+    var isMine=likedBy[pst.id+"_"+myIp];
+    var isOwner=pst.uid===myIp;
+    return '<div class="post'+(showMedal?" medal-post":"")+'">'+
+      '<div class="pmeta">'+
+      (showMedal?'<span style="font-size:14px;margin-right:3px">🥇</span>':"")+
+      '<span class="pno">'+(i+1)+'</span>'+
+      '<span class="pname'+(isOPp?" op":"")+'">'+(isOPp?'<span class="opbg">OP</span>':"")+esc(name)+'</span>'+
+      '<span class="pdate">'+fmt(pst.ts)+'</span>'+
+      '&nbsp;<span style="font-size:11px;color:#ddd;cursor:pointer" onclick="A.report()">報告</span>'+
+      (isOwner?'&nbsp;<span style="font-size:11px;color:#ddd;cursor:pointer" onclick="A.deletePost(this.dataset.tid,this.dataset.pid)" data-tid="'+esc(t.id)+'" data-pid="'+esc(pst.id)+'">削除</span>':"")+
+      '<br><span class="pid">ID:'+pst.uid+'</span></div>'+
+      '<div class="pbody"'+(likeCnt>=20?' style="font-weight:700"':'')+'>'+esc(pst.body)+'</div>'+
+      '<div class="like-row"><button class="like-btn'+(isMine?" liked":"")+'" onclick="A.doLike(this.dataset.pid)" data-pid="'+esc(pst.id)+'">'+(isMine?"♥ いいね済":"♡ いいね")+'</button>'+
+      '<span class="like-cnt">'+likeCnt+'</span>'+
+      (isMedal&&isOwner?'<a onclick="A.toggleMedal(this.dataset.pid)" data-pid="'+esc(pst.id)+'" style="font-size:11px;margin-left:6px">[🥇'+(hideMedal[pst.id]?"表示":"非表示")+']</a>':"")+
+      '</div></div>';
+  }).join("");
+  return '<a class="back-btn" onclick="A.top()">← スレ一覧に戻る</a>'+
+    '<div id="tv-hdr">'+
+    (badges?'<div class="tv-badges">'+badges+'</div>':"")+
+    '<div class="tv-title">'+esc(t.title)+(isK?'&nbsp;<span class="kanso-badge">完走</span>':"")+
+    '</div><div class="tv-meta">'+t.posts.length+'件のレス / 最終更新: '+fmt(t.posts[t.posts.length-1].ts)+'</div>'+
+    (isOP&&!isK&&t.posts.length>1?'<br><button class="kanso-op-btn" onclick="A.doKanso(this.dataset.tid)" data-tid="'+esc(t.id)+'">✅ 完走にする</button>':"")+
+    (isOP?'&nbsp;<button class="kanso-op-btn" style="border-color:#c00;color:#c00" onclick="A.deleteThread(this.dataset.tid)" data-tid="'+esc(t.id)+'">🗑 スレを削除</button>':"")+
+    (isK?'<br><span class="kanso-done-label">✅ 完走スレ</span>':"")+
+    '</div>'+
+    '<div id="posts-wrap">'+posts+'</div>'+
+    '<div id="reply-box"><h3>■ 返信する</h3>'+
+    '<input id="r-name" placeholder="名前（省略可）">'+
+    '<textarea id="r-body" placeholder="本文（必須・1000文字以内）" maxlength="1000"></textarea>'+
+    '<div class="form-foot"><span></span><button class="sub-btn" onclick="A.reply()">書き込む</button></div></div>';
+}
+
+/* ===アクション=== */
+function top(){st.thread=null;st.q="";document.getElementById("fwrap").style.display="none";render();}
+function cat(c){st.cat=c;st.thread=null;render();}
+function openT(id){for(var i=0;i<th.length;i++){if(th[i].id===id){st.thread=th[i];render();return;}}}
+function doLike(pid){var key=pid+"_"+myIp;if(likedBy[key])return;likedBy[key]=true;likes[pid]=(likes[pid]||0)+1;lw("kmh_likes",likes);lw("kmh_lb",likedBy);render();}
+function toggleMedal(pid){hideMedal[pid]=!hideMedal[pid];lw("kmh_hm",hideMedal);render();}
+function doKanso(tid){for(var i=0;i<th.length;i++){if(th[i].id===tid){th[i].kanso=true;lw("kmh",th);break;}}render();}
+function deleteThread(tid){
+  if(!confirm("\u3053\u306e\u30b9\u30ec\u30c3\u30c9\u3092\u524a\u9664\u3057\u307e\u3059\u304b\uff1f\u5143\u306b\u623b\u305b\u307e\u305b\u3093\u3002"))return;
+  th=th.filter(function(t){return t.id!==tid;});lw("kmh",th);st.thread=null;render();
+}
+function deletePost(tid,pid){
+  if(!confirm("\u3053\u306e\u30ec\u30b9\u3092\u524a\u9664\u3057\u307e\u3059\u304b\uff1f"))return;
+  for(var i=0;i<th.length;i++){if(th[i].id===tid){for(var j=0;j<th[i].posts.length;j++){if(th[i].posts[j].id===pid){th[i].posts[j].deleted=true;th[i].posts[j].body="";th[i].posts[j].name="";break;}}if(st.thread&&st.thread.id===tid)st.thread=th[i];break;}}
+  lw("kmh",th);render();
+}
+function report(){alert("\u5831\u544a\u3092\u53d7\u3051\u4ed8\u3051\u307e\u3057\u305f\u3002");}
+function reply(){
+  var body=(document.getElementById("r-body")||{}).value||"";
+  if(!body.trim())return;
+  var name=(document.getElementById("r-name")||{}).value||"";
+  if(name.trim()==="\u30b9\u30ec\u4e3b"){alert("\u300c\u30b9\u30ec\u4e3b\u300d\u306f\u30b9\u30ec\u3092\u7acb\u3066\u305f\u65b9\u5c02\u7528\u3067\u3059\u3002");return;}
+  var post={id:nid(),name:name.trim(),body:body.trim(),ts:Date.now(),uid:myIp};
+  for(var i=0;i<th.length;i++){if(th[i].id===st.thread.id){th[i].posts.push(post);st.thread=th[i];break;}}
+  lw("kmh",th);render();
+  setTimeout(function(){window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"});},50);
+}
+
+try{th=ls("kmh")||[];}catch(e){th=[];}
+try{likes=ls("kmh_likes")||{};}catch(e){likes={};}
+try{likedBy=ls("kmh_lb")||{};}catch(e){likedBy={};}
+try{hideMedal=ls("kmh_hm")||{};}catch(e){hideMedal={};}
+render();
+
+function toggleRank(hdr){
+  var box=hdr.nextElementSibling;if(!box)return;
+  var open=box.style.display!=="none";
+  box.style.display=open?"none":"block";
+  hdr.textContent=(open?"▽":"△")+hdr.textContent.slice(1);
+}
+return{top:top,cat:cat,openT:openT,toggleForm:toggleForm,submit:submit,reply:reply,
+  doLike:doLike,toggleMedal:toggleMedal,doKanso:doKanso,deleteThread:deleteThread,deletePost:deletePost,
+  searchKey:searchKey,doSearch:doSearch,clearSearch:clearSearch,report:report,
+  selectMag:selectMag,clearMag:clearMag,clearWork:clearWork,clearChara:clearChara,
+  setWork:setWork,setChara:setChara,renderTagUI:renderTagUI,showSuggest:showSuggest,pickSuggest:pickSuggest};
+})();
+
+</script>
+</body>
+</html>
