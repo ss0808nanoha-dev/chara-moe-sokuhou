@@ -780,10 +780,14 @@ async function submit(){
     var fcc=document.getElementById("fcc");if(fcc)fcc.textContent="0/1000";
     document.getElementById("fwrap").style.display="none";
     var nb=document.getElementById("new-btn");if(nb)nb.textContent="\uff0b \u30b9\u30ec\u3092\u7acb\u3066\u308b";
-    st.thread=null;
 
-    /* 最新データを読み直して画面更新 */
+    /* 作ったスレのIDを覚えておいて、loadAll後にそのスレを開く */
+    var newThreadId=newThread.id;
+    /* 最新データを読み直してから、新スレを開く */
     await loadAll();
+    for(var i=0;i<th.length;i++){
+      if(th[i].id===newThreadId){st.thread=th[i];updateHash();render();break;}
+    }
   }catch(e){
     alert("スレ作成に失敗しました: "+(e.message||e));
     console.error("submit error:",e);
@@ -1191,7 +1195,12 @@ async function reply(){
   var body=(document.getElementById("r-body")||{}).value||"";
   if(!body.trim())return;
   var name=(document.getElementById("r-name")||{}).value||"";
-  if(name.trim()==="スレ主"){alert("「スレ主」はスレを立てた方専用です。");return;}
+  /* 「スレ主」を名乗れるのはスレを立てた本人(1レス目のuid=自分)のみ。
+     なりすまし防止のため、本人以外が「スレ主」を入れたら弾く */
+  if(name.trim()==="スレ主"){
+    var isOP=st.thread&&st.thread.posts.length>0&&st.thread.posts[0].uid===myIp;
+    if(!isOP){alert("「スレ主」はスレを立てた方専用です。");return;}
+  }
 
   var replyBtn=document.querySelector("#reply-box .sub-btn");
   if(replyBtn){replyBtn.disabled=true;replyBtn.textContent="送信中...";}
