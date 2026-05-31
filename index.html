@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>キャラ萌え速報</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#fff4f0;color:#222;font:13px/1.7 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif;min-height:100vh}
@@ -166,6 +167,21 @@ input.err,textarea.err,select.err{border-color:#c00 !important}
 /* R18モーダル */
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:999;display:none;align-items:center;justify-content:center;padding:20px}
 #modal.on{display:flex}
+#site-footer{margin-top:30px;padding:18px 12px 30px;text-align:center;border-top:1px solid #f0c0a0;color:#888;font-size:11px;line-height:1.8}
+#site-footer a{color:#c04a00;cursor:pointer;margin:0 6px;text-decoration:underline}
+#site-footer a:hover{color:#a03a00}
+.doc-modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
+.doc-modal.on{display:flex}
+.doc-box{background:#fff;border-radius:6px;max-width:720px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.doc-hdr{background:#e05a00;color:#fff;padding:12px 18px;font-weight:700;font-size:15px;display:flex;justify-content:space-between;align-items:center}
+.doc-close{cursor:pointer;font-size:20px;font-weight:bold;background:transparent;border:none;color:#fff;padding:0 6px}
+.doc-body{padding:18px 22px;overflow-y:auto;font-size:13px;line-height:1.7;color:#333}
+.doc-body h3{font-size:14px;color:#c04a00;margin:18px 0 8px;border-left:3px solid #e05a00;padding-left:8px}
+.doc-body h3:first-child{margin-top:0}
+.doc-body ul{padding-left:20px;margin:6px 0}
+.doc-body li{margin:3px 0}
+.doc-body p{margin:6px 0}
+.doc-body .meta{color:#888;font-size:11px;margin-top:20px;text-align:right}
 .mbox{background:#fff;border-radius:3px;padding:24px;max-width:280px;width:100%;text-align:center;border-top:3px solid #c00}
 .mbtns{display:flex;gap:8px;margin-top:16px}
 .mng{flex:1;padding:8px;border:1px solid #ccc;background:#f5f5f5;font-size:12px;color:#555;border-radius:2px}
@@ -220,9 +236,9 @@ input.err,textarea.err,select.err{border-color:#c00 !important;background:#fff8f
   <!-- スレ立てフォーム -->
   <div id="fwrap" style="display:none">
     <h2>■ 新しいスレッドを立てる</h2>
-    <div style="font-size:11px;color:#888;margin-bottom:8px">カテゴリ・タイトル・本文は必須です</div>
+    <div style="font-size:11px;color:#888;margin-bottom:8px">タイトル・本文は必須です</div>
     <select id="f-cat">
-      <option value="">カテゴリを選択してください（必須）</option>
+      <option value="">カテゴリを選択（未選択の場合は雑談になります）</option>
       <option>キャラ萌え</option>
       <option>解釈・考察</option>
       <option>作品語り</option>
@@ -231,14 +247,16 @@ input.err,textarea.err,select.err{border-color:#c00 !important;background:#fff8f
     <div style="font-size:11px;color:#888;margin-bottom:4px">掲載誌（選択）</div>
     <div class="ptags" id="preset-tags"></div>
     <div id="sel-tags" style="margin-bottom:8px"></div>
-    <div style="font-size:11px;color:#888;margin-bottom:4px">作品名（入力後にキャラ名を追加できます）</div>
-    <div class="ctag-row" style="margin-bottom:4px">
-      <input id="work-inp" placeholder="作品名（例：ブルーロック）" maxlength="20" style="margin-bottom:0"
-        oninput="A.showSuggest('work-inp','work-suggest')"
-        onkeydown="if(event.key==='Enter'){A.setWork();event.preventDefault()}">
-      <button class="ctag-add" onclick="A.setWork()">追加</button>
+    <div id="work-row">
+      <div style="font-size:11px;color:#888;margin-bottom:4px">作品名（入力後にキャラ名を追加できます）</div>
+      <div class="ctag-row" style="margin-bottom:4px">
+        <input id="work-inp" placeholder="作品名（例：ブルーロック）" maxlength="20" style="margin-bottom:0"
+          oninput="A.showSuggest('work-inp','work-suggest')"
+          onkeydown="if(event.key==='Enter'){A.setWork();event.preventDefault()}">
+        <button class="ctag-add" onclick="A.setWork()">追加</button>
+      </div>
+      <div id="work-suggest" class="suggest-list"></div>
     </div>
-    <div id="work-suggest" class="suggest-list"></div>
     <div id="chara-row" style="display:none">
       <div style="font-size:11px;color:#888;margin:6px 0 4px">キャラクター名（任意）</div>
       <div class="ctag-row">
@@ -262,29 +280,347 @@ input.err,textarea.err,select.err{border-color:#c00 !important;background:#fff8f
   </div>
 
   <div id="main"></div>
+
+  <footer id="site-footer">
+    <div>
+      <a onclick="A.showDoc('terms')">利用規約</a>|<a onclick="A.showDoc('privacy')">プライバシーポリシー</a>|<a onclick="A.showDoc('about')">このサイトについて</a>
+    </div>
+    <div style="margin-top:8px">© キャラ萌え速報</div>
+  </footer>
+</div>
+
+<!-- 利用規約モーダル -->
+<div id="doc-terms" class="doc-modal" onclick="if(event.target===this)A.hideDoc('terms')">
+  <div class="doc-box">
+    <div class="doc-hdr"><span>利用規約</span><button class="doc-close" onclick="A.hideDoc('terms')">×</button></div>
+    <div class="doc-body">
+      <h3>はじめに</h3>
+      <p>「キャラ萌え速報」（以下「当掲示板」）は、キャラクターへの萌え・解釈・考察を匿名で語り合うことを目的とした掲示板です。当掲示板を利用する方（以下「ユーザー」）は、本規約に同意したものとみなします。</p>
+      <p>本規約の内容は、必要に応じて予告なく変更することがあります。</p>
+
+      <h3>当掲示板のコンセプト</h3>
+      <ul>
+        <li>キャラへの愛・萌え・解釈を自由に語れる場所です</li>
+        <li>叩き・誹謗中傷のない、安心して語れる雰囲気を大切にしています</li>
+        <li>二次創作・解釈考察を歓迎します</li>
+        <li>海外ユーザーも歓迎（English welcome）</li>
+      </ul>
+
+      <h3>禁止事項</h3>
+      <p>以下の行為を禁止します。違反した投稿は予告なく削除され、悪質と判断された場合はアクセス規制等の対象となります。</p>
+      <ul>
+        <li>特定のキャラ・作品・人物・ファンへの叩き、愚痴、誹謗中傷、ヘイトスピーチ</li>
+        <li>差別的な発言、対立煽り、荒らし行為</li>
+        <li>18禁内容（性器・性行為の直接描写など）※R18タグを付けたスレ内を除く</li>
+        <li>ネタバレ・リーク情報（発売日・公開日は公式に準拠）</li>
+        <li>作品の売上や順位を貶める投稿</li>
+        <li>政治・宗教・皇室・社会・海外時事・ジェンダー問題などのセンシティブな話題</li>
+        <li>ゲームハード論争、声優・俳優のスキャンダル</li>
+        <li>著作権・肖像権その他の権利侵害</li>
+        <li>個人情報・プライバシーの暴露</li>
+        <li>脅迫、犯罪予告</li>
+        <li>宣伝、勧誘、出会い系・外部誘導</li>
+        <li>他の掲示板やまとめサイトの話題</li>
+        <li>歌詞の全文掲載、漫画・雑誌の丸ごと転載</li>
+        <li>残酷・グロ・動物虐待などの過剰描写</li>
+        <li>同一内容のスレッドの乱立、連投スパム</li>
+        <li>スクリプト等によるサーバーへの過度な負荷、VPN等によるアクセス制限逃れ</li>
+        <li>AI生成画像の無断連投や混乱を招く投稿</li>
+        <li>その他、運営が不適切と判断した行為</li>
+      </ul>
+      <p>根拠ある考察や意見交換は歓迎します。人格攻撃や決めつけのみの投稿はお控えください。判断に迷う内容は運営が個別に判断します。</p>
+
+      <h3>スレッド・レス削除について</h3>
+      <ul>
+        <li>各レスの「報告」ボタン、またはスレ主による削除機能を通じて削除されます</li>
+        <li>10件以上の報告を受けたレスは自動的に非表示となります</li>
+        <li>スレ主はスレッド全体および各レスを削除できます</li>
+        <li>運営が不適切と判断したスレッド・レスは予告なく削除する場合があります</li>
+        <li>削除されたスレッドは復元できません</li>
+      </ul>
+
+      <h3>投稿コンテンツの取り扱い</h3>
+      <ul>
+        <li>ユーザーが投稿したテキスト・画像等に関する一切の責任は、投稿したユーザー自身に帰属します</li>
+        <li>ユーザーは、自身の投稿内容が第三者の著作権・肖像権・その他の権利を侵害しないことを保証するものとします</li>
+        <li>投稿によって第三者との間でトラブルが発生した場合、当掲示板は一切の責任を負いません</li>
+        <li>投稿内容の著作権は原則として投稿者または正当な権利者に帰属しますが、ユーザーは当掲示板に対し、運営・宣伝・システム構築のために投稿内容を無償かつ非独占的に使用・複製・改変・公表する権利を許諾するものとします</li>
+        <li>ユーザーは、当掲示板および当掲示板が権利を許諾した第三者に対して、著作者人格権を行使しないものとします</li>
+      </ul>
+
+      <h3>ログの保管と開示</h3>
+      <ul>
+        <li>投稿の削除有無にかかわらず、ログを一定期間保管しています</li>
+        <li>意図的かつ悪質な荒らし行為については、プロバイダへの通報および情報開示請求の対応をすることがあります</li>
+      </ul>
+
+      <h3>免責事項</h3>
+      <ul>
+        <li>当掲示板の利用により発生したいかなる損害についても、運営は責任を負いません</li>
+        <li>当掲示板に掲載された情報の正確性・有用性・最新性について、運営は保証しません</li>
+        <li>サービスの中断・終了によりユーザーに生じた損害について、運営は責任を負いません</li>
+      </ul>
+
+      <h3>コンテンツの二次利用について</h3>
+      <p>以下を遵守する条件で、当掲示板のコンテンツ使用（レス転載・切り抜き動画等）を認めます。</p>
+      <ul>
+        <li>動画説明文等に元スレッドのURLを正しく記載すること</li>
+        <li>意図的に誤解を招く編集やレス内容の改変をしないこと</li>
+        <li>禁止事項に該当するスレッド・レスを使用しないこと</li>
+        <li>創作イラスト等の転載をしないこと</li>
+        <li>ステルスマーケティングに使用しないこと</li>
+      </ul>
+      <p>規約違反が認められた場合、運営の判断により当該利用者へのコンテンツ提供を停止する場合があります。</p>
+
+      <h3>お問い合わせ</h3>
+      <p>削除依頼・規約違反の通報は、サイト内の各レスにある「報告」ボタンよりお願いします。</p>
+
+      <div class="meta">2026年5月制定</div>
+    </div>
+  </div>
+</div>
+
+<!-- プライバシーポリシーモーダル -->
+<div id="doc-privacy" class="doc-modal" onclick="if(event.target===this)A.hideDoc('privacy')">
+  <div class="doc-box">
+    <div class="doc-hdr"><span>プライバシーポリシー</span><button class="doc-close" onclick="A.hideDoc('privacy')">×</button></div>
+    <div class="doc-body">
+      <h3>基本方針</h3>
+      <p>「キャラ萌え速報」（以下「当掲示板」）は、ユーザーのプライバシーを尊重し、個人情報の適切な取り扱いに努めます。本ポリシーは、当掲示板が取得する情報とその利用方法について定めるものです。</p>
+
+      <h3>取得する情報</h3>
+      <ul>
+        <li><strong>投稿内容</strong>：ユーザーが当掲示板に書き込んだテキスト、選択したタグ等</li>
+        <li><strong>端末識別情報（uid）</strong>：投稿者・いいね・報告等の識別に使用するランダムな文字列。ブラウザのlocalStorageに保存され、当掲示板を超えて個人を特定するものではありません</li>
+        <li><strong>アクセスログ</strong>：閲覧履歴、操作履歴、利用環境（ブラウザ種別等）</li>
+        <li><strong>IPアドレス</strong>：通信時に技術的に取得される情報。悪質な利用の対応にのみ使用します</li>
+      </ul>
+      <p>当掲示板はユーザー登録を必要としません。氏名・住所・電話番号・メールアドレス等の個人情報を直接取得することはありません。</p>
+
+      <h3>取得した情報の利用目的</h3>
+      <ul>
+        <li>掲示板サービスの提供・運営・維持</li>
+        <li>不正利用・規約違反への対応</li>
+        <li>サービスの改善・新機能の開発</li>
+        <li>統計データの作成（個人を特定しない形式）</li>
+      </ul>
+
+      <h3>第三者への提供</h3>
+      <p>取得した情報を第三者に提供することは原則としてありませんが、以下の場合は除きます。</p>
+      <ul>
+        <li>法令に基づく開示請求があった場合</li>
+        <li>人の生命・身体・財産の保護のために必要な場合</li>
+        <li>悪質な荒らし行為等に対する、プロバイダへの通報および情報開示請求の場合</li>
+      </ul>
+
+      <h3>外部サービスの利用</h3>
+      <ul>
+        <li><strong>Supabase</strong>：データベースとして利用しています。投稿内容等のデータはSupabaseのサーバーに保存されます</li>
+        <li><strong>Vercel</strong>：サイトのホスティングに利用しています</li>
+        <li>今後、アクセス解析や広告サービスを導入することがあります。その際は本ポリシーを更新します。</li>
+      </ul>
+
+      <h3>Cookie・localStorageについて</h3>
+      <p>当掲示板は、ユーザー体験の向上のためlocalStorageを使用し、匿名識別子（uid）を保存します。ブラウザの設定により無効化できますが、その場合いいね・報告等の機能が正しく動作しないことがあります。</p>
+
+      <h3>EUデータ主体について</h3>
+      <p>当掲示板はEU内のデータ主体へのサービス提供を目的としていません。</p>
+
+      <h3>ポリシーの変更</h3>
+      <p>本ポリシーは、必要に応じて予告なく変更することがあります。重要な変更がある場合は、サイト上で告知します。</p>
+
+      <h3>お問い合わせ</h3>
+      <p>本ポリシーに関するお問い合わせは、サイト内の「報告」ボタンよりお願いします。</p>
+
+      <div class="meta">2026年5月制定</div>
+    </div>
+  </div>
+</div>
+
+<!-- このサイトについてモーダル -->
+<div id="doc-about" class="doc-modal" onclick="if(event.target===this)A.hideDoc('about')">
+  <div class="doc-box">
+    <div class="doc-hdr"><span>このサイトについて</span><button class="doc-close" onclick="A.hideDoc('about')">×</button></div>
+    <div class="doc-body">
+      <h3>キャラ萌え速報とは</h3>
+      <p>キャラクターへの萌え・解釈・考察を語る匿名掲示板です。叩きや誹謗中傷のない、誰もが安心して推しを語れる場所を目指しています。</p>
+
+      <h3>使い方</h3>
+      <ul>
+        <li><strong>スレを立てる</strong>：右上の「＋スレを立てる」ボタンから新しいスレを作成できます</li>
+        <li><strong>返信する</strong>：気になるスレを開いて、下部の入力欄から書き込めます</li>
+        <li><strong>いいね</strong>：気に入ったレスにハートマークを送れます（1人1回）</li>
+        <li><strong>タグ機能</strong>：掲載誌・作品名・キャラ名のタグを付けて、同じ推しのスレを見つけやすくします</li>
+        <li><strong>報告</strong>：規約違反のレスを見つけたら「報告」ボタンを押してください</li>
+      </ul>
+
+      <h3>特徴</h3>
+      <ul>
+        <li>匿名で投稿できます（デフォルト名：萌えてる匿名さん）</li>
+        <li>スレ主はスレ全体および自分のレスを削除できます</li>
+        <li>200レスで完走（または手動で完走化可能）</li>
+        <li>完走スレのいいね最多レスには金メダル🥇が付きます</li>
+        <li>海外ユーザーも歓迎（English welcome）</li>
+      </ul>
+
+      <div class="meta">© キャラ萌え速報</div>
+    </div>
+  </div>
 </div>
 
 <script>
+/* ============================================================
+   キャラ萌え速報 - Supabase接続版
+   ------------------------------------------------------------
+   元のlocalStorage版から、データの保存先をSupabaseに変更。
+   表示まわり(renderList/renderThread等)のコードは元のまま。
+   データの「読み書き」だけSupabaseのDBを使うようにしている。
+   ============================================================ */
+
+/* ▼▼▼ ここを自分のSupabaseの値に書き換える ▼▼▼ */
+var SUPABASE_URL = "https://xflcbgsonmvvzbefbreq.supabase.co";
+var SUPABASE_KEY = "sb_publishable_in8cVtZwe3SbE0l6Y3Jf2Q_awVX6mJY";
+/* ▲▲▲ ここまで ▲▲▲ */
+
+/* Supabaseクライアントを作る。これ経由でDBを読み書きする */
+var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 var A=(function(){
 var CATS=["すべて","キャラ萌え","解釈・考察","作品語り","雑談"];
 var MAGS=["週刊少年ジャンプ","週刊少年マガジン","週刊少年サンデー","少年チャンピオン","ジャンプ＋","その他漫画","アニメ","ゲーム"];
 var TC={"週刊少年ジャンプ":"#cc0000","週刊少年マガジン":"#1a56a0","週刊少年サンデー":"#2e7d32","少年チャンピオン":"#e65100","ジャンプ＋":"#880044","その他漫画":"#555","アニメ":"#6a1a6a","ゲーム":"#1565c0"};
 var KANSO=200;
 var st={thread:null,cat:"すべて",q:"",sort:"new"};
-var th=[],likes={},likedBy={},hideMedal={};
+/* th: スレ一覧。元のlocalStorage版と同じ入れ子構造で持つ
+   (各スレが posts[] を内側に持ち、各postに likeCount/likedByMe が付く) */
+var th=[];
+var loading=true;   /* データ読み込み中フラグ */
 var fMag="",fWork="",fChara="";
 
 function p(n){return("0"+n).slice(-2);}
 var wday=["日","月","火","水","木","金","土"];
 function fmt(ts){var d=new Date(ts);return d.getFullYear()+"/"+p(d.getMonth()+1)+"/"+p(d.getDate())+"("+wday[d.getDay()]+") "+p(d.getHours())+":"+p(d.getMinutes())+":"+p(d.getSeconds());}
-function nid(){return Math.random().toString(36).slice(2,10).toUpperCase();}
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
-function ls(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}}
-function lw(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 function tcol(t){return TC[t]||"#888";}
-var myIp=(function(){var v=ls("kmh_ip");if(!v){v=Math.random().toString(36).slice(2,10).toUpperCase();lw("kmh_ip",v);}return v;})();
 
-/* ===タグUI=== */
+/* 端末ごとの匿名ID。これは「誰がいいねしたか」「誰がスレ主か」の
+   判定に使うだけなので、localStorageに残して問題ない */
+function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+var myIp=(function(){var v=lsGet("kmh_ip");if(!v){v=Math.random().toString(36).slice(2,10).toUpperCase();lsSet("kmh_ip",v);}return v;})();
+
+/* ============================================================
+   Supabaseとのデータやりとり
+   ============================================================ */
+
+/* DBから全データを読み込んで、th配列を組み立て直す。
+   3つのテーブル(threads/posts/likes)を取得し、
+   元の「スレの中にpostsが入っている」形に合体させる。 */
+async function loadAll(){
+  loading=true;
+  render();
+  try{
+    /* 4テーブルを並行で取得 */
+    var tRes=await sb.from("threads").select("*").order("id",{ascending:true});
+    var pRes=await sb.from("posts").select("*").order("id",{ascending:true});
+    var lRes=await sb.from("likes").select("*");
+    var rRes=await sb.from("reports").select("*");
+
+    if(tRes.error) throw tRes.error;
+    if(pRes.error) throw pRes.error;
+    if(lRes.error) throw lRes.error;
+    if(rRes.error) throw rRes.error;
+
+    var threads=tRes.data||[];
+    var posts=pRes.data||[];
+    var likes=lRes.data||[];
+    var reports=rRes.data||[];
+
+    /* 各postの「いいね数」と「自分がいいね済みか」を集計 */
+    var likeCount={},likedMine={};
+    likes.forEach(function(lk){
+      likeCount[lk.post_id]=(likeCount[lk.post_id]||0)+1;
+      if(lk.uid===myIp) likedMine[lk.post_id]=true;
+    });
+
+    /* 各postの「報告数」と「自分が報告済みか」を集計 */
+    var reportCount={},reportedMine={};
+    reports.forEach(function(rp){
+      reportCount[rp.post_id]=(reportCount[rp.post_id]||0)+1;
+      if(rp.uid===myIp) reportedMine[rp.post_id]=true;
+    });
+
+    /* postsをthread_idごとにまとめる */
+    var byThread={};
+    posts.forEach(function(po){
+      if(!byThread[po.thread_id]) byThread[po.thread_id]=[];
+      var rc=reportCount[po.id]||0;
+      /* 10回以上報告されたレスは自動的に非表示扱いにする */
+      var autoHidden=rc>=10;
+      byThread[po.thread_id].push({
+        id:po.id,
+        name:po.name||"",
+        body:(po.deleted||autoHidden)?"":(po.body||""),
+        ts:new Date(po.created_at).getTime(),
+        uid:po.uid,
+        deleted:!!po.deleted,
+        autoHidden:autoHidden,
+        medalHidden:!!po.medal_hidden,
+        likeCount:likeCount[po.id]||0,
+        likedByMe:!!likedMine[po.id],
+        reportCount:rc,
+        reportedByMe:!!reportedMine[po.id]
+      });
+    });
+
+    /* スレを新しい順(id降順)に並べて、postsをくっつける */
+    th=threads.slice().reverse().map(function(t){
+      var tags=[];
+      if(t.mag_tag) tags.push(t.mag_tag);
+      if(t.work_tag) tags.push(t.work_tag);
+      if(t.chara_tag) tags.push(t.chara_tag);
+      return {
+        id:t.id,
+        title:t.title,
+        cat:t.cat,
+        tags:tags,
+        workTag:t.work_tag||"",
+        charaTag:t.chara_tag||"",
+        kanso:!!t.kanso,
+        posts:byThread[t.id]||[]
+      };
+    });
+
+    /* postが0件のスレは表示が壊れるので除外(通常は起こらない) */
+    th=th.filter(function(t){return t.posts.length>0;});
+
+    loading=false;
+
+    /* もしスレ詳細を開いていたら、最新データに差し替える */
+    if(st.thread){
+      var found=null;
+      for(var i=0;i<th.length;i++){if(th[i].id===st.thread.id){found=th[i];break;}}
+      st.thread=found;
+    }else{
+      /* 初回ロード時など、まだ何も開いていない状態でURLにハッシュがある場合は反映 */
+      if(location.hash){
+        applyHash();
+        return; /* applyHash内でrender済 */
+      }
+    }
+    render();
+  }catch(e){
+    loading=false;
+    th=[];
+    var main=document.getElementById("main");
+    if(main) main.innerHTML='<div class="empty">⚠️ データの読み込みに失敗しました。<br>通信環境を確認して、ページを再読み込みしてください。<br><br><span style="font-size:11px;color:#c00">'+esc(e.message||String(e))+'</span></div>';
+    console.error("loadAll error:",e);
+  }
+}
+
+/* ============================================================
+   タグUI (元コードのまま)
+   ============================================================ */
 function renderTagUI(){
   var pt=document.getElementById("preset-tags");
   if(pt){
@@ -326,20 +662,48 @@ function setChara(){
   renderTagUI();
 }
 
-/* ===サジェスト=== */
-function getAllTags(){
+/* ===サジェスト===
+   作品名サジェストとキャラ名サジェストを別々に集計する。
+   既存スレのwork_tag/chara_tagカラムから、使用回数の多い順に並べる。
+   ヤフー検索やPixiv検索のように「入力途中で人気順に絞り込み」を実現。 */
+function getWorkTags(){
   var all={};
-  th.forEach(function(t){(t.tags||[]).forEach(function(tg){if(MAGS.indexOf(tg)<0)all[tg]=(all[tg]||0)+1;});});
+  th.forEach(function(t){
+    if(t.workTag) all[t.workTag]=(all[t.workTag]||0)+1;
+  });
   return Object.keys(all).sort(function(a,b){return all[b]-all[a];});
 }
+function getCharaTags(){
+  var all={};
+  th.forEach(function(t){
+    if(t.charaTag) all[t.charaTag]=(all[t.charaTag]||0)+1;
+  });
+  return Object.keys(all).sort(function(a,b){return all[b]-all[a];});
+}
+/* 旧getAllTagsは互換のため残す(検索などで使われる可能性) */
+function getAllTags(){
+  var all={};
+  th.forEach(function(t){
+    if(t.workTag) all[t.workTag]=(all[t.workTag]||0)+1;
+    if(t.charaTag) all[t.charaTag]=(all[t.charaTag]||0)+1;
+  });
+  return Object.keys(all).sort(function(a,b){return all[b]-all[a];});
+}
+
 function showSuggest(inpId,listId){
   var inp=document.getElementById(inpId),list=document.getElementById(listId);
   if(!inp||!list)return;
   var val=inp.value.trim().toLowerCase();
   if(val.length<1){list.style.display="none";return;}
-  var all=getAllTags().filter(function(tg){return tg.toLowerCase().indexOf(val)>=0;});
-  if(!all.length){list.style.display="none";return;}
-  list.innerHTML=all.slice(0,6).map(function(tg){
+  /* 入力欄の種類によって候補のソースを切り替える */
+  var pool;
+  if(inpId==="work-inp") pool=getWorkTags();
+  else if(inpId==="chara-inp") pool=getCharaTags();
+  else pool=getAllTags();
+  var matched=pool.filter(function(tg){return tg.toLowerCase().indexOf(val)>=0;});
+  if(!matched.length){list.style.display="none";return;}
+  /* 最大5件まで表示(人気順) */
+  list.innerHTML=matched.slice(0,5).map(function(tg){
     return '<div class="suggest-item" onclick="A.pickSuggest(this)" data-inp="'+esc(inpId)+'" data-list="'+esc(listId)+'" data-v="'+esc(tg)+'">'+esc(tg)+'</div>';
   }).join("");
   list.style.display="block";
@@ -351,7 +715,9 @@ function pickSuggest(el){
   if(list)list.style.display="none";
 }
 
-/* ===フォーム=== */
+/* ============================================================
+   フォーム
+   ============================================================ */
 function toggleForm(){
   var fw=document.getElementById("fwrap"),nb=document.getElementById("new-btn");
   var open=fw.style.display==="block";
@@ -363,30 +729,67 @@ function showErr(id,show){
   var el=document.getElementById(id);if(!el)return;
   el.className="field-err"+(show?" show":"");
 }
-function submit(){
+
+/* スレ立て: Supabaseのthreadsに1件、postsに1件insert */
+async function submit(){
   var title=(document.getElementById("f-title")||{}).value||"";
   var body=(document.getElementById("f-body")||{}).value||"";
   var c=(document.getElementById("f-cat")||{}).value||"";
+  /* カテゴリが選ばれてなかったら自動的に「雑談」にする(沙弥さん仕様) */
+  if(!c) c="雑談";
   var ok=true;
-  showErr("err-cat",!c);if(!c)ok=false;
+  showErr("err-cat",false);
   showErr("err-title",!title.trim());if(!title.trim())ok=false;
   showErr("err-body",!body.trim());if(!body.trim())ok=false;
-  var catEl=document.getElementById("f-cat");if(catEl)catEl.className=!c?"err":"";
+  var catEl=document.getElementById("f-cat");if(catEl)catEl.className="";
   var titEl=document.getElementById("f-title");if(titEl)titEl.className=!title.trim()?"err":"";
   var bodEl=document.getElementById("f-body");if(bodEl)bodEl.className=!body.trim()?"err":"";
   if(!ok){var first=document.querySelector(".field-err.show");if(first)first.scrollIntoView({behavior:"smooth",block:"center"});return;}
+
   var name=(document.getElementById("f-name")||{}).value||"";
-  var tags=[];if(fMag)tags.push(fMag);if(fWork)tags.push(fWork);if(fChara)tags.push(fChara);
-  var t={id:nid(),title:title.trim(),cat:c,tags:tags,workTag:fWork,charaTag:fChara,kanso:false,
-    posts:[{id:nid(),name:name.trim(),body:body.trim(),ts:Date.now(),uid:myIp}]};
-  th.unshift(t);lw("kmh",th);
-  fMag="";fWork="";fChara="";
-  ["f-title","f-name","f-body"].forEach(function(id){var el=document.getElementById(id);if(el){el.value="";el.className="";}});
-  var fcat=document.getElementById("f-cat");if(fcat){fcat.value="";fcat.className="";}
-  ["err-cat","err-title","err-body"].forEach(function(id){showErr(id,false);});
-  document.getElementById("fwrap").style.display="none";
-  var nb=document.getElementById("new-btn");if(nb)nb.textContent="\uff0b \u30b9\u30ec\u3092\u7acb\u3066\u308b";
-  st.thread=null;render();
+  var subBtn=document.querySelector("#fwrap .sub-btn");
+  if(subBtn){subBtn.disabled=true;subBtn.textContent="送信中...";}
+
+  try{
+    /* 1) スレッド本体をinsert。.select()で作られた行(idつき)が返る */
+    var tIns=await sb.from("threads").insert({
+      title:title.trim(),
+      cat:c,
+      mag_tag:fMag||null,
+      work_tag:fWork||null,
+      chara_tag:fChara||null,
+      op_uid:myIp
+    }).select();
+    if(tIns.error) throw tIns.error;
+    var newThread=tIns.data[0];
+
+    /* 2) 1レス目(スレ本文)をinsert */
+    var pIns=await sb.from("posts").insert({
+      thread_id:newThread.id,
+      name:name.trim(),
+      body:body.trim(),
+      uid:myIp
+    });
+    if(pIns.error) throw pIns.error;
+
+    /* 入力欄リセット */
+    fMag="";fWork="";fChara="";
+    ["f-title","f-name","f-body"].forEach(function(id){var el=document.getElementById(id);if(el){el.value="";el.className="";}});
+    var fcat=document.getElementById("f-cat");if(fcat){fcat.value="";fcat.className="";}
+    ["err-cat","err-title","err-body"].forEach(function(id){showErr(id,false);});
+    var fcc=document.getElementById("fcc");if(fcc)fcc.textContent="0/1000";
+    document.getElementById("fwrap").style.display="none";
+    var nb=document.getElementById("new-btn");if(nb)nb.textContent="\uff0b \u30b9\u30ec\u3092\u7acb\u3066\u308b";
+    st.thread=null;
+
+    /* 最新データを読み直して画面更新 */
+    await loadAll();
+  }catch(e){
+    alert("スレ作成に失敗しました: "+(e.message||e));
+    console.error("submit error:",e);
+  }finally{
+    if(subBtn){subBtn.disabled=false;subBtn.textContent="スレを立てる";}
+  }
 }
 
 /* ===カテゴリ・検索=== */
@@ -403,22 +806,41 @@ function renderBc(){
   document.getElementById("bc-in").innerHTML='<a onclick="A.top()">TOP</a> &raquo; <span>'+esc(st.thread.title)+'</span>';
 }
 function updateTitle(){document.title=st.thread?st.thread.title+" - キャラ萌え速報":"キャラ萌え速報";}
-function render(){renderCats();renderBc();updateTitle();document.getElementById("main").innerHTML=st.thread?renderThread():renderList();window.scrollTo(0,0);}
+function render(){
+  renderCats();renderBc();updateTitle();
+  var main=document.getElementById("main");
+  if(loading){main.innerHTML='<div class="empty">読み込み中...</div>';return;}
+  main.innerHTML=st.thread?renderThread():renderList();
+  window.scrollTo(0,0);
+}
 function doSearch(){var inp=document.getElementById("sq");if(inp){st.q=inp.value.trim();render();}}
 function clearSearch(){st.q="";var inp=document.getElementById("sq");if(inp)inp.value="";render();}
 function searchKey(e){if(e.key==="Enter")doSearch();}
+/* ランキングのキャラ名/作品名をクリックしたとき呼ばれる。
+   検索ワードにタグを設定し、スレ一覧画面で絞り込み表示する */
+function searchByTag(tag){
+  st.thread=null;
+  st.cat="すべて";
+  st.q=tag;
+  updateHash();
+  render();
+  /* 検索バーにもその値を反映(ユーザーが見て分かるように) */
+  setTimeout(function(){
+    var inp=document.getElementById("sq");
+    if(inp) inp.value=tag;
+    window.scrollTo(0,0);
+  },50);
+}
 
 /* ===ランキング=== */
 function calcRanks(){
   var thRank=th.slice().sort(function(a,b){return b.posts.length-a.posts.length;}).slice(0,5);
-  // 作品ランキング
   var workMap={};
   th.forEach(function(t){
     var w=t.workTag||((t.tags||[]).filter(function(tg){return MAGS.indexOf(tg)<0;})[0]);
     if(w)workMap[w]=(workMap[w]||0)+1;
   });
   var workRank=Object.keys(workMap).map(function(k){return{name:k,val:workMap[k]};}).sort(function(a,b){return b.val-a.val;}).slice(0,5);
-  // キャラランキング
   var charaMap={};
   th.forEach(function(t){
     var c=t.charaTag||((t.tags||[]).filter(function(tg){return MAGS.indexOf(tg)<0;})[1]);
@@ -446,21 +868,17 @@ function renderList(){
     return t.title.toLowerCase().indexOf(q)>=0||(t.tags&&t.tags.some(function(tg){return tg.toLowerCase().indexOf(q)>=0;}));
   }):base;
 
-  // ソート
   var now=Date.now();
   list=list.slice().sort(function(a,b){
     if(st.sort==="hot"){
-      // 人気：いいね合計+レス数
-      var sa=(a.posts||[]).reduce(function(s,p){return s+(likes[p.id]||0);},0)+a.posts.length;
-      var sb=(b.posts||[]).reduce(function(s,p){return s+(likes[p.id]||0);},0)+b.posts.length;
-      return sb-sa;
+      var sa=(a.posts||[]).reduce(function(s,p){return s+(p.likeCount||0);},0)+a.posts.length;
+      var sb2=(b.posts||[]).reduce(function(s,p){return s+(p.likeCount||0);},0)+b.posts.length;
+      return sb2-sa;
     } else if(st.sort==="rising"){
-      // 急上昇：直近1時間のいいね+レス数
       var ha=(a.posts||[]).filter(function(p){return now-p.ts<3600000;}).length;
       var hb=(b.posts||[]).filter(function(p){return now-p.ts<3600000;}).length;
       return hb-ha;
     }
-    // new（デフォルト）
     return b.posts[b.posts.length-1].ts - a.posts[a.posts.length-1].ts;
   });
 
@@ -477,19 +895,16 @@ function renderList(){
       return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span><span class="rank-name"><a onclick="A.openT(this.dataset.id)" data-id="'+esc(t.id)+'">'+esc(t.title)+'</a></span><span class="rank-val">'+t.posts.length+'res</span></div>';
     }).join(""):'<div class="rank-item" style="color:#bbb;font-size:11px">データなし</div>';
     var wkH=r.workRank.length?r.workRank.map(function(x,i){
-      return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span><span class="rank-name">'+esc(x.name)+'</span><span class="rank-val">'+x.val+'スレ</span></div>';
+      return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span><span class="rank-name"><a onclick="A.searchByTag(this.dataset.t)" data-t="'+esc(x.name)+'">'+esc(x.name)+'</a></span><span class="rank-val">'+x.val+'スレ</span></div>';
     }).join(""):'<div class="rank-item" style="color:#bbb;font-size:11px">データなし</div>';
     var chH=r.charaRank.length?r.charaRank.map(function(x,i){
-      return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span><span class="rank-name">'+esc(x.name)+'</span><span class="rank-val">'+x.val+'スレ</span></div>';
+      return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span><span class="rank-name"><a onclick="A.searchByTag(this.dataset.t)" data-t="'+esc(x.name)+'">'+esc(x.name)+'</a></span><span class="rank-val">'+x.val+'スレ</span></div>';
     }).join(""):'<div class="rank-item" style="color:#bbb;font-size:11px">データなし</div>';
     top+='<div class="rank-wrap"><div class="rank-box"><div class="rank-hdr">📣 話題スレ TOP5</div>'+thH+'</div></div>';
-    top+='<div class="rank-toggle">'+
-      '<div class="rtog-item">'+
-      '<div class="rtog-hdr" onclick="A.toggleRank(this)">▽ 話題作品 TOP5</div>'+
-      '<div class="rank-box" id="rank-work" style="display:none">'+wkH+'</div></div>'+
-      '<div class="rtog-item">'+
-      '<div class="rtog-hdr" onclick="A.toggleRank(this)">▽ 話題キャラ TOP5</div>'+
-      '<div class="rank-box" id="rank-chara" style="display:none">'+chH+'</div></div>'+
+    /* 話題作品/キャラのTOP5を、折りたたみなしで常時表示する */
+    top+='<div class="rank-wrap">'+
+      '<div class="rank-box"><div class="rank-hdr">🎬 話題作品 TOP5</div>'+wkH+'</div>'+
+      '<div class="rank-box"><div class="rank-hdr">⭐ 話題キャラ TOP5</div>'+chH+'</div>'+
       '</div>';
   }
   if(!list.length)return top+'<div class="empty">まだスレッドがありません。最初のスレを立ててみよう！</div>';
@@ -509,7 +924,7 @@ function renderList(){
 function getMedalPost(t){
   if(!t.kanso&&t.posts.length<KANSO)return null;
   var best=null,bc=-1;
-  t.posts.forEach(function(pst){var c=likes[pst.id]||0;if(c>bc){bc=c;best=pst;}});
+  t.posts.forEach(function(pst){var c=pst.likeCount||0;if(c>bc){bc=c;best=pst;}});
   return bc>0?best:null;
 }
 
@@ -522,12 +937,13 @@ function renderThread(){
   var badges=makeBadges(t.tags,t.cat);
   var posts=t.posts.map(function(pst,i){
     if(pst.deleted)return '<div class="post"><div class="pmeta"><span class="pno">'+(i+1)+'</span></div><div class="pbody" style="color:#bbb;font-size:12px">このレスは削除されています</div></div>';
+    if(pst.autoHidden)return '<div class="post"><div class="pmeta"><span class="pno">'+(i+1)+'</span></div><div class="pbody" style="color:#bbb;font-size:12px">⚠️ このレスは複数の報告により非表示になっています</div></div>';
     var name=pst.name||"萌えてる匿名さん";
     var isOPp=i===0;
     var isMedal=medalPost&&medalPost.id===pst.id;
-    var showMedal=isMedal&&!hideMedal[pst.id];
-    var likeCnt=likes[pst.id]||0;
-    var isMine=likedBy[pst.id+"_"+myIp];
+    var showMedal=isMedal&&!pst.medalHidden;
+    var likeCnt=pst.likeCount||0;
+    var isMine=pst.likedByMe;
     var isOwner=pst.uid===myIp;
     return '<div class="post'+(showMedal?" medal-post":"")+'">'+
       '<div class="pmeta">'+
@@ -535,13 +951,13 @@ function renderThread(){
       '<span class="pno">'+(i+1)+'</span>'+
       '<span class="pname'+(isOPp?" op":"")+'">'+(isOPp?'<span class="opbg">OP</span>':"")+esc(name)+'</span>'+
       '<span class="pdate">'+fmt(pst.ts)+'</span>'+
-      '&nbsp;<span style="font-size:11px;color:#ddd;cursor:pointer" onclick="A.report()">報告</span>'+
+      '&nbsp;<span style="font-size:11px;color:'+(pst.reportedByMe?"#888":"#ddd")+';cursor:pointer" onclick="A.report(this.dataset.pid)" data-pid="'+esc(pst.id)+'">'+(pst.reportedByMe?"報告済":"報告")+'</span>'+
       (isOwner?'&nbsp;<span style="font-size:11px;color:#ddd;cursor:pointer" onclick="A.deletePost(this.dataset.tid,this.dataset.pid)" data-tid="'+esc(t.id)+'" data-pid="'+esc(pst.id)+'">削除</span>':"")+
       '<br><span class="pid">ID:'+pst.uid+'</span></div>'+
       '<div class="pbody"'+(likeCnt>=20?' style="font-weight:700"':'')+'>'+esc(pst.body)+'</div>'+
       '<div class="like-row"><button class="like-btn'+(isMine?" liked":"")+'" onclick="A.doLike(this.dataset.pid)" data-pid="'+esc(pst.id)+'">'+(isMine?"♥ いいね済":"♡ いいね")+'</button>'+
       '<span class="like-cnt">'+likeCnt+'</span>'+
-      (isMedal&&isOwner?'<a onclick="A.toggleMedal(this.dataset.pid)" data-pid="'+esc(pst.id)+'" style="font-size:11px;margin-left:6px">[🥇'+(hideMedal[pst.id]?"表示":"非表示")+']</a>':"")+
+      (isMedal&&isOwner?'<a onclick="A.toggleMedal(this.dataset.pid)" data-pid="'+esc(pst.id)+'" style="font-size:11px;margin-left:6px">[🥇'+(pst.medalHidden?"表示":"非表示")+']</a>':"")+
       '</div></div>';
   }).join("");
   return '<a class="back-btn" onclick="A.top()">← スレ一覧に戻る</a>'+
@@ -560,39 +976,243 @@ function renderThread(){
     '<div class="form-foot"><span></span><button class="sub-btn" onclick="A.reply()">書き込む</button></div></div>';
 }
 
-/* ===アクション=== */
-function top(){st.thread=null;st.q="";document.getElementById("fwrap").style.display="none";render();}
-function cat(c){st.cat=c;st.thread=null;render();}
-function openT(id){for(var i=0;i<th.length;i++){if(th[i].id===id){st.thread=th[i];render();return;}}}
-function doLike(pid){var key=pid+"_"+myIp;if(likedBy[key])return;likedBy[key]=true;likes[pid]=(likes[pid]||0)+1;lw("kmh_likes",likes);lw("kmh_lb",likedBy);render();}
-function toggleMedal(pid){hideMedal[pid]=!hideMedal[pid];lw("kmh_hm",hideMedal);render();}
-function doKanso(tid){for(var i=0;i<th.length;i++){if(th[i].id===tid){th[i].kanso=true;lw("kmh",th);break;}}render();}
-function deleteThread(tid){
-  if(!confirm("\u3053\u306e\u30b9\u30ec\u30c3\u30c9\u3092\u524a\u9664\u3057\u307e\u3059\u304b\uff1f\u5143\u306b\u623b\u305b\u307e\u305b\u3093\u3002"))return;
-  th=th.filter(function(t){return t.id!==tid;});lw("kmh",th);st.thread=null;render();
+/* ============================================================
+   アクション (Supabase書き込み)
+   ============================================================ */
+/* ============================================================
+   URLハッシュとの連動
+   ------------------------------------------------------------
+   #t=42 のような形でスレIDをURLに残す。これにより:
+   - F5(再読み込み)してもスレ詳細が開いたまま
+   - スレのURLをコピーして他人に共有できる
+   - ブラウザの「戻る」「進む」ボタンが効く
+   ============================================================ */
+
+/* 現在の状態に応じてURLハッシュを更新する。
+   無限ループを防ぐため、hashchangeイベントを発火させない方法で書き換える */
+var skipNextHashChange=false;
+function updateHash(){
+  var newHash="";
+  if(st.thread) newHash="#t="+st.thread.id;
+  /* 既に同じハッシュなら何もしない(履歴が荒れるのを防ぐ) */
+  if(location.hash===newHash) return;
+  skipNextHashChange=true;
+  if(newHash){
+    location.hash=newHash;
+  }else{
+    /* ハッシュを綺麗に消す(history.pushStateで履歴を残す) */
+    history.pushState("",document.title,location.pathname+location.search);
+  }
 }
-function deletePost(tid,pid){
-  if(!confirm("\u3053\u306e\u30ec\u30b9\u3092\u524a\u9664\u3057\u307e\u3059\u304b\uff1f"))return;
-  for(var i=0;i<th.length;i++){if(th[i].id===tid){for(var j=0;j<th[i].posts.length;j++){if(th[i].posts[j].id===pid){th[i].posts[j].deleted=true;th[i].posts[j].body="";th[i].posts[j].name="";break;}}if(st.thread&&st.thread.id===tid)st.thread=th[i];break;}}
-  lw("kmh",th);render();
+
+/* URLハッシュからスレIDを取り出して、対応するスレを開く。
+   loadAll完了時とhashchange発生時の両方から呼ばれる */
+function applyHash(){
+  var m=location.hash.match(/^#t=(\d+)$/);
+  if(m){
+    var id=Number(m[1]);
+    for(var i=0;i<th.length;i++){
+      if(th[i].id===id){st.thread=th[i];render();return;}
+    }
+    /* ハッシュにIDはあるけどスレが見つからない=削除済み等。一覧に戻す */
+    st.thread=null;
+    render();
+  }else{
+    /* ハッシュなし=一覧表示 */
+    st.thread=null;
+    render();
+  }
 }
-function report(){alert("\u5831\u544a\u3092\u53d7\u3051\u4ed8\u3051\u307e\u3057\u305f\u3002");}
-function reply(){
+
+/* ブラウザの戻る/進るボタンや、ユーザーが直接URLバーをいじったときに発火 */
+window.addEventListener("hashchange",function(){
+  if(skipNextHashChange){skipNextHashChange=false;return;}
+  applyHash();
+});
+
+function top(){st.thread=null;st.q=""; var fw=document.getElementById("fwrap"); if(fw)fw.style.display="none"; updateHash(); render();}
+function cat(c){st.cat=c;st.thread=null; updateHash(); render();}
+function openT(id){
+  /* idは数値なので、文字列で渡ってきても比較できるよう緩めに照合 */
+  for(var i=0;i<th.length;i++){if(String(th[i].id)===String(id)){st.thread=th[i]; updateHash(); render();return;}}
+}
+
+/* いいね: likesテーブルに1行insert。
+   DB側のunique(post_id,uid)制約で2回目は自動で弾かれる */
+async function doLike(pid){
+  /* 表示中スレから対象postを探す */
+  var post=null;
+  if(st.thread){
+    for(var i=0;i<st.thread.posts.length;i++){
+      if(String(st.thread.posts[i].id)===String(pid)){post=st.thread.posts[i];break;}
+    }
+  }
+  if(!post||post.likedByMe)return;   /* 既にいいね済なら何もしない */
+
+  /* 先に画面を更新(体感を速くする) */
+  post.likedByMe=true;
+  post.likeCount=(post.likeCount||0)+1;
+  render();
+
+  try{
+    var res=await sb.from("likes").insert({post_id:Number(pid),uid:myIp});
+    if(res.error){
+      /* unique制約違反(コード23505)は「既にいいね済」なので無視 */
+      if(res.error.code!=="23505") throw res.error;
+    }
+  }catch(e){
+    /* 失敗したら表示を元に戻す */
+    post.likedByMe=false;
+    post.likeCount=Math.max(0,(post.likeCount||1)-1);
+    render();
+    alert("いいねに失敗しました: "+(e.message||e));
+  }
+}
+
+/* メダル表示/非表示の切り替え: postsのmedal_hiddenをupdate */
+async function toggleMedal(pid){
+  var post=null;
+  if(st.thread){
+    for(var i=0;i<st.thread.posts.length;i++){
+      if(String(st.thread.posts[i].id)===String(pid)){post=st.thread.posts[i];break;}
+    }
+  }
+  if(!post)return;
+  var next=!post.medalHidden;
+  try{
+    var res=await sb.from("posts").update({medal_hidden:next}).eq("id",Number(pid));
+    if(res.error) throw res.error;
+    post.medalHidden=next;
+    render();
+  }catch(e){
+    alert("操作に失敗しました: "+(e.message||e));
+  }
+}
+
+/* 完走にする: threadsのkansoをtrueにupdate */
+async function doKanso(tid){
+  if(!confirm("このスレッドを完走にしますか？"))return;
+  try{
+    var res=await sb.from("threads").update({kanso:true}).eq("id",Number(tid));
+    if(res.error) throw res.error;
+    await loadAll();
+  }catch(e){
+    alert("完走処理に失敗しました: "+(e.message||e));
+  }
+}
+
+/* スレ削除: threadsから1行delete。
+   postsとlikesはSQLのon delete cascadeで自動的に消える */
+async function deleteThread(tid){
+  if(!confirm("このスレッドを削除しますか？元に戻せません。"))return;
+  try{
+    var res=await sb.from("threads").delete().eq("id",Number(tid));
+    if(res.error) throw res.error;
+    st.thread=null;
+    await loadAll();
+  }catch(e){
+    alert("削除に失敗しました: "+(e.message||e));
+  }
+}
+
+/* レス削除: 行は残したまま、deletedフラグをtrueにして本文を空にする
+   (レス番号がずれないようにするため、物理削除はしない) */
+async function deletePost(tid,pid){
+  if(!confirm("このレスを削除しますか？"))return;
+  try{
+    var res=await sb.from("posts").update({deleted:true,body:"",name:""}).eq("id",Number(pid));
+    if(res.error) throw res.error;
+    await loadAll();
+  }catch(e){
+    alert("削除に失敗しました: "+(e.message||e));
+  }
+}
+
+/* 規約・プラポリ等のモーダル表示 */
+function showDoc(name){
+  var el=document.getElementById("doc-"+name);
+  if(el) el.classList.add("on");
+  document.body.style.overflow="hidden"; /* スクロールロック */
+}
+function hideDoc(name){
+  var el=document.getElementById("doc-"+name);
+  if(el) el.classList.remove("on");
+  document.body.style.overflow="";
+}
+
+/* 報告: reportsテーブルに1行insert。
+   DB側のunique(post_id,uid)制約で2回目は自動で弾かれる。
+   10回到達したら次回の読み込み時に自動的に非表示扱いになる(loadAll内で判定)。 */
+async function report(pid){
+  if(!pid){return;}
+  /* 表示中スレから対象postを探して、既に報告済みかチェック */
+  var post=null;
+  if(st.thread){
+    for(var i=0;i<st.thread.posts.length;i++){
+      if(String(st.thread.posts[i].id)===String(pid)){post=st.thread.posts[i];break;}
+    }
+  }
+  if(post&&post.reportedByMe){
+    alert("このレスは既に報告済みです。");
+    return;
+  }
+  if(!confirm("このレスを通報しますか？\n（規約違反のレスに対してのみ使用してください）"))return;
+
+  try{
+    var res=await sb.from("reports").insert({post_id:Number(pid),uid:myIp});
+    if(res.error){
+      /* unique制約違反(コード23505)は「既に報告済」なので静かに扱う */
+      if(res.error.code==="23505"){
+        alert("このレスは既に報告済みです。");
+        return;
+      }
+      throw res.error;
+    }
+    /* 即座に画面反映: post.reportedByMe=trueにし、count++ */
+    if(post){
+      post.reportedByMe=true;
+      post.reportCount=(post.reportCount||0)+1;
+      /* 10回到達したら自動非表示にも反映 */
+      if(post.reportCount>=10){
+        post.autoHidden=true;
+        post.body="";
+      }
+    }
+    alert("報告を受け付けました。ご協力ありがとうございます。");
+    render();
+  }catch(e){
+    alert("報告に失敗しました: "+(e.message||e));
+    console.error("report error:",e);
+  }
+}
+
+/* 返信: postsに1行insert */
+async function reply(){
   var body=(document.getElementById("r-body")||{}).value||"";
   if(!body.trim())return;
   var name=(document.getElementById("r-name")||{}).value||"";
-  if(name.trim()==="\u30b9\u30ec\u4e3b"){alert("\u300c\u30b9\u30ec\u4e3b\u300d\u306f\u30b9\u30ec\u3092\u7acb\u3066\u305f\u65b9\u5c02\u7528\u3067\u3059\u3002");return;}
-  var post={id:nid(),name:name.trim(),body:body.trim(),ts:Date.now(),uid:myIp};
-  for(var i=0;i<th.length;i++){if(th[i].id===st.thread.id){th[i].posts.push(post);st.thread=th[i];break;}}
-  lw("kmh",th);render();
-  setTimeout(function(){window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"});},50);
-}
+  if(name.trim()==="スレ主"){alert("「スレ主」はスレを立てた方専用です。");return;}
 
-try{th=ls("kmh")||[];}catch(e){th=[];}
-try{likes=ls("kmh_likes")||{};}catch(e){likes={};}
-try{likedBy=ls("kmh_lb")||{};}catch(e){likedBy={};}
-try{hideMedal=ls("kmh_hm")||{};}catch(e){hideMedal={};}
-render();
+  var replyBtn=document.querySelector("#reply-box .sub-btn");
+  if(replyBtn){replyBtn.disabled=true;replyBtn.textContent="送信中...";}
+
+  try{
+    var res=await sb.from("posts").insert({
+      thread_id:Number(st.thread.id),
+      name:name.trim(),
+      body:body.trim(),
+      uid:myIp
+    });
+    if(res.error) throw res.error;
+    await loadAll();
+    setTimeout(function(){window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"});},80);
+  }catch(e){
+    alert("書き込みに失敗しました: "+(e.message||e));
+    console.error("reply error:",e);
+  }finally{
+    if(replyBtn){replyBtn.disabled=false;replyBtn.textContent="書き込む";}
+  }
+}
 
 function toggleRank(hdr){
   var box=hdr.nextElementSibling;if(!box)return;
@@ -600,13 +1220,19 @@ function toggleRank(hdr){
   box.style.display=open?"none":"block";
   hdr.textContent=(open?"▽":"△")+hdr.textContent.slice(1);
 }
+
+/* ============================================================
+   起動: Supabaseからデータを読み込む
+   ============================================================ */
+loadAll();
+
 return{top:top,cat:cat,openT:openT,toggleForm:toggleForm,submit:submit,reply:reply,
   doLike:doLike,toggleMedal:toggleMedal,doKanso:doKanso,deleteThread:deleteThread,deletePost:deletePost,
-  searchKey:searchKey,doSearch:doSearch,clearSearch:clearSearch,report:report,
+  searchKey:searchKey,doSearch:doSearch,clearSearch:clearSearch,searchByTag:searchByTag,report:report,
   selectMag:selectMag,clearMag:clearMag,clearWork:clearWork,clearChara:clearChara,
-  setWork:setWork,setChara:setChara,renderTagUI:renderTagUI,showSuggest:showSuggest,pickSuggest:pickSuggest};
+  setWork:setWork,setChara:setChara,renderTagUI:renderTagUI,showSuggest:showSuggest,pickSuggest:pickSuggest,
+  sortBy:sortBy,showDoc:showDoc,hideDoc:hideDoc};
 })();
-
 </script>
 </body>
 </html>
