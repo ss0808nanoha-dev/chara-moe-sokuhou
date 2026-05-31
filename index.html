@@ -510,6 +510,65 @@ function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 var myIp=(function(){var v=lsGet("kmh_ip");if(!v){v=Math.random().toString(36).slice(2,10).toUpperCase();lsSet("kmh_ip",v);}return v;})();
 
 /* ============================================================
+   管理者モード
+   ------------------------------------------------------------
+   隠しコマンド「nanohataiga0808」を連続入力すると有効化される。
+   有効時は全スレ・全レスに対する削除権限がUIに出てくる。
+   注意: これはあくまでUI上の権限で、本格的な権限管理は
+   将来Supabase Auth + RLS厳格化で実装する想定。
+   ============================================================ */
+var ADMIN_KEY="nanohataiga0808";
+var adminMode=lsGet("kmh_admin")==="1";
+var adminBuf="";
+window.addEventListener("keydown",function(e){
+  /* テキスト入力中(input/textarea)は隠しコマンドを無効にする
+     →スレ立て本文で偶然「nanohataiga0808」を打っても誤発動しない */
+  var tag=(e.target&&e.target.tagName||"").toLowerCase();
+  if(tag==="input"||tag==="textarea")return;
+  /* Ctrl/Alt/Metaを使った操作中は無視(ショートカット衝突回避) */
+  if(e.ctrlKey||e.altKey||e.metaKey)return;
+  /* 1文字キーだけ受け取る */
+  if(e.key&&e.key.length===1){
+    adminBuf+=e.key.toLowerCase();
+    /* バッファが長くなりすぎないよう、必要な長さだけ保持 */
+    if(adminBuf.length>ADMIN_KEY.length) adminBuf=adminBuf.slice(-ADMIN_KEY.length);
+    if(adminBuf===ADMIN_KEY){
+      adminMode=!adminMode;
+      lsSet("kmh_admin",adminMode?"1":"0");
+      adminBuf="";
+      updateAdminBadge();
+      /* 表示を即座に切り替える */
+      if(typeof render==="function") render();
+      alert(adminMode?"🔐 管理者モードを有効にしました":"管理者モードを解除しました");
+    }
+  }
+});
+
+/* 画面下に管理者モードの状態バッジを表示する */
+function updateAdminBadge(){
+  var el=document.getElementById("admin-badge");
+  if(!el){
+    el=document.createElement("div");
+    el.id="admin-badge";
+    el.style.cssText="position:fixed;bottom:10px;right:10px;background:#c00;color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:3px;z-index:998;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3)";
+    el.title="クリックで解除";
+    el.onclick=function(){
+      if(confirm("管理者モードを解除しますか？")){
+        adminMode=false;
+        lsSet("kmh_admin","0");
+        updateAdminBadge();
+        if(typeof render==="function") render();
+      }
+    };
+    document.body.appendChild(el);
+  }
+  el.textContent="🔐 管理者モード";
+  el.style.display=adminMode?"block":"none";
+}
+/* 起動時に状態バッジを表示する(モードONなら) */
+setTimeout(updateAdminBadge,100);
+
+/* ============================================================
    Supabaseとのデータやりとり
    ============================================================ */
 
@@ -938,6 +997,8 @@ function renderThread(){
   var isK=t.kanso||t.posts.length>=KANSO;
   var medalPost=getMedalPost(t);
   var isOP=t.posts.length>0&&t.posts[0].uid===myIp;
+  /* 管理者モード時はスレ主と同等以上の権限を持つ */
+  var canModerateThread=isOP||adminMode;
   var badges=makeBadges(t.tags,t.cat);
   var posts=t.posts.map(function(pst,i){
     if(pst.deleted)return '<div class="post"><div class="pmeta"><span class="pno">'+(i+1)+'</span></div><div class="pbody" style="color:#bbb;font-size:12px">このレスは削除されています</div></div>';
@@ -949,6 +1010,8 @@ function renderThread(){
     var likeCnt=pst.likeCount||0;
     var isMine=pst.likedByMe;
     var isOwner=pst.uid===myIp;
+    /* 管理者モード時はどのレスでも削除できる */
+    var canDeletePost=isOwner||adminMode;
     return '<div class="post'+(showMedal?" medal-post":"")+'">'+
       '<div class="pmeta">'+
       (showMedal?'<span style="font-size:14px;margin-right:3px">🥇</span>':"")+
@@ -956,7 +1019,7 @@ function renderThread(){
       '<span class="pname'+(isOPp?" op":"")+'">'+(isOPp?'<span class="opbg">OP</span>':"")+esc(name)+'</span>'+
       '<span class="pdate">'+fmt(pst.ts)+'</span>'+
       '&nbsp;<span style="font-size:11px;color:'+(pst.reportedByMe?"#888":"#ddd")+';cursor:pointer" onclick="A.report(this.dataset.pid)" data-pid="'+esc(pst.id)+'">'+(pst.reportedByMe?"報告済":"報告")+'</span>'+
-      (isOwner?'&nbsp;<span style="font-size:11px;color:#ddd;cursor:pointer" onclick="A.deletePost(this.dataset.tid,this.dataset.pid)" data-tid="'+esc(t.id)+'" data-pid="'+esc(pst.id)+'">削除</span>':"")+
+      (canDeletePost?'&nbsp;<span style="font-size:11px;color:#ddd;cursor:pointer" onclick="A.deletePost(this.dataset.tid,this.dataset.pid)" data-tid="'+esc(t.id)+'" data-pid="'+esc(pst.id)+'">削除</span>':"")+
       '<br><span class="pid">ID:'+pst.uid+'</span></div>'+
       '<div class="pbody"'+(likeCnt>=20?' style="font-weight:700"':'')+'>'+esc(pst.body)+'</div>'+
       '<div class="like-row"><button class="like-btn'+(isMine?" liked":"")+'" onclick="A.doLike(this.dataset.pid)" data-pid="'+esc(pst.id)+'">'+(isMine?"♥ いいね済":"♡ いいね")+'</button>'+
@@ -969,8 +1032,8 @@ function renderThread(){
     (badges?'<div class="tv-badges">'+badges+'</div>':"")+
     '<div class="tv-title">'+esc(t.title)+(isK?'&nbsp;<span class="kanso-badge">完走</span>':"")+
     '</div><div class="tv-meta">'+t.posts.length+'件のレス / 最終更新: '+fmt(t.posts[t.posts.length-1].ts)+'</div>'+
-    (isOP&&!isK&&t.posts.length>1?'<br><button class="kanso-op-btn" onclick="A.doKanso(this.dataset.tid)" data-tid="'+esc(t.id)+'">✅ 完走にする</button>':"")+
-    (isOP?'&nbsp;<button class="kanso-op-btn" style="border-color:#c00;color:#c00" onclick="A.deleteThread(this.dataset.tid)" data-tid="'+esc(t.id)+'">🗑 スレを削除</button>':"")+
+    (canModerateThread&&!isK&&t.posts.length>1?'<br><button class="kanso-op-btn" onclick="A.doKanso(this.dataset.tid)" data-tid="'+esc(t.id)+'">✅ 完走にする</button>':"")+
+    (canModerateThread?'&nbsp;<button class="kanso-op-btn" style="border-color:#c00;color:#c00" onclick="A.deleteThread(this.dataset.tid)" data-tid="'+esc(t.id)+'">🗑 スレを削除</button>':"")+
     (isK?'<br><span class="kanso-done-label">✅ 完走スレ</span>':"")+
     '</div>'+
     '<div id="posts-wrap">'+posts+'</div>'+
