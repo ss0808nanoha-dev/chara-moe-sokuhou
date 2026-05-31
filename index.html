@@ -199,6 +199,60 @@ input.err,textarea.err,select.err{border-color:#c00 !important;background:#fff8f
 .sort-btn{font-size:11px;padding:4px 10px;border:1px solid #e0c0a0;border-radius:2px;background:#fff;color:#888;cursor:pointer}
 .sort-btn.on{background:#e05a00;color:#fff;border-color:#e05a00;font-weight:700}
 .sort-btn:hover:not(.on){background:#fff3e8}
+
+/* ========================================
+   管理者モード(ダークモード)
+   body.admin が付いている時だけ適用される。
+   既存スタイルをCSSの後ろに置いた方が優先される仕組みで上書き。
+   ======================================== */
+body.admin{background:#1a1a1a;color:#e0e0e0}
+body.admin a{color:#ff9966}
+body.admin input,body.admin textarea,body.admin select{background:#2a2a2a;color:#e0e0e0;border-color:#555}
+body.admin input:focus,body.admin textarea:focus,body.admin select:focus{border-color:#ff7733}
+body.admin #hd{background:#3a1500;border-bottom-color:#1a0a00}
+body.admin #catnav{background:#2a1000;border-bottom-color:#1a0a00}
+body.admin .cnav{color:rgba(255,255,255,.5)}
+body.admin .cnav.on{background:rgba(255,255,255,.1);color:#fff}
+body.admin #new-btn{background:#3a3a3a;color:#ff9966}
+body.admin #new-btn:hover{background:#4a4a4a}
+body.admin #bc{background:#222;color:#aaa;border-bottom-color:#333}
+body.admin #notice,body.admin #guide,body.admin #fwrap,body.admin .th-item,body.admin .post,body.admin #reply-box,body.admin #tv-hdr{background:#2a2a2a;border-color:#444;color:#e0e0e0}
+body.admin #notice .ntitle,body.admin #guide .gtitle,body.admin #fwrap h2{color:#ff9966}
+body.admin .ptag{background:#333;color:#bbb;border-color:#555}
+body.admin .ptag.on{background:#ff7733;color:#fff;border-color:#ff7733}
+body.admin .ctag-add{background:#333;color:#bbb;border-color:#555}
+body.admin .ctag-add:hover{background:#ff7733;color:#fff;border-color:#ff7733}
+body.admin .th-title,body.admin .tv-title,body.admin .pname{color:#e0e0e0}
+body.admin .pdate,body.admin .pid,body.admin .th-meta,body.admin .tv-meta{color:#888}
+body.admin .pbody{color:#d0d0d0}
+body.admin .like-btn{background:#333;color:#bbb;border-color:#555}
+body.admin .like-btn.liked{background:#cc4422;color:#fff;border-color:#cc4422}
+body.admin .like-cnt{color:#aaa}
+body.admin .th-res{background:#333;color:#aaa}
+body.admin .sort-btn{background:#2a2a2a;color:#aaa;border-color:#555}
+body.admin .sort-btn.on{background:#cc4422;color:#fff;border-color:#cc4422}
+body.admin #search-bar input{background:#2a2a2a;color:#e0e0e0}
+body.admin .rank-box{background:#2a2a2a;border-color:#444}
+body.admin .rank-hdr{background:#3a1500;color:#ff9966}
+body.admin .rank-item{border-bottom-color:#333}
+body.admin .rank-no{color:#888}
+body.admin .rank-name{color:#e0e0e0}
+body.admin .rank-val{color:#888}
+body.admin .empty{color:#888}
+body.admin .opbg{background:#cc4422}
+body.admin .medal-post{background:#2a2515;border-left-color:#ffaa44}
+body.admin .kanso-badge{background:#444;color:#fff}
+body.admin .kanso-op-btn{background:#2a2a2a;color:#e0e0e0;border-color:#555}
+body.admin .kanso-done-label{color:#888}
+body.admin .back-btn{color:#ff9966}
+body.admin #site-footer{color:#888;border-top-color:#444}
+body.admin #site-footer a{color:#ff9966}
+body.admin .doc-box{background:#2a2a2a;color:#e0e0e0}
+body.admin .doc-body{color:#d0d0d0}
+body.admin .doc-body h3{color:#ff9966;border-left-color:#ff7733}
+body.admin .suggest-list{background:#2a2a2a;border-color:#555}
+body.admin .suggest-item{color:#e0e0e0;border-bottom-color:#444}
+body.admin .suggest-item:hover{background:#3a3a3a}
 </style>
 </head>
 <body>
@@ -546,6 +600,12 @@ window.addEventListener("keydown",function(e){
 
 /* 画面下に管理者モードの状態バッジを表示する */
 function updateAdminBadge(){
+  /* bodyにadminクラスを付け外し → CSSでダークモード適用 */
+  if(adminMode){
+    document.body.classList.add("admin");
+  }else{
+    document.body.classList.remove("admin");
+  }
   var el=document.getElementById("admin-badge");
   if(!el){
     el=document.createElement("div");
