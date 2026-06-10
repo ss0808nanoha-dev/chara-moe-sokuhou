@@ -58,6 +58,11 @@ input.err,textarea.err,select.err{border-color:#c00 !important}
 .sub-btn{background:#e05a00;color:#fff;font-size:12px;font-weight:700;padding:7px 22px;border-radius:2px}
 .sub-btn:hover{background:#c04a00}
 .help-text{font-size:10px;color:#888;margin:-4px 0 6px;line-height:1.5}
+.oppass-box{background:#fff8f3;border:1px dashed #f0b890;border-radius:4px;padding:10px 12px;margin-bottom:7px}
+.oppass-label{display:block;font-size:13px;font-weight:700;color:#e05a00;margin-bottom:6px}
+#fwrap #f-oppass{border:2px solid #e05a00;background:#fff;margin-bottom:6px}
+#fwrap #f-oppass:focus{border-color:#c04a00;box-shadow:0 0 0 2px rgba(224,90,0,.15)}
+.oppass-box .help-text{margin:0}
 .rank-wrap{display:flex;gap:8px;margin-bottom:10px}
 .rank-box{flex:1;background:#fff;border:1px solid #e0c0a0;overflow:hidden;min-width:0}
 .rank-hdr{background:#e05a00;color:#fff;font-size:11px;font-weight:700;padding:4px 10px}
@@ -191,6 +196,9 @@ body.admin .suggest-item{color:#e0e0e0;border-bottom-color:#444}
 body.admin .suggest-item:hover{background:#3a3a3a}
 body.admin .op-recover{color:#888}
 body.admin .op-recover:hover{color:#ff9966}
+body.admin .oppass-box{background:#332016;border-color:#7a4a28}
+body.admin .oppass-label{color:#ff9966}
+body.admin #fwrap #f-oppass{border-color:#ff7733;background:#2a2a2a}
 </style>
 </head>
 <body>
@@ -264,8 +272,11 @@ body.admin .op-recover:hover{color:#ff9966}
     <input id="f-name" placeholder="名前（省略可・匿名になります）">
     <textarea id="f-body" placeholder="本文（必須・1000文字以内）" maxlength="1000"
       oninput="document.getElementById('fcc').textContent=this.value.length+'/1000'"></textarea>
-    <input id="f-oppass" placeholder="スレ主合言葉（任意・4文字以上）" maxlength="40">
-    <div class="help-text">💡 別の端末からスレ管理に戻りたい場合に必要です。<br>※忘れると別端末からの管理ができなくなります</div>
+    <div class="oppass-box">
+      <label class="oppass-label" for="f-oppass">🔑 スレ主合言葉（任意・4文字以上）</label>
+      <input id="f-oppass" placeholder="例：sukinakotoba2008" maxlength="40">
+      <div class="help-text">💡 別の端末からスレ管理に戻りたい場合に必要です。<br>※忘れると別端末からの管理ができなくなります</div>
+    </div>
     <div class="form-foot">
       <span class="ccount" id="fcc">0/1000</span>
       <button class="sub-btn" onclick="A.submit()">スレを立てる</button>
@@ -488,7 +499,7 @@ function isVerifiedOp(threadId){
   return getVerifiedOps().indexOf(String(threadId))>=0;
 }
 
-/* スレ詳細画面で「スレ主に戻る」リンクをクリックしたとき */
+/* スレ詳細画面で「このスレを立てた方へ」リンクをクリックしたとき */
 async function recoverOp(tid){
   var pwd=prompt("このスレを立てたときの合言葉を入力してください：");
   if(pwd===null) return; /* キャンセル */
@@ -970,7 +981,7 @@ function renderThread(){
   var isOPByPassword=isVerifiedOp(t.id);
   var isOP=isOPByUid||isOPByPassword;
   var canModerateThread=isOP||adminMode;
-  /* 「スレ主に戻る」リンクの表示条件: 自分はスレ主ではない、かつ合言葉が設定されている */
+  /* 「このスレを立てた方へ」リンクの表示条件: 自分はスレ主ではない、かつ合言葉が設定されている */
   var showRecover=!isOP&&t.hasOpPassword;
   var badges=makeBadges(t.tags,t.cat);
   var posts=t.posts.map(function(pst,i){
@@ -1008,7 +1019,7 @@ function renderThread(){
     (canModerateThread&&!isK&&t.posts.length>1?'<br><button class="kanso-op-btn" onclick="A.doKanso(this.dataset.tid)" data-tid="'+esc(t.id)+'">✅ 完走にする</button>':"")+
     (canModerateThread?'&nbsp;<button class="kanso-op-btn" style="border-color:#c00;color:#c00" onclick="A.deleteThread(this.dataset.tid)" data-tid="'+esc(t.id)+'">🗑 スレを削除</button>':"")+
     (isK?'<br><span class="kanso-done-label">✅ 完走スレ</span>':"")+
-    (showRecover?'<br><a class="op-recover" onclick="A.recoverOp(this.dataset.tid)" data-tid="'+esc(t.id)+'">🔑 スレ主に戻る（合言葉を入力）</a>':"")+
+    (showRecover?'<br><a class="op-recover" onclick="A.recoverOp(this.dataset.tid)" data-tid="'+esc(t.id)+'">🔑 このスレを立てた方へ（合言葉を入力）</a>':"")+
     '</div>'+
     '<div id="posts-wrap">'+posts+'</div>'+
     '<div id="reply-box"><h3>■ 返信する</h3>'+
