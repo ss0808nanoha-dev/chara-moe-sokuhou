@@ -156,6 +156,10 @@ input.err,textarea.err,select.err{border-color:#c00 !important}
 .sort-btn{font-size:11px;padding:4px 10px;border:1px solid #e0c0a0;border-radius:2px;background:#fff;color:#888;cursor:pointer}
 .sort-btn.on{background:#e05a00;color:#fff;border-color:#e05a00;font-weight:700}
 .sort-btn:hover:not(.on){background:#fff3e8}
+.ad-block{margin:10px 0;padding:10px 12px;background:#fff;border:1px solid #e8d0c0;border-radius:4px}
+.ad-label{font-size:10px;color:#aaa;text-align:center;letter-spacing:2px;margin-bottom:8px;border-bottom:1px dashed #e8d0c0;padding-bottom:5px}
+.rakuten-ad{margin:8px 0;display:flex;justify-content:center;gap:8px;align-items:flex-start}
+.rakuten-ad img{width:47%;max-width:240px;height:auto;border-radius:4px;margin:0!important}
 
 /* 言語選択 / 注意書きモーダル */
 .lang-modal{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}
@@ -234,6 +238,8 @@ body.admin .lang-box{background:#2a2a2a;color:#e0e0e0}
 body.admin .lang-opt{background:#332016;border-color:#ff7733;color:#ff9966}
 body.admin .lang-opt:hover{background:#ff7733;color:#fff}
 body.admin .notice-text{color:#d0d0d0}
+body.admin .ad-block{background:#2a2a2a;border-color:#444}
+body.admin .ad-label{color:#888;border-bottom-color:#444}
 </style>
 </head>
 <body>
@@ -560,7 +566,7 @@ var I18N={
     fail_reply:"書き込みに失敗しました: ", fail_auth:"認証に失敗しました: ",
     notice:"⚠️ このサイトは翻訳機能を使用しています。\n元の言語以外では、表示に多少のずれが生じる場合があります。\nあらかじめご了承ください。",
     notice_ok:"OK・サイトへ進む",
-    translate:"🌐 翻訳", show_original:"🔼 原文に戻す", tl_translating:"翻訳中...", tl_tag:"翻訳", tl_fail:"翻訳に失敗しました。少し時間をおいてお試しください。"
+    translate:"🌐 翻訳", show_original:"🔼 原文に戻す", tl_translating:"翻訳中...", tl_tag:"翻訳", tl_fail:"翻訳に失敗しました。少し時間をおいてお試しください。", ad_label:"PR・広告"
   },
   en:{
     new_thread:"+ New Thread", close_form:"▲ Close", form_h2:"■ Create a New Thread",
@@ -604,7 +610,7 @@ var I18N={
     fail_reply:"Failed to post: ", fail_auth:"Authentication failed: ",
     notice:"⚠️ This site uses machine translation.\nThere may be slight inaccuracies outside the original language.\nThank you for understanding.",
     notice_ok:"OK, enter the site",
-    translate:"🌐 Translate", show_original:"🔼 Show original", tl_translating:"Translating...", tl_tag:"Translation", tl_fail:"Translation failed. Please try again in a moment."
+    translate:"🌐 Translate", show_original:"🔼 Show original", tl_translating:"Translating...", tl_tag:"Translation", tl_fail:"Translation failed. Please try again in a moment.", ad_label:"PR / Ad"
   },
   ko:{
     new_thread:"+ 새 글 작성", close_form:"▲ 닫기", form_h2:"■ 새 스레드 작성",
@@ -648,7 +654,7 @@ var I18N={
     fail_reply:"작성 실패: ", fail_auth:"인증 실패: ",
     notice:"⚠️ 이 사이트는 번역 기능을 사용합니다.\n원래 언어가 아닌 경우 표시에 다소 차이가 있을 수 있습니다.\n양해 부탁드립니다.",
     notice_ok:"확인, 사이트로 이동",
-    translate:"🌐 번역", show_original:"🔼 원문 보기", tl_translating:"번역 중...", tl_tag:"번역", tl_fail:"번역에 실패했습니다. 잠시 후 다시 시도해 주세요."
+    translate:"🌐 번역", show_original:"🔼 원문 보기", tl_translating:"번역 중...", tl_tag:"번역", tl_fail:"번역에 실패했습니다. 잠시 후 다시 시도해 주세요.", ad_label:"PR · 광고"
   }
 };
 
@@ -664,6 +670,13 @@ var MAG_I18N={
   en:{"週刊少年ジャンプ":"Weekly Shonen Jump","週刊少年マガジン":"Weekly Shonen Magazine","週刊少年サンデー":"Weekly Shonen Sunday","少年チャンピオン":"Shonen Champion","ジャンプ＋":"Jump+","その他漫画":"Other Manga","アニメ":"Anime","ゲーム":"Game"},
   ko:{"週刊少年ジャンプ":"주간 소년 점프","週刊少年マガジン":"주간 소년 매거진","週刊少年サンデー":"주간 소년 선데이","少年チャンピオン":"소년 챔피언","ジャンプ＋":"점프 플러스","その他漫画":"기타 만화","アニメ":"애니메이션","ゲーム":"게임"}
 };
+
+/* 楽天アフィリエイト広告(画像のみ)。左から順に表示される。
+   差し替え・追加する場合はこの配列の中身を入れ替える。 */
+var RAKUTEN_ADS=[
+`<a href="https://hb.afl.rakuten.co.jp/ichiba/54c2b556.715eed90.54c2b557.1f16c205/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fbookfan%2Fbk-4065279135%2F&link_type=pict&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MSwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9" target="_blank" rel="nofollow sponsored noopener" style="word-wrap:break-word;"><img src="https://hbb.afl.rakuten.co.jp/hgb/54c2b556.715eed90.54c2b557.1f16c205/?me_id=1285657&item_id=12667449&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fbookfan%2Fcabinet%2F01005%2Fbk4065279135.jpg%3F_ex%3D240x240&s=240x240&t=pict" border="0" style="margin:2px" alt="ブルーロック 19巻" title="ブルーロック 19巻"></a>`,
+`<a href="https://hb.afl.rakuten.co.jp/ichiba/54c2b556.715eed90.54c2b557.1f16c205/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fbookfan%2Fbk-4065285011%2F&link_type=pict&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9" target="_blank" rel="nofollow sponsored noopener" style="word-wrap:break-word;"><img src="https://hbb.afl.rakuten.co.jp/hgb/54c2b556.715eed90.54c2b557.1f16c205/?me_id=1285657&item_id=12707162&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fbookfan%2Fcabinet%2F01012%2Fbk4065285011.jpg%3F_ex%3D240x240&s=240x240&t=pict" border="0" style="margin:2px" alt="ブルーロック 20巻" title="ブルーロック 20巻"></a>`
+];
 
 var A=(function(){
 var CATS=["すべて","キャラ萌え","解釈・考察","作品語り","雑談"];
@@ -1148,6 +1161,12 @@ function makeBadges(tags,cat){
 }
 function sortBy(s){st.sort=s;render();}
 
+/* 楽天広告ブロックのHTML(PR表示付き) */
+function rakutenAdHtml(){
+  if(!RAKUTEN_ADS||!RAKUTEN_ADS.length) return "";
+  return '<div class="ad-block"><div class="ad-label">'+t("ad_label")+'</div><div class="rakuten-ad">'+RAKUTEN_ADS.join("")+'</div></div>';
+}
+
 function renderList(){
   var base=st.cat==="すべて"?th.slice():th.filter(function(t2){return t2.cat===st.cat;});
   var list=st.q?base.filter(function(t2){
@@ -1270,6 +1289,7 @@ function renderThread(){
     (showRecover?'<br><a class="op-recover" onclick="A.recoverOp(this.dataset.tid)" data-tid="'+esc(t2.id)+'">'+t("recover_op")+'</a>':"")+
     '</div>'+
     '<div id="posts-wrap">'+posts+'</div>'+
+    rakutenAdHtml()+
     '<div id="reply-box"><h3>'+t("reply_h3")+'</h3>'+
     '<input id="r-name" placeholder="'+esc(t("reply_name_ph"))+'">'+
     '<textarea id="r-body" placeholder="'+esc(t("reply_body_ph"))+'" maxlength="1000"></textarea>'+
