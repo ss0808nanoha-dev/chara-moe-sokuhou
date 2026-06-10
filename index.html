@@ -1152,10 +1152,11 @@ async function submit(){
         return;
       }
       if(subBtn) subBtn.textContent=t("thumb_uploading");
-      /* ファイル名は拡張子に依存せず必ず通る安全な形にする */
+      /* ファイル名は確実に通るランダムIDにする */
       var rawExt=(thumbFile.name.split(".").pop()||"").toLowerCase();
       var safeExt=/^(jpg|jpeg|png|gif|webp)$/.test(rawExt)?rawExt:"jpg";
-      var path="thumb_"+myIp+"_"+Date.now()+"."+safeExt;
+      var rnd=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():(""+Date.now()+Math.floor(Math.random()*1000000));
+      var path=rnd+"."+safeExt;
       var contentType=thumbFile.type&&thumbFile.type.indexOf("image/")===0?thumbFile.type:"image/jpeg";
       var up=await sb.storage.from("thumbnails").upload(path,thumbFile,{cacheControl:"3600",upsert:false,contentType:contentType});
       if(up.error) throw up.error;
