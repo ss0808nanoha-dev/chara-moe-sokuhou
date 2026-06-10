@@ -12,8 +12,6 @@ a{color:#c00;text-decoration:underline;cursor:pointer}
 button{cursor:pointer;font:inherit;border:none;background:none;color:inherit}
 input,textarea,select{font:inherit;border:1px solid #ccc;padding:5px 8px;background:#fff;border-radius:2px;outline:none}
 input:focus,textarea:focus,select:focus{border-color:#e05a00}
-
-/* ===ヘッダー=== */
 #hd{background:#e05a00;padding:0;border-bottom:3px solid #c04a00}
 #hd-top{max-width:780px;margin:0 auto;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
 #logo-btn{display:flex;flex-direction:column;gap:1px}
@@ -23,8 +21,6 @@ input:focus,textarea:focus,select:focus{border-color:#e05a00}
 #r18tag{font-size:10px;background:#900;color:#fff;padding:1px 6px;border-radius:2px;display:none}
 #new-btn{background:#fff;color:#e05a00;font-size:12px;font-weight:900;padding:5px 13px;border-radius:2px;border:none}
 #new-btn:hover{background:#ffe0d0}
-
-/* カテゴリナビ */
 #catnav{background:#c04a00;overflow-x:auto;-webkit-overflow-scrolling:touch;border-bottom:1px solid #a03a00}
 #catnav::-webkit-scrollbar{display:none}
 #catnav-in{max-width:780px;margin:0 auto;display:flex;padding:0 8px}
@@ -32,25 +28,9 @@ input:focus,textarea:focus,select:focus{border-color:#e05a00}
 .cnav:first-child{border-left:1px solid rgba(255,255,255,.15)}
 .cnav.on{color:#fff;background:rgba(0,0,0,.2)}
 .cnav:hover:not(.on){color:#fff}
-
-/* パンくず */
 #bc{font-size:11px;color:#888;padding:4px 12px;border-bottom:1px solid #e0c8b8;background:#fff9f5;display:none}
 #bc-in{max-width:780px;margin:0 auto}
-
-/* メイン */
 #wrap{max-width:780px;margin:0 auto;padding:10px 10px 80px}
-
-/* お知らせボックス */
-#notice{background:#fff;border:1px solid #e0c0a0;border-left:4px solid #e05a00;padding:10px 12px;margin-bottom:10px;font-size:12px;line-height:1.8}
-#notice .ntitle{font-weight:700;color:#e05a00;margin-bottom:4px;font-size:13px}
-
-/* スレ立て方ガイド */
-#guide{background:#fff;border:1px solid #e0c0a0;padding:10px 12px;margin-bottom:10px;font-size:12px}
-#guide .gtitle{font-weight:700;color:#e05a00;margin-bottom:6px;font-size:12px}
-#guide ol{padding-left:18px;line-height:2}
-#guide .gnote{color:#888;margin-top:4px;font-size:11px}
-
-/* スレ立てフォーム */
 #fwrap{background:#fff;border:1px solid #e0c0a0;border-top:3px solid #e05a00;padding:12px;margin-bottom:10px;display:none}
 #fwrap.on{display:block}
 #fwrap h2{font-size:12px;font-weight:700;color:#e05a00;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #f0d0c0}
@@ -77,8 +57,7 @@ input.err,textarea.err,select.err{border-color:#c00 !important}
 .ccount{font-size:10px;color:#bbb}
 .sub-btn{background:#e05a00;color:#fff;font-size:12px;font-weight:700;padding:7px 22px;border-radius:2px}
 .sub-btn:hover{background:#c04a00}
-
-/* ランキング */
+.help-text{font-size:10px;color:#888;margin:-4px 0 6px;line-height:1.5}
 .rank-wrap{display:flex;gap:8px;margin-bottom:10px}
 .rank-box{flex:1;background:#fff;border:1px solid #e0c0a0;overflow:hidden;min-width:0}
 .rank-hdr{background:#e05a00;color:#fff;font-size:11px;font-weight:700;padding:4px 10px}
@@ -87,8 +66,6 @@ input.err,textarea.err,select.err{border-color:#c00 !important}
 .rank-no{font-weight:900;color:#e05a00;width:16px;flex-shrink:0;font-size:12px}
 .rank-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rank-val{color:#aaa;flex-shrink:0;font-size:10px}
-
-/* スレ一覧 */
 #thread-list{display:flex;flex-direction:column;gap:1px}
 .th-item{background:#fff;border:1px solid #e8d0c0;padding:8px 10px;display:block;width:100%;text-align:left}
 .th-item:hover{border-color:#e05a00;background:#fff9f5}
@@ -96,25 +73,19 @@ input.err,textarea.err,select.err{border-color:#c00 !important}
 .th-cat{font-size:10px;font-weight:700;background:#e05a00;color:#fff;padding:1px 6px;border-radius:2px}
 .th-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .th-title{font-size:14px;font-weight:700;color:#222;line-height:1.4;text-align:left}
-.th-title.blur{color:#bbb}
 .th-res{font-size:11px;color:#e05a00;border:1px solid #e0c0a0;padding:1px 7px;white-space:nowrap;flex-shrink:0;font-weight:700;border-radius:2px}
-.th-syno{font-size:11px;color:#777;margin-top:3px}
 .th-meta{font-size:10px;color:#bbb;margin-top:3px}
 .kanso-badge{font-size:10px;background:#e05a00;color:#fff;padding:1px 6px;margin-left:4px;border-radius:2px;font-weight:700}
 .empty{text-align:center;color:#bbb;padding:40px;font-size:13px;line-height:2;background:#fff;border:1px solid #e8d0c0}
-
-
-/* ===スレビュー=== */
 #tv-hdr{background:#fff;border:1px solid #e8d0c0;border-top:3px solid #e05a00;padding:10px 12px;margin-bottom:6px}
 .tv-badges{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:6px}
 .tv-title{font-size:16px;font-weight:900;color:#222;line-height:1.4;margin-bottom:3px}
-.tv-syno{font-size:12px;color:#777;border-left:3px solid #e05a00;padding-left:8px;margin-bottom:5px}
 .tv-meta{font-size:11px;color:#aaa}
 .kanso-op-btn{font-size:11px;border:1px solid #e05a00;color:#e05a00;padding:2px 10px;border-radius:2px;margin-top:6px;display:inline-block}
 .kanso-op-btn:hover{background:#e05a00;color:#fff}
 .kanso-done-label{font-size:11px;color:#e05a00;font-weight:700;margin-top:5px;display:inline-block}
-
-/* 投稿 */
+.op-recover{font-size:11px;color:#888;margin-top:8px;display:inline-block;cursor:pointer;text-decoration:underline}
+.op-recover:hover{color:#e05a00}
 #posts-wrap{background:#fff;border:1px solid #e8d0c0;margin-bottom:8px}
 .post{padding:8px 12px;border-bottom:1px solid #fff4f0}
 .post:nth-child(even){background:#fffaf7}
@@ -132,39 +103,17 @@ input.err,textarea.err,select.err{border-color:#c00 !important}
 .like-btn{font-size:11px;border:1px solid #ddd;padding:2px 10px;color:#aaa;border-radius:2px;background:#fff}
 .like-btn.liked{border-color:#e05a00;color:#e05a00;font-weight:700}
 .like-cnt{font-size:11px;color:#aaa}
-
-/* 返信フォーム */
 #reply-box{background:#fff;border:1px solid #e8d0c0;border-top:3px solid #e05a00;padding:12px}
 #reply-box h3{font-size:12px;font-weight:700;color:#e05a00;margin-bottom:8px}
 #reply-box input,#reply-box textarea{width:100%;display:block;margin-bottom:7px}
 #reply-box textarea{height:100px}
 .back-btn{display:inline-block;font-size:11px;color:#e05a00;margin-bottom:8px}
-
-/* 検索バー */
 #search-bar{background:#fff;border:1px solid #e8d0c0;border-top:3px solid #e05a00;padding:8px 10px;margin-bottom:10px;display:flex;gap:6px;align-items:center}
 #search-bar input{flex:1;padding:6px 10px;border:1px solid #ccc;border-radius:2px;font-size:13px}
 #search-bar input:focus{border-color:#e05a00}
 #search-bar button{background:#e05a00;color:#fff;font-size:12px;font-weight:700;padding:6px 14px;border-radius:2px;flex-shrink:0}
 #search-bar button:hover{background:#c04a00}
 .search-clear{font-size:11px;color:#e05a00;flex-shrink:0;cursor:pointer}
-.search-note{font-size:12px;color:#888;margin-bottom:6px;padding:4px 2px}
-
-/* R18ロック */
-.r18lock{background:#fff;border:1px solid #ffcdd2;padding:32px;text-align:center;margin-bottom:8px}
-.r18lock-btn{border:1px solid #c00;color:#c00;padding:7px 22px;font-size:12px;font-weight:700;border-radius:2px;background:#fff}
-.r18lock-btn:hover{background:#c00;color:#fff}
-
-/* 検索バー */
-
-
-
-
-
-.search-clear{font-size:11px;color:#e05a00;flex-shrink:0}
-.search-result-note{font-size:12px;color:#888;margin-bottom:6px;padding:4px 2px}
-.search-hit{background:#fff9f0}
-
-/* R18モーダル */
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:999;display:none;align-items:center;justify-content:center;padding:20px}
 #modal.on{display:flex}
 #site-footer{margin-top:30px;padding:18px 12px 30px;text-align:center;border-top:1px solid #f0c0a0;color:#888;font-size:11px;line-height:1.8}
@@ -186,25 +135,12 @@ input.err,textarea.err,select.err{border-color:#c00 !important}
 .mbtns{display:flex;gap:8px;margin-top:16px}
 .mng{flex:1;padding:8px;border:1px solid #ccc;background:#f5f5f5;font-size:12px;color:#555;border-radius:2px}
 .mok{flex:1;padding:8px;background:#c00;font-size:12px;color:#fff;font-weight:700;border-radius:2px}
-.field-err{font-size:11px;color:#c00;margin:-4px 0 6px;display:none}
-.field-err.show{display:block}
-input.err,textarea.err,select.err{border-color:#c00 !important;background:#fff8f8}
-
-.rank-toggle{display:flex;gap:8px;margin-bottom:10px}
-.rtog-item{flex:1;min-width:0}
-.rtog-hdr{background:#e05a00;color:#fff;font-size:11px;font-weight:700;padding:5px 10px;cursor:pointer;user-select:none}
-.rtog-hdr:hover{background:#c04a00}
-
 #sort-bar{display:flex;gap:4px;margin-bottom:8px}
 .sort-btn{font-size:11px;padding:4px 10px;border:1px solid #e0c0a0;border-radius:2px;background:#fff;color:#888;cursor:pointer}
 .sort-btn.on{background:#e05a00;color:#fff;border-color:#e05a00;font-weight:700}
 .sort-btn:hover:not(.on){background:#fff3e8}
 
-/* ========================================
-   管理者モード(ダークモード)
-   body.admin が付いている時だけ適用される。
-   既存スタイルをCSSの後ろに置いた方が優先される仕組みで上書き。
-   ======================================== */
+/* 管理者モード(ダークモード) */
 body.admin{background:#1a1a1a;color:#e0e0e0}
 body.admin a{color:#ff9966}
 body.admin input,body.admin textarea,body.admin select{background:#2a2a2a;color:#e0e0e0;border-color:#555}
@@ -216,8 +152,8 @@ body.admin .cnav.on{background:rgba(255,255,255,.1);color:#fff}
 body.admin #new-btn{background:#3a3a3a;color:#ff9966}
 body.admin #new-btn:hover{background:#4a4a4a}
 body.admin #bc{background:#222;color:#aaa;border-bottom-color:#333}
-body.admin #notice,body.admin #guide,body.admin #fwrap,body.admin .th-item,body.admin .post,body.admin #reply-box,body.admin #tv-hdr{background:#2a2a2a;border-color:#444;color:#e0e0e0}
-body.admin #notice .ntitle,body.admin #guide .gtitle,body.admin #fwrap h2{color:#ff9966}
+body.admin #fwrap,body.admin .th-item,body.admin .post,body.admin #reply-box,body.admin #tv-hdr{background:#2a2a2a;border-color:#444;color:#e0e0e0}
+body.admin #fwrap h2{color:#ff9966}
 body.admin .ptag{background:#333;color:#bbb;border-color:#555}
 body.admin .ptag.on{background:#ff7733;color:#fff;border-color:#ff7733}
 body.admin .ctag-add{background:#333;color:#bbb;border-color:#555}
@@ -253,6 +189,8 @@ body.admin .doc-body h3{color:#ff9966;border-left-color:#ff7733}
 body.admin .suggest-list{background:#2a2a2a;border-color:#555}
 body.admin .suggest-item{color:#e0e0e0;border-bottom-color:#444}
 body.admin .suggest-item:hover{background:#3a3a3a}
+body.admin .op-recover{color:#888}
+body.admin .op-recover:hover{color:#ff9966}
 </style>
 </head>
 <body>
@@ -272,8 +210,8 @@ body.admin .suggest-item:hover{background:#3a3a3a}
 <div id="hd">
   <div id="hd-top">
     <button id="logo-btn" onclick="A.top()">
-      <div id="logo">キャラ萌え速報</div>
-      <div id="logo-tagline">キャラへの萌え・解釈を語る匿名掲示板</div>
+      <div id="logo">ダラルズ</div>
+      <div id="logo-tagline">キャラ萌え速報</div>
     </button>
     <div id="hd-r">
       <span id="r18tag">🔞解除中</span>
@@ -287,7 +225,6 @@ body.admin .suggest-item:hover{background:#3a3a3a}
 
 <div id="wrap">
 
-  <!-- スレ立てフォーム -->
   <div id="fwrap" style="display:none">
     <h2>■ 新しいスレッドを立てる</h2>
     <div style="font-size:11px;color:#888;margin-bottom:8px">タイトル・本文は必須です</div>
@@ -327,6 +264,8 @@ body.admin .suggest-item:hover{background:#3a3a3a}
     <input id="f-name" placeholder="名前（省略可・匿名になります）">
     <textarea id="f-body" placeholder="本文（必須・1000文字以内）" maxlength="1000"
       oninput="document.getElementById('fcc').textContent=this.value.length+'/1000'"></textarea>
+    <input id="f-oppass" placeholder="スレ主合言葉（任意・4文字以上）" maxlength="40">
+    <div class="help-text">💡 別の端末からスレ管理に戻りたい場合に必要です。<br>※忘れると別端末からの管理ができなくなります</div>
     <div class="form-foot">
       <span class="ccount" id="fcc">0/1000</span>
       <button class="sub-btn" onclick="A.submit()">スレを立てる</button>
@@ -343,7 +282,6 @@ body.admin .suggest-item:hover{background:#3a3a3a}
   </footer>
 </div>
 
-<!-- 利用規約モーダル -->
 <div id="doc-terms" class="doc-modal" onclick="if(event.target===this)A.hideDoc('terms')">
   <div class="doc-box">
     <div class="doc-hdr"><span>利用規約</span><button class="doc-close" onclick="A.hideDoc('terms')">×</button></div>
@@ -351,7 +289,6 @@ body.admin .suggest-item:hover{background:#3a3a3a}
       <h3>はじめに</h3>
       <p>「キャラ萌え速報」（以下「当掲示板」）は、キャラクターへの萌え・解釈・考察を匿名で語り合うことを目的とした掲示板です。当掲示板を利用する方（以下「ユーザー」）は、本規約に同意したものとみなします。</p>
       <p>本規約の内容は、必要に応じて予告なく変更することがあります。</p>
-
       <h3>当掲示板のコンセプト</h3>
       <ul>
         <li>キャラへの愛・萌え・解釈を自由に語れる場所です</li>
@@ -359,7 +296,6 @@ body.admin .suggest-item:hover{background:#3a3a3a}
         <li>二次創作・解釈考察を歓迎します</li>
         <li>海外ユーザーも歓迎（English welcome）</li>
       </ul>
-
       <h3>禁止事項</h3>
       <p>以下の行為を禁止します。違反した投稿は予告なく削除され、悪質と判断された場合はアクセス規制等の対象となります。</p>
       <ul>
@@ -383,7 +319,6 @@ body.admin .suggest-item:hover{background:#3a3a3a}
         <li>その他、運営が不適切と判断した行為</li>
       </ul>
       <p>根拠ある考察や意見交換は歓迎します。人格攻撃や決めつけのみの投稿はお控えください。判断に迷う内容は運営が個別に判断します。</p>
-
       <h3>スレッド・レス削除について</h3>
       <ul>
         <li>各レスの「報告」ボタン、またはスレ主による削除機能を通じて削除されます</li>
@@ -392,7 +327,6 @@ body.admin .suggest-item:hover{background:#3a3a3a}
         <li>運営が不適切と判断したスレッド・レスは予告なく削除する場合があります</li>
         <li>削除されたスレッドは復元できません</li>
       </ul>
-
       <h3>投稿コンテンツの取り扱い</h3>
       <ul>
         <li>ユーザーが投稿したテキスト・画像等に関する一切の責任は、投稿したユーザー自身に帰属します</li>
@@ -401,20 +335,17 @@ body.admin .suggest-item:hover{background:#3a3a3a}
         <li>投稿内容の著作権は原則として投稿者または正当な権利者に帰属しますが、ユーザーは当掲示板に対し、運営・宣伝・システム構築のために投稿内容を無償かつ非独占的に使用・複製・改変・公表する権利を許諾するものとします</li>
         <li>ユーザーは、当掲示板および当掲示板が権利を許諾した第三者に対して、著作者人格権を行使しないものとします</li>
       </ul>
-
       <h3>ログの保管と開示</h3>
       <ul>
         <li>投稿の削除有無にかかわらず、ログを一定期間保管しています</li>
         <li>意図的かつ悪質な荒らし行為については、プロバイダへの通報および情報開示請求の対応をすることがあります</li>
       </ul>
-
       <h3>免責事項</h3>
       <ul>
         <li>当掲示板の利用により発生したいかなる損害についても、運営は責任を負いません</li>
         <li>当掲示板に掲載された情報の正確性・有用性・最新性について、運営は保証しません</li>
         <li>サービスの中断・終了によりユーザーに生じた損害について、運営は責任を負いません</li>
       </ul>
-
       <h3>コンテンツの二次利用について</h3>
       <p>以下を遵守する条件で、当掲示板のコンテンツ使用（レス転載・切り抜き動画等）を認めます。</p>
       <ul>
@@ -425,23 +356,19 @@ body.admin .suggest-item:hover{background:#3a3a3a}
         <li>ステルスマーケティングに使用しないこと</li>
       </ul>
       <p>規約違反が認められた場合、運営の判断により当該利用者へのコンテンツ提供を停止する場合があります。</p>
-
       <h3>お問い合わせ</h3>
       <p>削除依頼・規約違反の通報は、サイト内の各レスにある「報告」ボタンよりお願いします。</p>
-
       <div class="meta">2026年5月制定</div>
     </div>
   </div>
 </div>
 
-<!-- プライバシーポリシーモーダル -->
 <div id="doc-privacy" class="doc-modal" onclick="if(event.target===this)A.hideDoc('privacy')">
   <div class="doc-box">
     <div class="doc-hdr"><span>プライバシーポリシー</span><button class="doc-close" onclick="A.hideDoc('privacy')">×</button></div>
     <div class="doc-body">
       <h3>基本方針</h3>
       <p>「キャラ萌え速報」（以下「当掲示板」）は、ユーザーのプライバシーを尊重し、個人情報の適切な取り扱いに努めます。本ポリシーは、当掲示板が取得する情報とその利用方法について定めるものです。</p>
-
       <h3>取得する情報</h3>
       <ul>
         <li><strong>投稿内容</strong>：ユーザーが当掲示板に書き込んだテキスト、選択したタグ等</li>
@@ -450,7 +377,6 @@ body.admin .suggest-item:hover{background:#3a3a3a}
         <li><strong>IPアドレス</strong>：通信時に技術的に取得される情報。悪質な利用の対応にのみ使用します</li>
       </ul>
       <p>当掲示板はユーザー登録を必要としません。氏名・住所・電話番号・メールアドレス等の個人情報を直接取得することはありません。</p>
-
       <h3>取得した情報の利用目的</h3>
       <ul>
         <li>掲示板サービスの提供・運営・維持</li>
@@ -458,7 +384,6 @@ body.admin .suggest-item:hover{background:#3a3a3a}
         <li>サービスの改善・新機能の開発</li>
         <li>統計データの作成（個人を特定しない形式）</li>
       </ul>
-
       <h3>第三者への提供</h3>
       <p>取得した情報を第三者に提供することは原則としてありませんが、以下の場合は除きます。</p>
       <ul>
@@ -466,39 +391,31 @@ body.admin .suggest-item:hover{background:#3a3a3a}
         <li>人の生命・身体・財産の保護のために必要な場合</li>
         <li>悪質な荒らし行為等に対する、プロバイダへの通報および情報開示請求の場合</li>
       </ul>
-
       <h3>外部サービスの利用</h3>
       <ul>
         <li><strong>Supabase</strong>：データベースとして利用しています。投稿内容等のデータはSupabaseのサーバーに保存されます</li>
         <li><strong>Vercel</strong>：サイトのホスティングに利用しています</li>
         <li>今後、アクセス解析や広告サービスを導入することがあります。その際は本ポリシーを更新します。</li>
       </ul>
-
       <h3>Cookie・localStorageについて</h3>
       <p>当掲示板は、ユーザー体験の向上のためlocalStorageを使用し、匿名識別子（uid）を保存します。ブラウザの設定により無効化できますが、その場合いいね・報告等の機能が正しく動作しないことがあります。</p>
-
       <h3>EUデータ主体について</h3>
       <p>当掲示板はEU内のデータ主体へのサービス提供を目的としていません。</p>
-
       <h3>ポリシーの変更</h3>
       <p>本ポリシーは、必要に応じて予告なく変更することがあります。重要な変更がある場合は、サイト上で告知します。</p>
-
       <h3>お問い合わせ</h3>
       <p>本ポリシーに関するお問い合わせは、サイト内の「報告」ボタンよりお願いします。</p>
-
       <div class="meta">2026年5月制定</div>
     </div>
   </div>
 </div>
 
-<!-- このサイトについてモーダル -->
 <div id="doc-about" class="doc-modal" onclick="if(event.target===this)A.hideDoc('about')">
   <div class="doc-box">
     <div class="doc-hdr"><span>このサイトについて</span><button class="doc-close" onclick="A.hideDoc('about')">×</button></div>
     <div class="doc-body">
       <h3>キャラ萌え速報とは</h3>
       <p>キャラクターへの萌え・解釈・考察を語る匿名掲示板です。叩きや誹謗中傷のない、誰もが安心して推しを語れる場所を目指しています。</p>
-
       <h3>使い方</h3>
       <ul>
         <li><strong>スレを立てる</strong>：右上の「＋スレを立てる」ボタンから新しいスレを作成できます</li>
@@ -506,8 +423,8 @@ body.admin .suggest-item:hover{background:#3a3a3a}
         <li><strong>いいね</strong>：気に入ったレスにハートマークを送れます（1人1回）</li>
         <li><strong>タグ機能</strong>：掲載誌・作品名・キャラ名のタグを付けて、同じ推しのスレを見つけやすくします</li>
         <li><strong>報告</strong>：規約違反のレスを見つけたら「報告」ボタンを押してください</li>
+        <li><strong>スレ主合言葉</strong>：スレ立て時に設定すれば、別の端末からでもスレ管理に戻れます</li>
       </ul>
-
       <h3>特徴</h3>
       <ul>
         <li>匿名で投稿できます（デフォルト名：萌えてる匿名さん）</li>
@@ -516,27 +433,14 @@ body.admin .suggest-item:hover{background:#3a3a3a}
         <li>完走スレのいいね最多レスには金メダル🥇が付きます</li>
         <li>海外ユーザーも歓迎（English welcome）</li>
       </ul>
-
       <div class="meta">© キャラ萌え速報</div>
     </div>
   </div>
 </div>
 
 <script>
-/* ============================================================
-   キャラ萌え速報 - Supabase接続版
-   ------------------------------------------------------------
-   元のlocalStorage版から、データの保存先をSupabaseに変更。
-   表示まわり(renderList/renderThread等)のコードは元のまま。
-   データの「読み書き」だけSupabaseのDBを使うようにしている。
-   ============================================================ */
-
-/* ▼▼▼ ここを自分のSupabaseの値に書き換える ▼▼▼ */
 var SUPABASE_URL = "https://xflcbgsonmvvzbefbreq.supabase.co";
 var SUPABASE_KEY = "sb_publishable_in8cVtZwe3SbE0l6Y3Jf2Q_awVX6mJY";
-/* ▲▲▲ ここまで ▲▲▲ */
-
-/* Supabaseクライアントを作る。これ経由でDBを読み書きする */
 var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 var A=(function(){
@@ -545,10 +449,8 @@ var MAGS=["週刊少年ジャンプ","週刊少年マガジン","週刊少年サ
 var TC={"週刊少年ジャンプ":"#cc0000","週刊少年マガジン":"#1a56a0","週刊少年サンデー":"#2e7d32","少年チャンピオン":"#e65100","ジャンプ＋":"#880044","その他漫画":"#555","アニメ":"#6a1a6a","ゲーム":"#1565c0"};
 var KANSO=200;
 var st={thread:null,cat:"すべて",q:"",sort:"new"};
-/* th: スレ一覧。元のlocalStorage版と同じ入れ子構造で持つ
-   (各スレが posts[] を内側に持ち、各postに likeCount/likedByMe が付く) */
 var th=[];
-var loading=true;   /* データ読み込み中フラグ */
+var loading=true;
 var fMag="",fWork="",fChara="";
 
 function p(n){return("0"+n).slice(-2);}
@@ -557,50 +459,87 @@ function fmt(ts){var d=new Date(ts);return d.getFullYear()+"/"+p(d.getMonth()+1)
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
 function tcol(t){return TC[t]||"#888";}
 
-/* 端末ごとの匿名ID。これは「誰がいいねしたか」「誰がスレ主か」の
-   判定に使うだけなので、localStorageに残して問題ない */
 function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
 function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 var myIp=(function(){var v=lsGet("kmh_ip");if(!v){v=Math.random().toString(36).slice(2,10).toUpperCase();lsSet("kmh_ip",v);}return v;})();
 
 /* ============================================================
-   管理者モード
+   スレ主合言葉認証
    ------------------------------------------------------------
-   隠しコマンド「nanohataiga0808」を連続入力すると有効化される。
-   有効時は全スレ・全レスに対する削除権限がUIに出てくる。
-   注意: これはあくまでUI上の権限で、本格的な権限管理は
-   将来Supabase Auth + RLS厳格化で実装する想定。
+   localStorageに「合言葉認証済みのスレIDリスト」を保存する。
+   別端末から合言葉を入力して認証成功すると、そのスレIDがリスト入りし、
+   以降は再入力なしでスレ主として振る舞える。
+   ============================================================ */
+function getVerifiedOps(){
+  try{
+    var v=lsGet("kmh_op_verified");
+    return v?JSON.parse(v):[];
+  }catch(e){return [];}
+}
+function addVerifiedOp(threadId){
+  var list=getVerifiedOps();
+  var idStr=String(threadId);
+  if(list.indexOf(idStr)<0){
+    list.push(idStr);
+    lsSet("kmh_op_verified",JSON.stringify(list));
+  }
+}
+function isVerifiedOp(threadId){
+  return getVerifiedOps().indexOf(String(threadId))>=0;
+}
+
+/* スレ詳細画面で「スレ主に戻る」リンクをクリックしたとき */
+async function recoverOp(tid){
+  var pwd=prompt("このスレを立てたときの合言葉を入力してください：");
+  if(pwd===null) return; /* キャンセル */
+  pwd=pwd.trim();
+  if(pwd.length<4){alert("合言葉は4文字以上です。");return;}
+
+  try{
+    var res=await sb.from("threads").select("op_password").eq("id",Number(tid)).single();
+    if(res.error) throw res.error;
+    var savedPwd=res.data&&res.data.op_password;
+    if(!savedPwd){
+      alert("このスレッドには合言葉が設定されていません。");
+      return;
+    }
+    if(savedPwd===pwd){
+      addVerifiedOp(tid);
+      alert("✅ スレ主として認証されました。\nこの端末ではこのスレを管理できます。");
+      render();
+    }else{
+      alert("❌ 合言葉が違います。");
+    }
+  }catch(e){
+    alert("認証に失敗しました: "+(e.message||e));
+  }
+}
+
+/* ============================================================
+   管理者モード
    ============================================================ */
 var ADMIN_KEY="nanohataiga0808";
 var adminMode=lsGet("kmh_admin")==="1";
 var adminBuf="";
 window.addEventListener("keydown",function(e){
-  /* テキスト入力中(input/textarea)は隠しコマンドを無効にする
-     →スレ立て本文で偶然「nanohataiga0808」を打っても誤発動しない */
   var tag=(e.target&&e.target.tagName||"").toLowerCase();
   if(tag==="input"||tag==="textarea")return;
-  /* Ctrl/Alt/Metaを使った操作中は無視(ショートカット衝突回避) */
   if(e.ctrlKey||e.altKey||e.metaKey)return;
-  /* 1文字キーだけ受け取る */
   if(e.key&&e.key.length===1){
     adminBuf+=e.key.toLowerCase();
-    /* バッファが長くなりすぎないよう、必要な長さだけ保持 */
     if(adminBuf.length>ADMIN_KEY.length) adminBuf=adminBuf.slice(-ADMIN_KEY.length);
     if(adminBuf===ADMIN_KEY){
       adminMode=!adminMode;
       lsSet("kmh_admin",adminMode?"1":"0");
       adminBuf="";
       updateAdminBadge();
-      /* 表示を即座に切り替える */
       if(typeof render==="function") render();
       alert(adminMode?"🔐 管理者モードを有効にしました":"管理者モードを解除しました");
     }
   }
 });
 
-/* 画面下に管理者モードの状態バッジを表示する */
 function updateAdminBadge(){
-  /* bodyにadminクラスを付け外し → CSSでダークモード適用 */
   if(adminMode){
     document.body.classList.add("admin");
   }else{
@@ -625,21 +564,15 @@ function updateAdminBadge(){
   el.textContent="🔐 管理者モード";
   el.style.display=adminMode?"block":"none";
 }
-/* 起動時に状態バッジを表示する(モードONなら) */
 setTimeout(updateAdminBadge,100);
 
 /* ============================================================
    Supabaseとのデータやりとり
    ============================================================ */
-
-/* DBから全データを読み込んで、th配列を組み立て直す。
-   3つのテーブル(threads/posts/likes)を取得し、
-   元の「スレの中にpostsが入っている」形に合体させる。 */
 async function loadAll(){
   loading=true;
   render();
   try{
-    /* 4テーブルを並行で取得 */
     var tRes=await sb.from("threads").select("*").order("id",{ascending:true});
     var pRes=await sb.from("posts").select("*").order("id",{ascending:true});
     var lRes=await sb.from("likes").select("*");
@@ -655,26 +588,22 @@ async function loadAll(){
     var likes=lRes.data||[];
     var reports=rRes.data||[];
 
-    /* 各postの「いいね数」と「自分がいいね済みか」を集計 */
     var likeCount={},likedMine={};
     likes.forEach(function(lk){
       likeCount[lk.post_id]=(likeCount[lk.post_id]||0)+1;
       if(lk.uid===myIp) likedMine[lk.post_id]=true;
     });
 
-    /* 各postの「報告数」と「自分が報告済みか」を集計 */
     var reportCount={},reportedMine={};
     reports.forEach(function(rp){
       reportCount[rp.post_id]=(reportCount[rp.post_id]||0)+1;
       if(rp.uid===myIp) reportedMine[rp.post_id]=true;
     });
 
-    /* postsをthread_idごとにまとめる */
     var byThread={};
     posts.forEach(function(po){
       if(!byThread[po.thread_id]) byThread[po.thread_id]=[];
       var rc=reportCount[po.id]||0;
-      /* 10回以上報告されたレスは自動的に非表示扱いにする */
       var autoHidden=rc>=10;
       byThread[po.thread_id].push({
         id:po.id,
@@ -692,7 +621,6 @@ async function loadAll(){
       });
     });
 
-    /* スレを新しい順(id降順)に並べて、postsをくっつける */
     th=threads.slice().reverse().map(function(t){
       var tags=[];
       if(t.mag_tag) tags.push(t.mag_tag);
@@ -706,25 +634,23 @@ async function loadAll(){
         workTag:t.work_tag||"",
         charaTag:t.chara_tag||"",
         kanso:!!t.kanso,
+        hasOpPassword:!!t.op_password,  /* 合言葉が設定されているか(中身は持たない) */
         posts:byThread[t.id]||[]
       };
     });
 
-    /* postが0件のスレは表示が壊れるので除外(通常は起こらない) */
     th=th.filter(function(t){return t.posts.length>0;});
 
     loading=false;
 
-    /* もしスレ詳細を開いていたら、最新データに差し替える */
     if(st.thread){
       var found=null;
       for(var i=0;i<th.length;i++){if(th[i].id===st.thread.id){found=th[i];break;}}
       st.thread=found;
     }else{
-      /* 初回ロード時など、まだ何も開いていない状態でURLにハッシュがある場合は反映 */
       if(location.hash){
         applyHash();
-        return; /* applyHash内でrender済 */
+        return;
       }
     }
     render();
@@ -737,9 +663,7 @@ async function loadAll(){
   }
 }
 
-/* ============================================================
-   タグUI (元コードのまま)
-   ============================================================ */
+/* タグUI */
 function renderTagUI(){
   var pt=document.getElementById("preset-tags");
   if(pt){
@@ -781,25 +705,16 @@ function setChara(){
   renderTagUI();
 }
 
-/* ===サジェスト===
-   作品名サジェストとキャラ名サジェストを別々に集計する。
-   既存スレのwork_tag/chara_tagカラムから、使用回数の多い順に並べる。
-   ヤフー検索やPixiv検索のように「入力途中で人気順に絞り込み」を実現。 */
 function getWorkTags(){
   var all={};
-  th.forEach(function(t){
-    if(t.workTag) all[t.workTag]=(all[t.workTag]||0)+1;
-  });
+  th.forEach(function(t){if(t.workTag) all[t.workTag]=(all[t.workTag]||0)+1;});
   return Object.keys(all).sort(function(a,b){return all[b]-all[a];});
 }
 function getCharaTags(){
   var all={};
-  th.forEach(function(t){
-    if(t.charaTag) all[t.charaTag]=(all[t.charaTag]||0)+1;
-  });
+  th.forEach(function(t){if(t.charaTag) all[t.charaTag]=(all[t.charaTag]||0)+1;});
   return Object.keys(all).sort(function(a,b){return all[b]-all[a];});
 }
-/* 旧getAllTagsは互換のため残す(検索などで使われる可能性) */
 function getAllTags(){
   var all={};
   th.forEach(function(t){
@@ -814,14 +729,12 @@ function showSuggest(inpId,listId){
   if(!inp||!list)return;
   var val=inp.value.trim().toLowerCase();
   if(val.length<1){list.style.display="none";return;}
-  /* 入力欄の種類によって候補のソースを切り替える */
   var pool;
   if(inpId==="work-inp") pool=getWorkTags();
   else if(inpId==="chara-inp") pool=getCharaTags();
   else pool=getAllTags();
   var matched=pool.filter(function(tg){return tg.toLowerCase().indexOf(val)>=0;});
   if(!matched.length){list.style.display="none";return;}
-  /* 最大5件まで表示(人気順) */
   list.innerHTML=matched.slice(0,5).map(function(tg){
     return '<div class="suggest-item" onclick="A.pickSuggest(this)" data-inp="'+esc(inpId)+'" data-list="'+esc(listId)+'" data-v="'+esc(tg)+'">'+esc(tg)+'</div>';
   }).join("");
@@ -834,9 +747,7 @@ function pickSuggest(el){
   if(list)list.style.display="none";
 }
 
-/* ============================================================
-   フォーム
-   ============================================================ */
+/* フォーム */
 function toggleForm(){
   var fw=document.getElementById("fwrap"),nb=document.getElementById("new-btn");
   var open=fw.style.display==="block";
@@ -849,40 +760,45 @@ function showErr(id,show){
   el.className="field-err"+(show?" show":"");
 }
 
-/* スレ立て: Supabaseのthreadsに1件、postsに1件insert */
 async function submit(){
   var title=(document.getElementById("f-title")||{}).value||"";
   var body=(document.getElementById("f-body")||{}).value||"";
   var c=(document.getElementById("f-cat")||{}).value||"";
-  /* カテゴリが選ばれてなかったら自動的に「雑談」にする(沙弥さん仕様) */
+  var opPass=(document.getElementById("f-oppass")||{}).value||"";
   if(!c) c="雑談";
   var ok=true;
   showErr("err-cat",false);
   showErr("err-title",!title.trim());if(!title.trim())ok=false;
-  showErr("err-body",!body.trim());if(!body.trim())ok=false;
   var catEl=document.getElementById("f-cat");if(catEl)catEl.className="";
   var titEl=document.getElementById("f-title");if(titEl)titEl.className=!title.trim()?"err":"";
   var bodEl=document.getElementById("f-body");if(bodEl)bodEl.className=!body.trim()?"err":"";
-  if(!ok){var first=document.querySelector(".field-err.show");if(first)first.scrollIntoView({behavior:"smooth",block:"center"});return;}
+  if(!body.trim())ok=false;
+  /* スレ主合言葉のバリデーション: 入力された場合は4文字以上必須 */
+  opPass=opPass.trim();
+  if(opPass&&opPass.length<4){
+    alert("スレ主合言葉は4文字以上で設定してください。空欄でもOKです。");
+    var pwEl=document.getElementById("f-oppass");if(pwEl)pwEl.focus();
+    return;
+  }
+  if(!ok)return;
 
   var name=(document.getElementById("f-name")||{}).value||"";
   var subBtn=document.querySelector("#fwrap .sub-btn");
   if(subBtn){subBtn.disabled=true;subBtn.textContent="送信中...";}
 
   try{
-    /* 1) スレッド本体をinsert。.select()で作られた行(idつき)が返る */
     var tIns=await sb.from("threads").insert({
       title:title.trim(),
       cat:c,
       mag_tag:fMag||null,
       work_tag:fWork||null,
       chara_tag:fChara||null,
-      op_uid:myIp
+      op_uid:myIp,
+      op_password:opPass||null
     }).select();
     if(tIns.error) throw tIns.error;
     var newThread=tIns.data[0];
 
-    /* 2) 1レス目(スレ本文)をinsert */
     var pIns=await sb.from("posts").insert({
       thread_id:newThread.id,
       name:name.trim(),
@@ -891,18 +807,20 @@ async function submit(){
     });
     if(pIns.error) throw pIns.error;
 
-    /* 入力欄リセット */
     fMag="";fWork="";fChara="";
-    ["f-title","f-name","f-body"].forEach(function(id){var el=document.getElementById(id);if(el){el.value="";el.className="";}});
+    ["f-title","f-name","f-body","f-oppass"].forEach(function(id){var el=document.getElementById(id);if(el){el.value="";el.className="";}});
     var fcat=document.getElementById("f-cat");if(fcat){fcat.value="";fcat.className="";}
     ["err-cat","err-title","err-body"].forEach(function(id){showErr(id,false);});
     var fcc=document.getElementById("fcc");if(fcc)fcc.textContent="0/1000";
     document.getElementById("fwrap").style.display="none";
     var nb=document.getElementById("new-btn");if(nb)nb.textContent="\uff0b \u30b9\u30ec\u3092\u7acb\u3066\u308b";
 
-    /* 作ったスレのIDを覚えておいて、loadAll後にそのスレを開く */
+    /* 合言葉設定済みの場合、その情報をユーザーに見せて忘れないように促す */
+    if(opPass){
+      alert("✅ スレを作成しました。\n\nスレ主合言葉「"+opPass+"」を控えておいてください。\n別の端末からこのスレを管理する際に必要です。");
+    }
+
     var newThreadId=newThread.id;
-    /* 最新データを読み直してから、新スレを開く */
     await loadAll();
     for(var i=0;i<th.length;i++){
       if(th[i].id===newThreadId){st.thread=th[i];updateHash();render();break;}
@@ -915,7 +833,7 @@ async function submit(){
   }
 }
 
-/* ===カテゴリ・検索=== */
+/* カテゴリ・検索 */
 function renderCats(){
   document.getElementById("catnav-in").innerHTML=CATS.map(function(c){
     var on=st.cat===c&&!st.thread;
@@ -939,15 +857,12 @@ function render(){
 function doSearch(){var inp=document.getElementById("sq");if(inp){st.q=inp.value.trim();render();}}
 function clearSearch(){st.q="";var inp=document.getElementById("sq");if(inp)inp.value="";render();}
 function searchKey(e){if(e.key==="Enter")doSearch();}
-/* ランキングのキャラ名/作品名をクリックしたとき呼ばれる。
-   検索ワードにタグを設定し、スレ一覧画面で絞り込み表示する */
 function searchByTag(tag){
   st.thread=null;
   st.cat="すべて";
   st.q=tag;
   updateHash();
   render();
-  /* 検索バーにもその値を反映(ユーザーが見て分かるように) */
   setTimeout(function(){
     var inp=document.getElementById("sq");
     if(inp) inp.value=tag;
@@ -955,7 +870,6 @@ function searchByTag(tag){
   },50);
 }
 
-/* ===ランキング=== */
 function calcRanks(){
   var thRank=th.slice().sort(function(a,b){return b.posts.length-a.posts.length;}).slice(0,5);
   var workMap={};
@@ -973,7 +887,6 @@ function calcRanks(){
   return{thRank:thRank,workRank:workRank,charaRank:charaRank};
 }
 
-/* ===バッジ=== */
 function makeBadges(tags,cat){
   var html="";
   if(cat) html+='<span class="th-cat">'+esc(cat)+'</span>';
@@ -981,7 +894,6 @@ function makeBadges(tags,cat){
   return html;
 }
 
-/* ===スレ一覧=== */
 function sortBy(s){st.sort=s;render();}
 
 function renderList(){
@@ -1024,7 +936,6 @@ function renderList(){
       return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span><span class="rank-name"><a onclick="A.searchByTag(this.dataset.t)" data-t="'+esc(x.name)+'">'+esc(x.name)+'</a></span><span class="rank-val">'+x.val+'スレ</span></div>';
     }).join(""):'<div class="rank-item" style="color:#bbb;font-size:11px">データなし</div>';
     top+='<div class="rank-wrap"><div class="rank-box"><div class="rank-hdr">📣 話題スレ TOP5</div>'+thH+'</div></div>';
-    /* 話題作品/キャラのTOP5を、折りたたみなしで常時表示する */
     top+='<div class="rank-wrap">'+
       '<div class="rank-box"><div class="rank-hdr">🎬 話題作品 TOP5</div>'+wkH+'</div>'+
       '<div class="rank-box"><div class="rank-hdr">⭐ 話題キャラ TOP5</div>'+chH+'</div>'+
@@ -1043,7 +954,6 @@ function renderList(){
   }).join("")+'</div>';
 }
 
-/* ===メダル=== */
 function getMedalPost(t){
   if(!t.kanso&&t.posts.length<KANSO)return null;
   var best=null,bc=-1;
@@ -1051,14 +961,17 @@ function getMedalPost(t){
   return bc>0?best:null;
 }
 
-/* ===スレビュー=== */
 function renderThread(){
   var t=st.thread;
   var isK=t.kanso||t.posts.length>=KANSO;
   var medalPost=getMedalPost(t);
-  var isOP=t.posts.length>0&&t.posts[0].uid===myIp;
-  /* 管理者モード時はスレ主と同等以上の権限を持つ */
+  /* スレ主判定: 1レス目のuid一致 OR この端末で合言葉認証済み */
+  var isOPByUid=t.posts.length>0&&t.posts[0].uid===myIp;
+  var isOPByPassword=isVerifiedOp(t.id);
+  var isOP=isOPByUid||isOPByPassword;
   var canModerateThread=isOP||adminMode;
+  /* 「スレ主に戻る」リンクの表示条件: 自分はスレ主ではない、かつ合言葉が設定されている */
+  var showRecover=!isOP&&t.hasOpPassword;
   var badges=makeBadges(t.tags,t.cat);
   var posts=t.posts.map(function(pst,i){
     if(pst.deleted)return '<div class="post"><div class="pmeta"><span class="pno">'+(i+1)+'</span></div><div class="pbody" style="color:#bbb;font-size:12px">このレスは削除されています</div></div>';
@@ -1070,8 +983,8 @@ function renderThread(){
     var likeCnt=pst.likeCount||0;
     var isMine=pst.likedByMe;
     var isOwner=pst.uid===myIp;
-    /* 管理者モード時はどのレスでも削除できる */
-    var canDeletePost=isOwner||adminMode;
+    /* 合言葉認証済み or 管理者モードなら自分のレスじゃなくても削除可 */
+    var canDeletePost=isOwner||adminMode||isOPByPassword;
     return '<div class="post'+(showMedal?" medal-post":"")+'">'+
       '<div class="pmeta">'+
       (showMedal?'<span style="font-size:14px;margin-right:3px">🥇</span>':"")+
@@ -1095,6 +1008,7 @@ function renderThread(){
     (canModerateThread&&!isK&&t.posts.length>1?'<br><button class="kanso-op-btn" onclick="A.doKanso(this.dataset.tid)" data-tid="'+esc(t.id)+'">✅ 完走にする</button>':"")+
     (canModerateThread?'&nbsp;<button class="kanso-op-btn" style="border-color:#c00;color:#c00" onclick="A.deleteThread(this.dataset.tid)" data-tid="'+esc(t.id)+'">🗑 スレを削除</button>':"")+
     (isK?'<br><span class="kanso-done-label">✅ 完走スレ</span>':"")+
+    (showRecover?'<br><a class="op-recover" onclick="A.recoverOp(this.dataset.tid)" data-tid="'+esc(t.id)+'">🔑 スレ主に戻る（合言葉を入力）</a>':"")+
     '</div>'+
     '<div id="posts-wrap">'+posts+'</div>'+
     '<div id="reply-box"><h3>■ 返信する</h3>'+
@@ -1103,37 +1017,20 @@ function renderThread(){
     '<div class="form-foot"><span></span><button class="sub-btn" onclick="A.reply()">書き込む</button></div></div>';
 }
 
-/* ============================================================
-   アクション (Supabase書き込み)
-   ============================================================ */
-/* ============================================================
-   URLハッシュとの連動
-   ------------------------------------------------------------
-   #t=42 のような形でスレIDをURLに残す。これにより:
-   - F5(再読み込み)してもスレ詳細が開いたまま
-   - スレのURLをコピーして他人に共有できる
-   - ブラウザの「戻る」「進む」ボタンが効く
-   ============================================================ */
-
-/* 現在の状態に応じてURLハッシュを更新する。
-   無限ループを防ぐため、hashchangeイベントを発火させない方法で書き換える */
+/* アクション */
 var skipNextHashChange=false;
 function updateHash(){
   var newHash="";
   if(st.thread) newHash="#t="+st.thread.id;
-  /* 既に同じハッシュなら何もしない(履歴が荒れるのを防ぐ) */
   if(location.hash===newHash) return;
   skipNextHashChange=true;
   if(newHash){
     location.hash=newHash;
   }else{
-    /* ハッシュを綺麗に消す(history.pushStateで履歴を残す) */
     history.pushState("",document.title,location.pathname+location.search);
   }
 }
 
-/* URLハッシュからスレIDを取り出して、対応するスレを開く。
-   loadAll完了時とhashchange発生時の両方から呼ばれる */
 function applyHash(){
   var m=location.hash.match(/^#t=(\d+)$/);
   if(m){
@@ -1141,17 +1038,14 @@ function applyHash(){
     for(var i=0;i<th.length;i++){
       if(th[i].id===id){st.thread=th[i];render();return;}
     }
-    /* ハッシュにIDはあるけどスレが見つからない=削除済み等。一覧に戻す */
     st.thread=null;
     render();
   }else{
-    /* ハッシュなし=一覧表示 */
     st.thread=null;
     render();
   }
 }
 
-/* ブラウザの戻る/進るボタンや、ユーザーが直接URLバーをいじったときに発火 */
 window.addEventListener("hashchange",function(){
   if(skipNextHashChange){skipNextHashChange=false;return;}
   applyHash();
@@ -1160,23 +1054,18 @@ window.addEventListener("hashchange",function(){
 function top(){st.thread=null;st.q=""; var fw=document.getElementById("fwrap"); if(fw)fw.style.display="none"; updateHash(); render();}
 function cat(c){st.cat=c;st.thread=null; updateHash(); render();}
 function openT(id){
-  /* idは数値なので、文字列で渡ってきても比較できるよう緩めに照合 */
   for(var i=0;i<th.length;i++){if(String(th[i].id)===String(id)){st.thread=th[i]; updateHash(); render();return;}}
 }
 
-/* いいね: likesテーブルに1行insert。
-   DB側のunique(post_id,uid)制約で2回目は自動で弾かれる */
 async function doLike(pid){
-  /* 表示中スレから対象postを探す */
   var post=null;
   if(st.thread){
     for(var i=0;i<st.thread.posts.length;i++){
       if(String(st.thread.posts[i].id)===String(pid)){post=st.thread.posts[i];break;}
     }
   }
-  if(!post||post.likedByMe)return;   /* 既にいいね済なら何もしない */
+  if(!post||post.likedByMe)return;
 
-  /* 先に画面を更新(体感を速くする) */
   post.likedByMe=true;
   post.likeCount=(post.likeCount||0)+1;
   render();
@@ -1184,11 +1073,9 @@ async function doLike(pid){
   try{
     var res=await sb.from("likes").insert({post_id:Number(pid),uid:myIp});
     if(res.error){
-      /* unique制約違反(コード23505)は「既にいいね済」なので無視 */
       if(res.error.code!=="23505") throw res.error;
     }
   }catch(e){
-    /* 失敗したら表示を元に戻す */
     post.likedByMe=false;
     post.likeCount=Math.max(0,(post.likeCount||1)-1);
     render();
@@ -1196,7 +1083,6 @@ async function doLike(pid){
   }
 }
 
-/* メダル表示/非表示の切り替え: postsのmedal_hiddenをupdate */
 async function toggleMedal(pid){
   var post=null;
   if(st.thread){
@@ -1216,7 +1102,6 @@ async function toggleMedal(pid){
   }
 }
 
-/* 完走にする: threadsのkansoをtrueにupdate */
 async function doKanso(tid){
   if(!confirm("このスレッドを完走にしますか？"))return;
   try{
@@ -1228,8 +1113,6 @@ async function doKanso(tid){
   }
 }
 
-/* スレ削除: threadsから1行delete。
-   postsとlikesはSQLのon delete cascadeで自動的に消える */
 async function deleteThread(tid){
   if(!confirm("このスレッドを削除しますか？元に戻せません。"))return;
   try{
@@ -1242,8 +1125,6 @@ async function deleteThread(tid){
   }
 }
 
-/* レス削除: 行は残したまま、deletedフラグをtrueにして本文を空にする
-   (レス番号がずれないようにするため、物理削除はしない) */
 async function deletePost(tid,pid){
   if(!confirm("このレスを削除しますか？"))return;
   try{
@@ -1255,11 +1136,10 @@ async function deletePost(tid,pid){
   }
 }
 
-/* 規約・プラポリ等のモーダル表示 */
 function showDoc(name){
   var el=document.getElementById("doc-"+name);
   if(el) el.classList.add("on");
-  document.body.style.overflow="hidden"; /* スクロールロック */
+  document.body.style.overflow="hidden";
 }
 function hideDoc(name){
   var el=document.getElementById("doc-"+name);
@@ -1267,12 +1147,8 @@ function hideDoc(name){
   document.body.style.overflow="";
 }
 
-/* 報告: reportsテーブルに1行insert。
-   DB側のunique(post_id,uid)制約で2回目は自動で弾かれる。
-   10回到達したら次回の読み込み時に自動的に非表示扱いになる(loadAll内で判定)。 */
 async function report(pid){
   if(!pid){return;}
-  /* 表示中スレから対象postを探して、既に報告済みかチェック */
   var post=null;
   if(st.thread){
     for(var i=0;i<st.thread.posts.length;i++){
@@ -1288,18 +1164,15 @@ async function report(pid){
   try{
     var res=await sb.from("reports").insert({post_id:Number(pid),uid:myIp});
     if(res.error){
-      /* unique制約違反(コード23505)は「既に報告済」なので静かに扱う */
       if(res.error.code==="23505"){
         alert("このレスは既に報告済みです。");
         return;
       }
       throw res.error;
     }
-    /* 即座に画面反映: post.reportedByMe=trueにし、count++ */
     if(post){
       post.reportedByMe=true;
       post.reportCount=(post.reportCount||0)+1;
-      /* 10回到達したら自動非表示にも反映 */
       if(post.reportCount>=10){
         post.autoHidden=true;
         post.body="";
@@ -1313,16 +1186,15 @@ async function report(pid){
   }
 }
 
-/* 返信: postsに1行insert */
 async function reply(){
   var body=(document.getElementById("r-body")||{}).value||"";
   if(!body.trim())return;
   var name=(document.getElementById("r-name")||{}).value||"";
-  /* 「スレ主」を名乗れるのはスレを立てた本人(1レス目のuid=自分)のみ。
-     なりすまし防止のため、本人以外が「スレ主」を入れたら弾く */
   if(name.trim()==="スレ主"){
-    var isOP=st.thread&&st.thread.posts.length>0&&st.thread.posts[0].uid===myIp;
-    if(!isOP){alert("「スレ主」はスレを立てた方専用です。");return;}
+    /* スレ主名乗りの判定: uid一致 OR 合言葉認証済み */
+    var isOPByUid=st.thread&&st.thread.posts.length>0&&st.thread.posts[0].uid===myIp;
+    var isOPByPassword=st.thread&&isVerifiedOp(st.thread.id);
+    if(!(isOPByUid||isOPByPassword)){alert("「スレ主」はスレを立てた方専用です。");return;}
   }
 
   var replyBtn=document.querySelector("#reply-box .sub-btn");
@@ -1346,16 +1218,7 @@ async function reply(){
   }
 }
 
-function toggleRank(hdr){
-  var box=hdr.nextElementSibling;if(!box)return;
-  var open=box.style.display!=="none";
-  box.style.display=open?"none":"block";
-  hdr.textContent=(open?"▽":"△")+hdr.textContent.slice(1);
-}
-
-/* ============================================================
-   起動: Supabaseからデータを読み込む
-   ============================================================ */
+/* 起動 */
 loadAll();
 
 return{top:top,cat:cat,openT:openT,toggleForm:toggleForm,submit:submit,reply:reply,
@@ -1363,7 +1226,7 @@ return{top:top,cat:cat,openT:openT,toggleForm:toggleForm,submit:submit,reply:rep
   searchKey:searchKey,doSearch:doSearch,clearSearch:clearSearch,searchByTag:searchByTag,report:report,
   selectMag:selectMag,clearMag:clearMag,clearWork:clearWork,clearChara:clearChara,
   setWork:setWork,setChara:setChara,renderTagUI:renderTagUI,showSuggest:showSuggest,pickSuggest:pickSuggest,
-  sortBy:sortBy,showDoc:showDoc,hideDoc:hideDoc};
+  sortBy:sortBy,showDoc:showDoc,hideDoc:hideDoc,recoverOp:recoverOp};
 })();
 </script>
 </body>
