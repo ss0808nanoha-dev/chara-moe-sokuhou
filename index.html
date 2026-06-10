@@ -1152,9 +1152,12 @@ async function submit(){
         return;
       }
       if(subBtn) subBtn.textContent=t("thumb_uploading");
-      var ext=(thumbFile.name.split(".").pop()||"jpg").toLowerCase().replace(/[^a-z0-9]/g,"")||"jpg";
-      var path=myIp+"_"+Date.now()+"."+ext;
-      var up=await sb.storage.from("thumbnails").upload(path,thumbFile,{cacheControl:"3600",upsert:false});
+      /* ファイル名は拡張子に依存せず必ず通る安全な形にする */
+      var rawExt=(thumbFile.name.split(".").pop()||"").toLowerCase();
+      var safeExt=/^(jpg|jpeg|png|gif|webp)$/.test(rawExt)?rawExt:"jpg";
+      var path="thumb_"+myIp+"_"+Date.now()+"."+safeExt;
+      var contentType=thumbFile.type&&thumbFile.type.indexOf("image/")===0?thumbFile.type:"image/jpeg";
+      var up=await sb.storage.from("thumbnails").upload(path,thumbFile,{cacheControl:"3600",upsert:false,contentType:contentType});
       if(up.error) throw up.error;
       var pub=sb.storage.from("thumbnails").getPublicUrl(path);
       thumbUrl=pub&&pub.data&&pub.data.publicUrl?pub.data.publicUrl:null;
