@@ -1227,7 +1227,11 @@ function renderList(){
   if(st.cat==="すべて"&&th.length>0){
     var r=calcRanks();
     var thH=r.thRank.length?r.thRank.map(function(t2,i){
-      return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span><span class="rank-name"><a onclick="A.openT(this.dataset.id)" data-id="'+esc(t2.id)+'">'+esc(t2.title)+'</a></span><span class="rank-val">'+t2.posts.length+t("res_unit")+'</span></div>';
+      var canTl=(t2.titleLang||"ja")!==(uiLang||"ja");
+      var titleShown=(t2.showTitleTl&&t2.titleTranslated)?t2.titleTranslated:t2.title;
+      var btnLabel=t2.titleTranslating?"…":((t2.showTitleTl&&t2.titleTranslated)?"🔼":"🌐");
+      var tlBtn=canTl?'<span class="tl-btn" style="margin-left:4px;padding:1px 6px;flex-shrink:0" onclick="event.stopPropagation();A.translateTitle(this.dataset.tid)" data-tid="'+esc(t2.id)+'" title="'+esc(t("translate"))+'">'+btnLabel+'</span>':"";
+      return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span><span class="rank-name"><a onclick="A.openT(this.dataset.id)" data-id="'+esc(t2.id)+'">'+esc(titleShown)+'</a></span>'+tlBtn+'<span class="rank-val">'+t2.posts.length+t("res_unit")+'</span></div>';
     }).join(""):'<div class="rank-item" style="color:#bbb;font-size:11px">'+t("no_data")+'</div>';
     var wkH=r.workRank.length?r.workRank.map(function(x,i){
       return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span><span class="rank-name"><a onclick="A.searchByTag(this.dataset.t)" data-t="'+esc(x.name)+'">'+esc(x.name)+'</a></span><span class="rank-val">'+x.val+t("thread_unit")+'</span></div>';
