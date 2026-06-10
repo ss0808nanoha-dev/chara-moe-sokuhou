@@ -74,6 +74,12 @@ input.err,textarea.err,select.err{border-color:#c00 !important}
 #fwrap #f-oppass{border:2px solid #e05a00;background:#fff;margin-bottom:6px}
 #fwrap #f-oppass:focus{border-color:#c04a00;box-shadow:0 0 0 2px rgba(224,90,0,.15)}
 .oppass-box .help-text{margin:0}
+.thumb-box{background:#fff8f3;border:1px dashed #f0b890;border-radius:4px;padding:10px 12px;margin-bottom:7px}
+.thumb-label{display:block;font-size:13px;font-weight:700;color:#e05a00;margin-bottom:6px}
+#f-thumb{width:100%;font-size:12px;margin-bottom:6px}
+#thumb-preview img{max-width:120px;max-height:120px;border-radius:4px;border:1px solid #e0c0a0}
+.th-thumb{width:48px;height:48px;object-fit:cover;border-radius:4px;flex-shrink:0;margin-left:6px}
+.rank-thumb{width:28px;height:28px;object-fit:cover;border-radius:3px;flex-shrink:0;margin-right:4px}
 .rank-wrap{display:flex;gap:8px;margin-bottom:10px}
 .rank-box{flex:1;background:#fff;border:1px solid #e0c0a0;overflow:hidden;min-width:0}
 .rank-hdr{background:#e05a00;color:#fff;font-size:11px;font-weight:700;padding:4px 10px}
@@ -239,6 +245,8 @@ body.admin .op-recover:hover{color:#ff9966}
 body.admin .oppass-box{background:#332016;border-color:#7a4a28}
 body.admin .oppass-label{color:#ff9966}
 body.admin #fwrap #f-oppass{border-color:#ff7733;background:#2a2a2a}
+body.admin .thumb-box{background:#332016;border-color:#7a4a28}
+body.admin .thumb-label{color:#ff9966}
 body.admin .pname.lang-ja{color:#6ab0ff}
 body.admin .pname.lang-ko{color:#b89cff}
 body.admin .pname.lang-en{color:#9bd84a}
@@ -349,6 +357,11 @@ body.admin .ad-label{color:#888;border-bottom-color:#444}
       <label class="oppass-label" id="g-oppasslabel" for="f-oppass">🔑 スレ主合言葉（任意・4文字以上）</label>
       <input id="f-oppass" placeholder="例：sukinakotoba2008" maxlength="40">
       <div class="help-text" id="g-oppasshelp">💡 別の端末からスレ管理に戻りたい場合に必要です。<br>※忘れると別端末からの管理ができなくなります</div>
+    </div>
+    <div class="thumb-box">
+      <label class="thumb-label" id="g-thumblabel" for="f-thumb">🖼 サムネイル画像（任意）</label>
+      <input type="file" id="f-thumb" accept="image/*" onchange="A.previewThumb()">
+      <div id="thumb-preview"></div>
     </div>
     <div class="form-foot">
       <span class="ccount" id="fcc">0/1000</span>
@@ -574,7 +587,8 @@ var I18N={
     fail_reply:"書き込みに失敗しました: ", fail_auth:"認証に失敗しました: ",
     notice:"⚠️ このサイトは翻訳機能を使用しています。\n元の言語以外では、表示に多少のずれが生じる場合があります。\nあらかじめご了承ください。",
     notice_ok:"OK・サイトへ進む",
-    translate:"🌐 翻訳", show_original:"🔼 原文に戻す", tl_translating:"翻訳中...", tl_tag:"翻訳", tl_fail:"翻訳に失敗しました。少し時間をおいてお試しください。", ad_label:"PR・広告"
+    translate:"🌐 翻訳", show_original:"🔼 原文に戻す", tl_translating:"翻訳中...", tl_tag:"翻訳", tl_fail:"翻訳に失敗しました。少し時間をおいてお試しください。", ad_label:"PR・広告",
+    thumb_label:"🖼 サムネイル画像（任意）", thumb_uploading:"画像をアップロード中...", thumb_toobig:"画像は5MB以下にしてください。", thumb_fail:"画像のアップロードに失敗しました: "
   },
   en:{
     new_thread:"+ New Thread", close_form:"▲ Close", form_h2:"■ Create a New Thread",
@@ -618,7 +632,8 @@ var I18N={
     fail_reply:"Failed to post: ", fail_auth:"Authentication failed: ",
     notice:"⚠️ This site uses machine translation.\nThere may be slight inaccuracies outside the original language.\nThank you for understanding.",
     notice_ok:"OK, enter the site",
-    translate:"🌐 Translate", show_original:"🔼 Show original", tl_translating:"Translating...", tl_tag:"Translation", tl_fail:"Translation failed. Please try again in a moment.", ad_label:"PR / Ad"
+    translate:"🌐 Translate", show_original:"🔼 Show original", tl_translating:"Translating...", tl_tag:"Translation", tl_fail:"Translation failed. Please try again in a moment.", ad_label:"PR / Ad",
+    thumb_label:"🖼 Thumbnail image (optional)", thumb_uploading:"Uploading image...", thumb_toobig:"Please use an image under 5MB.", thumb_fail:"Image upload failed: "
   },
   ko:{
     new_thread:"+ 새 글 작성", close_form:"▲ 닫기", form_h2:"■ 새 스레드 작성",
@@ -662,7 +677,8 @@ var I18N={
     fail_reply:"작성 실패: ", fail_auth:"인증 실패: ",
     notice:"⚠️ 이 사이트는 번역 기능을 사용합니다.\n원래 언어가 아닌 경우 표시에 다소 차이가 있을 수 있습니다.\n양해 부탁드립니다.",
     notice_ok:"확인, 사이트로 이동",
-    translate:"🌐 번역", show_original:"🔼 원문 보기", tl_translating:"번역 중...", tl_tag:"번역", tl_fail:"번역에 실패했습니다. 잠시 후 다시 시도해 주세요.", ad_label:"PR · 광고"
+    translate:"🌐 번역", show_original:"🔼 원문 보기", tl_translating:"번역 중...", tl_tag:"번역", tl_fail:"번역에 실패했습니다. 잠시 후 다시 시도해 주세요.", ad_label:"PR · 광고",
+    thumb_label:"🖼 썸네일 이미지 (선택)", thumb_uploading:"이미지 업로드 중...", thumb_toobig:"이미지는 5MB 이하로 해주세요.", thumb_fail:"이미지 업로드에 실패했습니다: "
   }
 };
 
@@ -795,6 +811,7 @@ function applyStaticI18n(){
   setHTML("g-oppasslabel","oppass_label");
   setPH("f-oppass","oppass_ph");
   setHTML("g-oppasshelp","oppass_help");
+  setText("g-thumblabel","thumb_label");
   setText("g-submitbtn","submit_btn");
   setText("g-foot-terms","foot_terms");
   setText("g-foot-privacy","foot_privacy");
@@ -966,6 +983,7 @@ async function loadAll(){
         workTag:t2.work_tag||"", charaTag:t2.chara_tag||"",
         kanso:!!t2.kanso, hasOpPassword:!!t2.op_password,
         titleLang:(tposts[0]&&tposts[0].postLang)||null,
+        thumbUrl:t2.thumb_url||null,
         posts:tposts
       };
     });
@@ -1083,6 +1101,23 @@ function showErr(id,show){
   el.className="field-err"+(show?" show":"");
 }
 
+/* サムネ画像を選んだときのプレビュー表示 */
+function previewThumb(){
+  var inp=document.getElementById("f-thumb");
+  var prev=document.getElementById("thumb-preview");
+  if(!inp||!prev)return;
+  prev.innerHTML="";
+  var file=inp.files&&inp.files[0];
+  if(!file)return;
+  if(file.size>5*1024*1024){
+    alert(t("thumb_toobig"));
+    inp.value="";
+    return;
+  }
+  var url=URL.createObjectURL(file);
+  prev.innerHTML='<img src="'+url+'" alt="preview">';
+}
+
 async function submit(){
   var title=(document.getElementById("f-title")||{}).value||"";
   var body=(document.getElementById("f-body")||{}).value||"";
@@ -1106,10 +1141,29 @@ async function submit(){
   var subBtn=document.querySelector("#fwrap .sub-btn");
   if(subBtn){subBtn.disabled=true;subBtn.textContent=t("submitting");}
   try{
+    /* サムネ画像が選ばれていればアップロード */
+    var thumbUrl=null;
+    var thumbInp=document.getElementById("f-thumb");
+    var thumbFile=thumbInp&&thumbInp.files&&thumbInp.files[0];
+    if(thumbFile){
+      if(thumbFile.size>5*1024*1024){
+        alert(t("thumb_toobig"));
+        if(subBtn){subBtn.disabled=false;subBtn.textContent=t("submit_btn");}
+        return;
+      }
+      if(subBtn) subBtn.textContent=t("thumb_uploading");
+      var ext=(thumbFile.name.split(".").pop()||"jpg").toLowerCase().replace(/[^a-z0-9]/g,"")||"jpg";
+      var path=myIp+"_"+Date.now()+"."+ext;
+      var up=await sb.storage.from("thumbnails").upload(path,thumbFile,{cacheControl:"3600",upsert:false});
+      if(up.error) throw up.error;
+      var pub=sb.storage.from("thumbnails").getPublicUrl(path);
+      thumbUrl=pub&&pub.data&&pub.data.publicUrl?pub.data.publicUrl:null;
+      if(subBtn) subBtn.textContent=t("submitting");
+    }
     var tIns=await sb.from("threads").insert({
       title:title.trim(), cat:c,
       mag_tag:fMag||null, work_tag:fWork||null, chara_tag:fChara||null,
-      op_uid:myIp, op_password:opPass||null
+      op_uid:myIp, op_password:opPass||null, thumb_url:thumbUrl
     }).select();
     if(tIns.error) throw tIns.error;
     var newThread=tIns.data[0];
@@ -1119,6 +1173,8 @@ async function submit(){
     if(pIns.error) throw pIns.error;
     fMag="";fWork="";fChara="";
     ["f-title","f-name","f-body","f-oppass"].forEach(function(id){var el=document.getElementById(id);if(el){el.value="";el.className="";}});
+    var ft=document.getElementById("f-thumb");if(ft)ft.value="";
+    var tp=document.getElementById("thumb-preview");if(tp)tp.innerHTML="";
     var fcat=document.getElementById("f-cat");if(fcat){fcat.value="";fcat.className="";}
     ["err-title"].forEach(function(id){showErr(id,false);});
     var fcc=document.getElementById("fcc");if(fcc)fcc.textContent="0/1000";
@@ -1199,6 +1255,16 @@ function rakutenAdHtml(){
   return '<div class="ad-block"><div class="ad-label">'+t("ad_label")+'</div><div class="rakuten-ad">'+RAKUTEN_ADS.join("")+'</div></div>';
 }
 
+/* 作品名/キャラ名の代表サムネ(その名前のスレで最初に見つかったサムネ) */
+function repThumbForWork(name){
+  for(var i=0;i<th.length;i++){if(th[i].workTag===name&&th[i].thumbUrl) return th[i].thumbUrl;}
+  return null;
+}
+function repThumbForChara(name){
+  for(var i=0;i<th.length;i++){if(th[i].charaTag===name&&th[i].thumbUrl) return th[i].thumbUrl;}
+  return null;
+}
+
 function renderList(){
   var base=st.cat==="すべて"?th.slice():th.filter(function(t2){return t2.cat===st.cat;});
   var list=st.q?base.filter(function(t2){
@@ -1231,13 +1297,18 @@ function renderList(){
       var titleShown=(t2.showTitleTl&&t2.titleTranslated)?t2.titleTranslated:t2.title;
       var btnLabel=t2.titleTranslating?"…":((t2.showTitleTl&&t2.titleTranslated)?"🔼":"🌐");
       var tlBtn=canTl?'<span class="tl-btn" style="margin-left:4px;padding:1px 6px;flex-shrink:0" onclick="event.stopPropagation();A.translateTitle(this.dataset.tid)" data-tid="'+esc(t2.id)+'" title="'+esc(t("translate"))+'">'+btnLabel+'</span>':"";
-      return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span><span class="rank-name"><a onclick="A.openT(this.dataset.id)" data-id="'+esc(t2.id)+'">'+esc(titleShown)+'</a></span>'+tlBtn+'<span class="rank-val">'+t2.posts.length+t("res_unit")+'</span></div>';
+      var rThumb=t2.thumbUrl?'<img class="rank-thumb" src="'+esc(t2.thumbUrl)+'" alt="" loading="lazy">':"";
+      return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span>'+rThumb+'<span class="rank-name"><a onclick="A.openT(this.dataset.id)" data-id="'+esc(t2.id)+'">'+esc(titleShown)+'</a></span>'+tlBtn+'<span class="rank-val">'+t2.posts.length+t("res_unit")+'</span></div>';
     }).join(""):'<div class="rank-item" style="color:#bbb;font-size:11px">'+t("no_data")+'</div>';
     var wkH=r.workRank.length?r.workRank.map(function(x,i){
-      return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span><span class="rank-name"><a onclick="A.searchByTag(this.dataset.t)" data-t="'+esc(x.name)+'">'+esc(x.name)+'</a></span><span class="rank-val">'+x.val+t("thread_unit")+'</span></div>';
+      var wt=repThumbForWork(x.name);
+      var wThumb=wt?'<img class="rank-thumb" src="'+esc(wt)+'" alt="" loading="lazy">':"";
+      return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span>'+wThumb+'<span class="rank-name"><a onclick="A.searchByTag(this.dataset.t)" data-t="'+esc(x.name)+'">'+esc(x.name)+'</a></span><span class="rank-val">'+x.val+t("thread_unit")+'</span></div>';
     }).join(""):'<div class="rank-item" style="color:#bbb;font-size:11px">'+t("no_data")+'</div>';
     var chH=r.charaRank.length?r.charaRank.map(function(x,i){
-      return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span><span class="rank-name"><a onclick="A.searchByTag(this.dataset.t)" data-t="'+esc(x.name)+'">'+esc(x.name)+'</a></span><span class="rank-val">'+x.val+t("thread_unit")+'</span></div>';
+      var ct=repThumbForChara(x.name);
+      var cThumb=ct?'<img class="rank-thumb" src="'+esc(ct)+'" alt="" loading="lazy">':"";
+      return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span>'+cThumb+'<span class="rank-name"><a onclick="A.searchByTag(this.dataset.t)" data-t="'+esc(x.name)+'">'+esc(x.name)+'</a></span><span class="rank-val">'+x.val+t("thread_unit")+'</span></div>';
     }).join(""):'<div class="rank-item" style="color:#bbb;font-size:11px">'+t("no_data")+'</div>';
     top+='<div class="rank-wrap"><div class="rank-box"><div class="rank-hdr">'+t("rank_thread")+'</div>'+thH+'</div></div>';
     top+='<div class="rank-wrap">'+
@@ -1255,7 +1326,7 @@ function renderList(){
     return '<div class="th-item" onclick="A.openT(this.dataset.id)" data-id="'+esc(t2.id)+'" role="button" tabindex="0">'+
       (badges?'<div class="th-badges">'+badges+'</div>':"")+
       '<div class="th-top"><div class="th-title">'+esc(t2.title)+(isK?'<span class="kanso-badge">'+t("kanso_badge")+'</span>':"")+tlTitleBtn+
-      '</div><span class="th-res">'+t2.posts.length+t("res_unit")+'</span></div>'+
+      '</div>'+(t2.thumbUrl?'<img class="th-thumb" src="'+esc(t2.thumbUrl)+'" alt="" loading="lazy">':"")+'<span class="th-res">'+t2.posts.length+t("res_unit")+'</span></div>'+
       (t2.showTitleTl&&t2.titleTranslated?'<div class="pbody-tl" style="margin-left:0"><span class="tl-tag">'+t("tl_tag")+'</span>'+esc(t2.titleTranslated)+'</div>':"")+
       '<div class="th-meta">'+fmt(last.ts)+'</div></div>';
   }).join("")+'</div>';
@@ -1568,7 +1639,7 @@ return{top:top,cat:cat,openT:openT,toggleForm:toggleForm,submit:submit,reply:rep
   selectMag:selectMag,clearMag:clearMag,clearWork:clearWork,clearChara:clearChara,
   setWork:setWork,setChara:setChara,renderTagUI:renderTagUI,showSuggest:showSuggest,pickSuggest:pickSuggest,
   sortBy:sortBy,showDoc:showDoc,hideDoc:hideDoc,recoverOp:recoverOp,
-  chooseLang:chooseLang,acceptNotice:acceptNotice,setLang:setLang,translatePost:translatePost,translateTitle:translateTitle,logoTap:logoTap};
+  chooseLang:chooseLang,acceptNotice:acceptNotice,setLang:setLang,translatePost:translatePost,translateTitle:translateTitle,logoTap:logoTap,previewThumb:previewThumb};
 })();
 </script>
 </body>
