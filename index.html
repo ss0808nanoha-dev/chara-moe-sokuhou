@@ -75,7 +75,7 @@ input.err,textarea.err,select.err{border-color:#c00 !important}
 .rank-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rank-val{color:#aaa;flex-shrink:0;font-size:10px}
 #thread-list{display:flex;flex-direction:column;gap:1px}
-.th-item{background:#fff;border:1px solid #e8d0c0;padding:8px 10px;display:block;width:100%;text-align:left}
+.th-item{background:#fff;border:1px solid #e8d0c0;padding:8px 10px;display:block;width:100%;text-align:left;cursor:pointer}
 .th-item:hover{border-color:#e05a00;background:#fff9f5}
 .th-badges{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:4px;align-items:center}
 .th-cat{font-size:10px;font-weight:700;background:#e05a00;color:#fff;padding:1px 6px;border-radius:2px}
@@ -915,11 +915,13 @@ async function loadAll(){
       if(t2.mag_tag) tags.push(t2.mag_tag);
       if(t2.work_tag) tags.push(t2.work_tag);
       if(t2.chara_tag) tags.push(t2.chara_tag);
+      var tposts=byThread[t2.id]||[];
       return {
         id:t2.id, title:t2.title, cat:t2.cat, tags:tags,
         workTag:t2.work_tag||"", charaTag:t2.chara_tag||"",
         kanso:!!t2.kanso, hasOpPassword:!!t2.op_password,
-        posts:byThread[t2.id]||[]
+        titleLang:(tposts[0]&&tposts[0].postLang)||null,
+        posts:tposts
       };
     });
     th=th.filter(function(t2){return t2.posts.length>0;});
@@ -1194,11 +1196,14 @@ function renderList(){
     var last=t2.posts[t2.posts.length-1];
     var isK=t2.kanso||t2.posts.length>=KANSO;
     var badges=makeBadges(t2.tags,t2.cat);
-    return '<button class="th-item" onclick="A.openT(this.dataset.id)" data-id="'+esc(t2.id)+'">'+
+    var canTlTitle=t2.titleLang&&t2.titleLang!==(uiLang||"ja");
+    var tlTitleBtn=canTlTitle?'<span class="tl-btn" onclick="event.stopPropagation();A.translateTitle(this.dataset.tid)" data-tid="'+esc(t2.id)+'">'+(t2.titleTranslating?t("tl_translating"):(t2.showTitleTl&&t2.titleTranslated?t("show_original"):t("translate")))+'</span>':"";
+    return '<div class="th-item" onclick="A.openT(this.dataset.id)" data-id="'+esc(t2.id)+'" role="button" tabindex="0">'+
       (badges?'<div class="th-badges">'+badges+'</div>':"")+
-      '<div class="th-top"><div class="th-title">'+esc(t2.title)+(isK?'<span class="kanso-badge">'+t("kanso_badge")+'</span>':"")+
+      '<div class="th-top"><div class="th-title">'+esc(t2.title)+(isK?'<span class="kanso-badge">'+t("kanso_badge")+'</span>':"")+tlTitleBtn+
       '</div><span class="th-res">'+t2.posts.length+t("res_unit")+'</span></div>'+
-      '<div class="th-meta">'+fmt(last.ts)+'</div></button>';
+      (t2.showTitleTl&&t2.titleTranslated?'<div class="pbody-tl" style="margin-left:0"><span class="tl-tag">'+t("tl_tag")+'</span>'+esc(t2.titleTranslated)+'</div>':"")+
+      '<div class="th-meta">'+fmt(last.ts)+'</div></div>';
   }).join("")+'</div>';
 }
 
@@ -1219,6 +1224,8 @@ function renderThread(){
   var canModerateThread=isOP||adminMode;
   var showRecover=!isOP&&t2.hasOpPassword;
   var badges=makeBadges(t2.tags,t2.cat);
+  var canTlTitle=t2.titleLang&&t2.titleLang!==(uiLang||"ja");
+  var tlTitleBtn=canTlTitle?'<button class="tl-btn" onclick="A.translateTitle(this.dataset.tid)" data-tid="'+esc(t2.id)+'">'+(t2.titleTranslating?t("tl_translating"):(t2.showTitleTl&&t2.titleTranslated?t("show_original"):t("translate")))+'</button>':"";
   var posts=t2.posts.map(function(pst,i){
     if(pst.deleted)return '<div class="post"><div class="pmeta"><span class="pno">'+(i+1)+'</span></div><div class="pbody" style="color:#bbb;font-size:12px">'+t("deleted_post")+'</div></div>';
     if(pst.autoHidden)return '<div class="post"><div class="pmeta"><span class="pno">'+(i+1)+'</span></div><div class="pbody" style="color:#bbb;font-size:12px">'+t("hidden_post")+'</div></div>';
@@ -1254,8 +1261,10 @@ function renderThread(){
   return '<a class="back-btn" onclick="A.top()">'+t("back_list")+'</a>'+
     '<div id="tv-hdr">'+
     (badges?'<div class="tv-badges">'+badges+'</div>':"")+
-    '<div class="tv-title">'+esc(t2.title)+(isK?'&nbsp;<span class="kanso-badge">'+t("kanso_badge")+'</span>':"")+
-    '</div><div class="tv-meta">'+t2.posts.length+t("res_count")+' / '+t("last_update")+fmt(t2.posts[t2.posts.length-1].ts)+'</div>'+
+    '<div class="tv-title">'+esc(t2.title)+(isK?'&nbsp;<span class="kanso-badge">'+t("kanso_badge")+'</span>':"")+tlTitleBtn+
+    '</div>'+
+    (t2.showTitleTl&&t2.titleTranslated?'<div class="pbody-tl" style="margin:0 0 6px"><span class="tl-tag">'+t("tl_tag")+'</span>'+esc(t2.titleTranslated)+'</div>':"")+
+    '<div class="tv-meta">'+t2.posts.length+t("res_count")+' / '+t("last_update")+fmt(t2.posts[t2.posts.length-1].ts)+'</div>'+
     (canModerateThread&&!isK&&t2.posts.length>1?'<br><button class="kanso-op-btn" onclick="A.doKanso(this.dataset.tid)" data-tid="'+esc(t2.id)+'">'+t("kanso_btn")+'</button>':"")+
     (canModerateThread?'&nbsp;<button class="kanso-op-btn" style="border-color:#c00;color:#c00" onclick="A.deleteThread(this.dataset.tid)" data-tid="'+esc(t2.id)+'">'+t("del_thread_btn")+'</button>':"")+
     (isK?'<br><span class="kanso-done-label">'+t("kanso_done_label")+'</span>':"")+
@@ -1427,6 +1436,35 @@ async function translatePost(pid){
   }
 }
 
+/* スレタイトルのオンデマンド翻訳 */
+async function translateTitle(tid){
+  var thr=null;
+  for(var i=0;i<th.length;i++){if(String(th[i].id)===String(tid)){thr=th[i];break;}}
+  if(!thr)return;
+  if(thr.titleTranslated){thr.showTitleTl=!thr.showTitleTl;render();return;}
+  if(thr.titleTranslating)return;
+  var src=thr.titleLang||"ja";
+  var tgt=uiLang||"ja";
+  if(src===tgt)return;
+  thr.titleTranslating=true;render();
+  try{
+    var url="https://api.mymemory.translated.net/get?q="+encodeURIComponent(thr.title)+"&langpair="+encodeURIComponent(src+"|"+tgt);
+    var resp=await fetch(url);
+    var data=await resp.json();
+    var txt=data&&data.responseData&&data.responseData.translatedText;
+    if(!txt) throw new Error("no translation");
+    thr.titleTranslated=txt;
+    thr.showTitleTl=true;
+    thr.titleTranslating=false;
+    render();
+  }catch(e){
+    thr.titleTranslating=false;
+    render();
+    alert(t("tl_fail"));
+    console.error("translateTitle error:",e);
+  }
+}
+
 async function reply(){
   var body=(document.getElementById("r-body")||{}).value||"";
   if(!body.trim())return;
@@ -1475,7 +1513,7 @@ return{top:top,cat:cat,openT:openT,toggleForm:toggleForm,submit:submit,reply:rep
   selectMag:selectMag,clearMag:clearMag,clearWork:clearWork,clearChara:clearChara,
   setWork:setWork,setChara:setChara,renderTagUI:renderTagUI,showSuggest:showSuggest,pickSuggest:pickSuggest,
   sortBy:sortBy,showDoc:showDoc,hideDoc:hideDoc,recoverOp:recoverOp,
-  chooseLang:chooseLang,acceptNotice:acceptNotice,setLang:setLang,translatePost:translatePost};
+  chooseLang:chooseLang,acceptNotice:acceptNotice,setLang:setLang,translatePost:translatePost,translateTitle:translateTitle};
 })();
 </script>
 </body>
