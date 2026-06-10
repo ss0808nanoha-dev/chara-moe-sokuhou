@@ -18,6 +18,9 @@ input:focus,textarea:focus,select:focus{border-color:#e05a00}
 #logo{font-size:20px;font-weight:900;color:#fff;letter-spacing:1px;font-family:'Hiragino Mincho ProN','Yu Mincho',serif;line-height:1}
 #logo-tagline{font-size:10px;color:rgba(255,255,255,.8);letter-spacing:.5px}
 #hd-r{display:flex;align-items:center;gap:8px;flex-shrink:0}
+#lang-switch{display:flex;gap:2px}
+.lang-sw-btn{font-size:10px;font-weight:700;color:rgba(255,255,255,.7);background:rgba(0,0,0,.15);padding:3px 6px;border-radius:2px}
+.lang-sw-btn.on{color:#e05a00;background:#fff}
 #r18tag{font-size:10px;background:#900;color:#fff;padding:1px 6px;border-radius:2px;display:none}
 #new-btn{background:#fff;color:#e05a00;font-size:12px;font-weight:900;padding:5px 13px;border-radius:2px;border:none}
 #new-btn:hover{background:#ffe0d0}
@@ -100,6 +103,11 @@ input.err,textarea.err,select.err{border-color:#c00 !important}
 .pno{color:#e05a00;font-weight:700;margin-right:5px}
 .pname{color:#228b22;font-weight:700;margin-right:5px}
 .pname.op{color:#e05a00}
+.pname.lang-ja{color:#1a56a0}
+.pname.lang-ko{color:#7c4dff}
+.pname.lang-en{color:#5fa600}
+.pname.lang-other{color:#888}
+.langflag{font-size:10px;font-weight:400;color:#bbb;margin-left:3px}
 .opbg{background:#fff4ec;color:#e05a00;font-size:10px;border-radius:2px;padding:0 5px;margin-right:4px}
 .pdate{margin-right:5px}
 .pid{color:#ccc;font-family:monospace;font-size:11px}
@@ -144,6 +152,18 @@ input.err,textarea.err,select.err{border-color:#c00 !important}
 .sort-btn{font-size:11px;padding:4px 10px;border:1px solid #e0c0a0;border-radius:2px;background:#fff;color:#888;cursor:pointer}
 .sort-btn.on{background:#e05a00;color:#fff;border-color:#e05a00;font-weight:700}
 .sort-btn:hover:not(.on){background:#fff3e8}
+
+/* 言語選択 / 注意書きモーダル */
+.lang-modal{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}
+.lang-modal.on{display:flex}
+.lang-box{background:#fff;border-radius:8px;max-width:340px;width:100%;padding:26px 22px;text-align:center;border-top:4px solid #e05a00;box-shadow:0 12px 40px rgba(0,0,0,.35)}
+.lang-ttl{font-size:14px;font-weight:900;color:#e05a00;margin-bottom:4px}
+.lang-sub{font-size:11px;color:#888;margin-bottom:16px;line-height:1.6}
+.lang-opt{display:block;width:100%;background:#fff7f2;border:2px solid #e05a00;color:#e05a00;font-size:15px;font-weight:700;padding:12px;border-radius:6px;margin-bottom:10px}
+.lang-opt:hover{background:#e05a00;color:#fff}
+.notice-text{font-size:13px;color:#333;line-height:1.8;margin-bottom:18px;white-space:pre-wrap}
+.notice-ok{background:#e05a00;color:#fff;font-size:14px;font-weight:700;padding:11px 28px;border-radius:6px;width:100%}
+.notice-ok:hover{background:#c04a00}
 
 /* 管理者モード(ダークモード) */
 body.admin{background:#1a1a1a;color:#e0e0e0}
@@ -199,9 +219,35 @@ body.admin .op-recover:hover{color:#ff9966}
 body.admin .oppass-box{background:#332016;border-color:#7a4a28}
 body.admin .oppass-label{color:#ff9966}
 body.admin #fwrap #f-oppass{border-color:#ff7733;background:#2a2a2a}
+body.admin .pname.lang-ja{color:#6ab0ff}
+body.admin .pname.lang-ko{color:#b89cff}
+body.admin .pname.lang-en{color:#9bd84a}
+body.admin .lang-box{background:#2a2a2a;color:#e0e0e0}
+body.admin .lang-opt{background:#332016;border-color:#ff7733;color:#ff9966}
+body.admin .lang-opt:hover{background:#ff7733;color:#fff}
+body.admin .notice-text{color:#d0d0d0}
 </style>
 </head>
 <body>
+
+<!-- 言語選択モーダル(初回アクセス時) -->
+<div id="lang-modal" class="lang-modal">
+  <div class="lang-box">
+    <div class="lang-ttl">言語を選択 / Language / 언어</div>
+    <div class="lang-sub">ダラルズ - キャラ萌え速報</div>
+    <button class="lang-opt" onclick="A.chooseLang('ja')">日本語</button>
+    <button class="lang-opt" onclick="A.chooseLang('ko')">한국어</button>
+    <button class="lang-opt" onclick="A.chooseLang('en')">English</button>
+  </div>
+</div>
+
+<!-- 翻訳の注意書きモーダル -->
+<div id="notice-modal" class="lang-modal">
+  <div class="lang-box">
+    <div class="notice-text" id="notice-text"></div>
+    <button class="notice-ok" id="notice-ok-btn" onclick="A.acceptNotice()">OK</button>
+  </div>
+</div>
 
 <div id="modal">
   <div class="mbox">
@@ -222,6 +268,11 @@ body.admin #fwrap #f-oppass{border-color:#ff7733;background:#2a2a2a}
       <div id="logo-tagline">キャラ萌え速報</div>
     </button>
     <div id="hd-r">
+      <div id="lang-switch">
+        <button class="lang-sw-btn" data-l="ja" onclick="A.setLang('ja')">JP</button>
+        <button class="lang-sw-btn" data-l="ko" onclick="A.setLang('ko')">KR</button>
+        <button class="lang-sw-btn" data-l="en" onclick="A.setLang('en')">EN</button>
+      </div>
       <span id="r18tag">🔞解除中</span>
       <button id="new-btn" onclick="A.toggleForm()">＋ スレを立てる</button>
     </div>
@@ -234,8 +285,8 @@ body.admin #fwrap #f-oppass{border-color:#ff7733;background:#2a2a2a}
 <div id="wrap">
 
   <div id="fwrap" style="display:none">
-    <h2>■ 新しいスレッドを立てる</h2>
-    <div style="font-size:11px;color:#888;margin-bottom:8px">タイトル・本文は必須です</div>
+    <h2 id="g-formh2">■ 新しいスレッドを立てる</h2>
+    <div id="g-required" style="font-size:11px;color:#888;margin-bottom:8px">タイトル・本文は必須です</div>
     <select id="f-cat">
       <option value="">カテゴリを選択（未選択の場合は雑談になります）</option>
       <option>キャラ萌え</option>
@@ -243,26 +294,26 @@ body.admin #fwrap #f-oppass{border-color:#ff7733;background:#2a2a2a}
       <option>作品語り</option>
       <option>雑談</option>
     </select>
-    <div style="font-size:11px;color:#888;margin-bottom:4px">掲載誌（選択）</div>
+    <div id="g-maglabel" style="font-size:11px;color:#888;margin-bottom:4px">掲載誌（選択）</div>
     <div class="ptags" id="preset-tags"></div>
     <div id="sel-tags" style="margin-bottom:8px"></div>
     <div id="work-row">
-      <div style="font-size:11px;color:#888;margin-bottom:4px">作品名（入力後にキャラ名を追加できます）</div>
+      <div id="g-worklabel" style="font-size:11px;color:#888;margin-bottom:4px">作品名（入力後にキャラ名を追加できます）</div>
       <div class="ctag-row" style="margin-bottom:4px">
         <input id="work-inp" placeholder="作品名（例：ブルーロック）" maxlength="20" style="margin-bottom:0"
           oninput="A.showSuggest('work-inp','work-suggest')"
           onkeydown="if(event.key==='Enter'){A.setWork();event.preventDefault()}">
-        <button class="ctag-add" onclick="A.setWork()">追加</button>
+        <button class="ctag-add" id="g-workadd" onclick="A.setWork()">追加</button>
       </div>
       <div id="work-suggest" class="suggest-list"></div>
     </div>
     <div id="chara-row" style="display:none">
-      <div style="font-size:11px;color:#888;margin:6px 0 4px">キャラクター名（任意）</div>
+      <div id="g-charalabel" style="font-size:11px;color:#888;margin:6px 0 4px">キャラクター名（任意）</div>
       <div class="ctag-row">
         <input id="chara-inp" placeholder="キャラ名（例：山田太郎）" maxlength="20" style="margin-bottom:0"
           oninput="A.showSuggest('chara-inp','chara-suggest')"
           onkeydown="if(event.key==='Enter'){A.setChara();event.preventDefault()}">
-        <button class="ctag-add" onclick="A.setChara()">追加</button>
+        <button class="ctag-add" id="g-charaadd" onclick="A.setChara()">追加</button>
       </div>
       <div id="chara-suggest" class="suggest-list"></div>
     </div>
@@ -273,13 +324,13 @@ body.admin #fwrap #f-oppass{border-color:#ff7733;background:#2a2a2a}
     <textarea id="f-body" placeholder="本文（必須・1000文字以内）" maxlength="1000"
       oninput="document.getElementById('fcc').textContent=this.value.length+'/1000'"></textarea>
     <div class="oppass-box">
-      <label class="oppass-label" for="f-oppass">🔑 スレ主合言葉（任意・4文字以上）</label>
+      <label class="oppass-label" id="g-oppasslabel" for="f-oppass">🔑 スレ主合言葉（任意・4文字以上）</label>
       <input id="f-oppass" placeholder="例：sukinakotoba2008" maxlength="40">
-      <div class="help-text">💡 別の端末からスレ管理に戻りたい場合に必要です。<br>※忘れると別端末からの管理ができなくなります</div>
+      <div class="help-text" id="g-oppasshelp">💡 別の端末からスレ管理に戻りたい場合に必要です。<br>※忘れると別端末からの管理ができなくなります</div>
     </div>
     <div class="form-foot">
       <span class="ccount" id="fcc">0/1000</span>
-      <button class="sub-btn" onclick="A.submit()">スレを立てる</button>
+      <button class="sub-btn" id="g-submitbtn" onclick="A.submit()">スレを立てる</button>
     </div>
   </div>
 
@@ -287,7 +338,7 @@ body.admin #fwrap #f-oppass{border-color:#ff7733;background:#2a2a2a}
 
   <footer id="site-footer">
     <div>
-      <a onclick="A.showDoc('terms')">利用規約</a>|<a onclick="A.showDoc('privacy')">プライバシーポリシー</a>|<a onclick="A.showDoc('about')">このサイトについて</a>
+      <a id="g-foot-terms" onclick="A.showDoc('terms')">利用規約</a>|<a id="g-foot-privacy" onclick="A.showDoc('privacy')">プライバシーポリシー</a>|<a id="g-foot-about" onclick="A.showDoc('about')">このサイトについて</a>
     </div>
     <div style="margin-top:8px">© キャラ萌え速報</div>
   </footer>
@@ -454,6 +505,145 @@ var SUPABASE_URL = "https://xflcbgsonmvvzbefbreq.supabase.co";
 var SUPABASE_KEY = "sb_publishable_in8cVtZwe3SbE0l6Y3Jf2Q_awVX6mJY";
 var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+/* ============================================================
+   多言語(i18n)辞書  ja=日本語 / en=English / ko=한국어
+   ※ en/ko はAIによる仮翻訳です。リリース前にネイティブチェック推奨。
+   ============================================================ */
+var I18N={
+  ja:{
+    new_thread:"＋ スレを立てる", close_form:"▲ 閉じる", form_h2:"■ 新しいスレッドを立てる",
+    required_note:"タイトル・本文は必須です",
+    cat_ph:"カテゴリを選択（未選択の場合は雑談になります）",
+    mag_label:"掲載誌（選択）", work_label:"作品名（入力後にキャラ名を追加できます）",
+    work_ph:"作品名（例：ブルーロック）", add_btn:"追加",
+    chara_label:"キャラクター名（任意）", chara_ph:"キャラ名（例：山田太郎）",
+    title_ph:"スレタイ（必須・40文字以内）", title_err:"スレタイを入力してください",
+    name_ph:"名前（省略可・匿名になります）", body_ph:"本文（必須・1000文字以内）",
+    oppass_label:"🔑 スレ主合言葉（任意・4文字以上）", oppass_ph:"例：sukinakotoba2008",
+    oppass_help:"💡 別の端末からスレ管理に戻りたい場合に必要です。<br>※忘れると別端末からの管理ができなくなります",
+    submit_btn:"スレを立てる", submitting:"送信中...",
+    search_ph:"キャラ名・作品名で検索...",
+    sort_new:"🕐 新着", sort_hot:"🔥 人気", sort_rising:"⚡ 急上昇",
+    rank_thread:"📣 話題スレ TOP5", rank_work:"🎬 話題作品 TOP5", rank_chara:"⭐ 話題キャラ TOP5",
+    no_data:"データなし", res_unit:"res", thread_unit:"スレ",
+    empty_list:"まだスレッドがありません。最初のスレを立ててみよう！",
+    back_list:"← スレ一覧に戻る", kanso_badge:"完走",
+    res_count:"件のレス", last_update:"最終更新: ",
+    reply_h3:"■ 返信する", reply_name_ph:"名前（省略可）", reply_body_ph:"本文（必須・1000文字以内）", reply_btn:"書き込む",
+    like:"♡ いいね", liked:"♥ いいね済", report:"報告", reported:"報告済", del:"削除",
+    kanso_btn:"✅ 完走にする", del_thread_btn:"🗑 スレを削除", kanso_done_label:"✅ 完走スレ",
+    recover_op:"🔑 このスレを立てた方へ（合言葉を入力）",
+    anon_name:"萌えてる匿名さん",
+    deleted_post:"このレスは削除されています", hidden_post:"⚠️ このレスは複数の報告により非表示になっています",
+    loading:"読み込み中...", load_fail:"⚠️ データの読み込みに失敗しました。<br>通信環境を確認して、ページを再読み込みしてください。",
+    foot_terms:"利用規約", foot_privacy:"プライバシーポリシー", foot_about:"このサイトについて",
+    confirm_kanso:"このスレッドを完走にしますか？", confirm_del_thread:"このスレッドを削除しますか？元に戻せません。",
+    confirm_del_post:"このレスを削除しますか？", confirm_report:"このレスを通報しますか？\n（規約違反のレスに対してのみ使用してください）",
+    report_done:"報告を受け付けました。ご協力ありがとうございます。", already_reported:"このレスは既に報告済みです。",
+    op_only:"「スレ主」はスレを立てた方専用です。",
+    oppass_short:"スレ主合言葉は4文字以上で設定してください。空欄でもOKです。",
+    body_empty:"本文を入力してください。",
+    recover_prompt:"このスレを立てたときの合言葉を入力してください：", recover_short:"合言葉は4文字以上です。",
+    recover_none:"このスレッドには合言葉が設定されていません。",
+    recover_ok:"✅ スレ主として認証されました。\nこの端末ではこのスレを管理できます。", recover_wrong:"❌ 合言葉が違います。",
+    created_ok:"✅ スレを作成しました。\n\nスレ主合言葉「{p}」を控えておいてください。\n別の端末からこのスレを管理する際に必要です。",
+    fail_create:"スレ作成に失敗しました: ", fail_like:"いいねに失敗しました: ", fail_op:"操作に失敗しました: ",
+    fail_kanso:"完走処理に失敗しました: ", fail_del:"削除に失敗しました: ", fail_report:"報告に失敗しました: ",
+    fail_reply:"書き込みに失敗しました: ", fail_auth:"認証に失敗しました: ",
+    notice:"⚠️ このサイトは翻訳機能を使用しています。\n元の言語以外では、表示に多少のずれが生じる場合があります。\nあらかじめご了承ください。",
+    notice_ok:"OK・サイトへ進む"
+  },
+  en:{
+    new_thread:"+ New Thread", close_form:"▲ Close", form_h2:"■ Create a New Thread",
+    required_note:"Title and body are required",
+    cat_ph:"Select a category (defaults to Chat)",
+    mag_label:"Magazine (optional)", work_label:"Title of work (add character after)",
+    work_ph:"Work title (e.g. Blue Lock)", add_btn:"Add",
+    chara_label:"Character name (optional)", chara_ph:"Character (e.g. John Doe)",
+    title_ph:"Thread title (required, max 40)", title_err:"Please enter a thread title",
+    name_ph:"Name (optional, anonymous)", body_ph:"Body (required, max 1000)",
+    oppass_label:"🔑 OP passphrase (optional, 4+ chars)", oppass_ph:"e.g. mysecret2008",
+    oppass_help:"💡 Needed to manage this thread from another device.<br>※If forgotten, you can't manage it elsewhere.",
+    submit_btn:"Create Thread", submitting:"Sending...",
+    search_ph:"Search by character or work...",
+    sort_new:"🕐 New", sort_hot:"🔥 Popular", sort_rising:"⚡ Rising",
+    rank_thread:"📣 Hot Threads TOP5", rank_work:"🎬 Hot Works TOP5", rank_chara:"⭐ Hot Characters TOP5",
+    no_data:"No data", res_unit:"res", thread_unit:" threads",
+    empty_list:"No threads yet. Be the first to post!",
+    back_list:"← Back to list", kanso_badge:"Done",
+    res_count:" replies", last_update:"Last update: ",
+    reply_h3:"■ Reply", reply_name_ph:"Name (optional)", reply_body_ph:"Body (required, max 1000)", reply_btn:"Post",
+    like:"♡ Like", liked:"♥ Liked", report:"Report", reported:"Reported", del:"Delete",
+    kanso_btn:"✅ Mark as done", del_thread_btn:"🗑 Delete thread", kanso_done_label:"✅ Completed",
+    recover_op:"🔑 Are you the thread owner? (enter passphrase)",
+    anon_name:"Anonymous Fan",
+    deleted_post:"This reply was deleted", hidden_post:"⚠️ Hidden due to multiple reports",
+    loading:"Loading...", load_fail:"⚠️ Failed to load data.<br>Check your connection and reload the page.",
+    foot_terms:"Terms", foot_privacy:"Privacy Policy", foot_about:"About",
+    confirm_kanso:"Mark this thread as completed?", confirm_del_thread:"Delete this thread? This cannot be undone.",
+    confirm_del_post:"Delete this reply?", confirm_report:"Report this reply?\n(Only for posts that violate the rules)",
+    report_done:"Report received. Thank you for your help.", already_reported:"You have already reported this reply.",
+    op_only:"The name \"OP\" is reserved for the thread owner.",
+    oppass_short:"The passphrase must be 4+ characters. Leaving it blank is OK.",
+    body_empty:"Please enter a message.",
+    recover_prompt:"Enter the passphrase you set when creating this thread:", recover_short:"Passphrase must be 4+ characters.",
+    recover_none:"No passphrase is set for this thread.",
+    recover_ok:"✅ Verified as thread owner.\nYou can manage this thread on this device.", recover_wrong:"❌ Incorrect passphrase.",
+    created_ok:"✅ Thread created.\n\nPlease note your passphrase: {p}\nYou'll need it to manage this thread from another device.",
+    fail_create:"Failed to create thread: ", fail_like:"Failed to like: ", fail_op:"Operation failed: ",
+    fail_kanso:"Failed to mark as done: ", fail_del:"Failed to delete: ", fail_report:"Failed to report: ",
+    fail_reply:"Failed to post: ", fail_auth:"Authentication failed: ",
+    notice:"⚠️ This site uses machine translation.\nThere may be slight inaccuracies outside the original language.\nThank you for understanding.",
+    notice_ok:"OK, enter the site"
+  },
+  ko:{
+    new_thread:"+ 새 글 작성", close_form:"▲ 닫기", form_h2:"■ 새 스레드 작성",
+    required_note:"제목과 본문은 필수입니다",
+    cat_ph:"카테고리 선택 (미선택 시 잡담)",
+    mag_label:"연재 잡지 (선택)", work_label:"작품명 (입력 후 캐릭터명 추가 가능)",
+    work_ph:"작품명 (예: 블루록)", add_btn:"추가",
+    chara_label:"캐릭터명 (선택)", chara_ph:"캐릭터명 (예: 홍길동)",
+    title_ph:"스레드 제목 (필수, 40자 이내)", title_err:"스레드 제목을 입력해 주세요",
+    name_ph:"이름 (생략 가능, 익명)", body_ph:"본문 (필수, 1000자 이내)",
+    oppass_label:"🔑 글쓴이 암호 (선택, 4자 이상)", oppass_ph:"예: mysecret2008",
+    oppass_help:"💡 다른 기기에서 스레드를 관리할 때 필요합니다.<br>※잊으면 다른 기기에서 관리할 수 없습니다.",
+    submit_btn:"스레드 작성", submitting:"전송 중...",
+    search_ph:"캐릭터·작품명 검색...",
+    sort_new:"🕐 최신", sort_hot:"🔥 인기", sort_rising:"⚡ 급상승",
+    rank_thread:"📣 화제의 스레드 TOP5", rank_work:"🎬 화제의 작품 TOP5", rank_chara:"⭐ 화제의 캐릭터 TOP5",
+    no_data:"데이터 없음", res_unit:"개", thread_unit:"개",
+    empty_list:"아직 스레드가 없습니다. 첫 글을 작성해 보세요!",
+    back_list:"← 목록으로", kanso_badge:"완주",
+    res_count:"개 댓글", last_update:"마지막 업데이트: ",
+    reply_h3:"■ 답글 작성", reply_name_ph:"이름 (생략 가능)", reply_body_ph:"본문 (필수, 1000자 이내)", reply_btn:"작성",
+    like:"♡ 좋아요", liked:"♥ 좋아요 완료", report:"신고", reported:"신고됨", del:"삭제",
+    kanso_btn:"✅ 완주 처리", del_thread_btn:"🗑 스레드 삭제", kanso_done_label:"✅ 완주 스레드",
+    recover_op:"🔑 이 스레드 작성자라면 (암호 입력)",
+    anon_name:"익명의 덕후님",
+    deleted_post:"삭제된 댓글입니다", hidden_post:"⚠️ 다수의 신고로 숨김 처리되었습니다",
+    loading:"불러오는 중...", load_fail:"⚠️ 데이터를 불러오지 못했습니다.<br>연결을 확인하고 페이지를 새로고침해 주세요.",
+    foot_terms:"이용약관", foot_privacy:"개인정보 처리방침", foot_about:"사이트 소개",
+    confirm_kanso:"이 스레드를 완주 처리할까요?", confirm_del_thread:"이 스레드를 삭제할까요? 되돌릴 수 없습니다.",
+    confirm_del_post:"이 댓글을 삭제할까요?", confirm_report:"이 댓글을 신고할까요?\n(규칙 위반 게시물에만 사용하세요)",
+    report_done:"신고가 접수되었습니다. 협조해 주셔서 감사합니다.", already_reported:"이미 신고한 댓글입니다.",
+    op_only:"'글쓴이' 이름은 스레드 작성자 전용입니다.",
+    oppass_short:"암호는 4자 이상이어야 합니다. 비워둬도 됩니다.",
+    body_empty:"본문을 입력해 주세요.",
+    recover_prompt:"이 스레드를 만들 때 설정한 암호를 입력하세요:", recover_short:"암호는 4자 이상입니다.",
+    recover_none:"이 스레드에는 암호가 설정되어 있지 않습니다.",
+    recover_ok:"✅ 글쓴이로 인증되었습니다.\n이 기기에서 이 스레드를 관리할 수 있습니다.", recover_wrong:"❌ 암호가 일치하지 않습니다.",
+    created_ok:"✅ 스레드를 작성했습니다.\n\n글쓴이 암호 '{p}'를 기록해 두세요.\n다른 기기에서 이 스레드를 관리할 때 필요합니다.",
+    fail_create:"스레드 작성 실패: ", fail_like:"좋아요 실패: ", fail_op:"작업 실패: ",
+    fail_kanso:"완주 처리 실패: ", fail_del:"삭제 실패: ", fail_report:"신고 실패: ",
+    fail_reply:"작성 실패: ", fail_auth:"인증 실패: ",
+    notice:"⚠️ 이 사이트는 번역 기능을 사용합니다.\n원래 언어가 아닌 경우 표시에 다소 차이가 있을 수 있습니다.\n양해 부탁드립니다.",
+    notice_ok:"확인, 사이트로 이동"
+  }
+};
+
+/* 言語フラグ表示(投稿者名の横) */
+var LANGFLAG={ja:"🇯🇵日本語", en:"🇺🇸English", ko:"🇰🇷한국어", other:"🌐"};
+
 var A=(function(){
 var CATS=["すべて","キャラ萌え","解釈・考察","作品語り","雑談"];
 var MAGS=["週刊少年ジャンプ","週刊少年マガジン","週刊少年サンデー","少年チャンピオン","ジャンプ＋","その他漫画","アニメ","ゲーム"];
@@ -464,66 +654,128 @@ var th=[];
 var loading=true;
 var fMag="",fWork="",fChara="";
 
+function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+
+/* ---- 言語(i18n) ---- */
+var uiLang=lsGet("kmh_ui_lang")||null;
+function t(key){
+  var l=uiLang||"ja";
+  return (I18N[l]&&I18N[l][key]!==undefined)?I18N[l][key]:(I18N.ja[key]!==undefined?I18N.ja[key]:key);
+}
+
 function p(n){return("0"+n).slice(-2);}
 var wday=["日","月","火","水","木","金","土"];
 function fmt(ts){var d=new Date(ts);return d.getFullYear()+"/"+p(d.getMonth()+1)+"/"+p(d.getDate())+"("+wday[d.getDay()]+") "+p(d.getHours())+":"+p(d.getMinutes())+":"+p(d.getSeconds());}
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
 function tcol(t){return TC[t]||"#888";}
+function nameLangClass(lang){
+  if(lang==="ja"||lang==="en"||lang==="ko") return " lang-"+lang;
+  if(lang==="other") return " lang-other";
+  return "";
+}
 
-function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
-function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 var myIp=(function(){var v=lsGet("kmh_ip");if(!v){v=Math.random().toString(36).slice(2,10).toUpperCase();lsSet("kmh_ip",v);}return v;})();
 
 /* ============================================================
-   スレ主合言葉認証
-   ------------------------------------------------------------
-   localStorageに「合言葉認証済みのスレIDリスト」を保存する。
-   別端末から合言葉を入力して認証成功すると、そのスレIDがリスト入りし、
-   以降は再入力なしでスレ主として振る舞える。
+   言語選択 / 注意書きモーダルの制御
    ============================================================ */
-function getVerifiedOps(){
-  try{
-    var v=lsGet("kmh_op_verified");
-    return v?JSON.parse(v):[];
-  }catch(e){return [];}
+function chooseLang(l){
+  uiLang=l;
+  lsSet("kmh_ui_lang",l);
+  lsSet("kmh_post_lang",l);   /* UI言語=投稿言語(シンプル方式) */
+  document.documentElement.lang=l;
+  var lm=document.getElementById("lang-modal");if(lm)lm.classList.remove("on");
+  /* 注意書きを表示 */
+  var nt=document.getElementById("notice-text");if(nt)nt.textContent=t("notice");
+  var ob=document.getElementById("notice-ok-btn");if(ob)ob.textContent=t("notice_ok");
+  var nm=document.getElementById("notice-modal");if(nm)nm.classList.add("on");
 }
-function addVerifiedOp(threadId){
-  var list=getVerifiedOps();
-  var idStr=String(threadId);
-  if(list.indexOf(idStr)<0){
-    list.push(idStr);
-    lsSet("kmh_op_verified",JSON.stringify(list));
+function acceptNotice(){
+  var nm=document.getElementById("notice-modal");if(nm)nm.classList.remove("on");
+  document.body.style.overflow="";
+  applyStaticI18n();
+  loadAll();
+}
+/* ヘッダーの言語切替ボタン(2回目以降の変更用) */
+function setLang(l){
+  uiLang=l;
+  lsSet("kmh_ui_lang",l);
+  lsSet("kmh_post_lang",l);
+  document.documentElement.lang=l;
+  applyStaticI18n();
+  render();
+}
+
+/* 静的HTML部分(フォーム・フッター等)の文言を現在の言語に反映 */
+function applyStaticI18n(){
+  function setText(id,key){var el=document.getElementById(id);if(el)el.textContent=t(key);}
+  function setHTML(id,key){var el=document.getElementById(id);if(el)el.innerHTML=t(key);}
+  function setPH(id,key){var el=document.getElementById(id);if(el)el.placeholder=t(key);}
+  /* ヘッダー新規ボタン(フォームが開いていないときだけ書き換える) */
+  var fw=document.getElementById("fwrap");
+  var formOpen=fw&&fw.style.display==="block";
+  var nb=document.getElementById("new-btn");
+  if(nb) nb.textContent=formOpen?t("close_form"):t("new_thread");
+  setText("g-formh2","form_h2");
+  setText("g-required","required_note");
+  /* カテゴリ選択の先頭option */
+  var fcat=document.getElementById("f-cat");
+  if(fcat&&fcat.options.length>0) fcat.options[0].text=t("cat_ph");
+  setText("g-maglabel","mag_label");
+  setText("g-worklabel","work_label");
+  setPH("work-inp","work_ph");
+  setText("g-workadd","add_btn");
+  setText("g-charalabel","chara_label");
+  setPH("chara-inp","chara_ph");
+  setText("g-charaadd","add_btn");
+  setPH("f-title","title_ph");
+  setText("err-title","title_err");
+  setPH("f-name","name_ph");
+  setPH("f-body","body_ph");
+  setHTML("g-oppasslabel","oppass_label");
+  setPH("f-oppass","oppass_ph");
+  setHTML("g-oppasshelp","oppass_help");
+  setText("g-submitbtn","submit_btn");
+  setText("g-foot-terms","foot_terms");
+  setText("g-foot-privacy","foot_privacy");
+  setText("g-foot-about","foot_about");
+  /* 言語切替ボタンのアクティブ表示 */
+  var sws=document.querySelectorAll(".lang-sw-btn");
+  for(var i=0;i<sws.length;i++){
+    if(sws[i].getAttribute("data-l")===uiLang) sws[i].classList.add("on");
+    else sws[i].classList.remove("on");
   }
 }
-function isVerifiedOp(threadId){
-  return getVerifiedOps().indexOf(String(threadId))>=0;
+
+/* ============================================================
+   スレ主合言葉認証
+   ============================================================ */
+function getVerifiedOps(){
+  try{var v=lsGet("kmh_op_verified");return v?JSON.parse(v):[];}catch(e){return [];}
 }
+function addVerifiedOp(threadId){
+  var list=getVerifiedOps();var idStr=String(threadId);
+  if(list.indexOf(idStr)<0){list.push(idStr);lsSet("kmh_op_verified",JSON.stringify(list));}
+}
+function isVerifiedOp(threadId){return getVerifiedOps().indexOf(String(threadId))>=0;}
 
-/* スレ詳細画面で「このスレを立てた方へ」リンクをクリックしたとき */
 async function recoverOp(tid){
-  var pwd=prompt("このスレを立てたときの合言葉を入力してください：");
-  if(pwd===null) return; /* キャンセル */
+  var pwd=prompt(t("recover_prompt"));
+  if(pwd===null) return;
   pwd=pwd.trim();
-  if(pwd.length<4){alert("合言葉は4文字以上です。");return;}
-
+  if(pwd.length<4){alert(t("recover_short"));return;}
   try{
     var res=await sb.from("threads").select("op_password").eq("id",Number(tid)).single();
     if(res.error) throw res.error;
     var savedPwd=res.data&&res.data.op_password;
-    if(!savedPwd){
-      alert("このスレッドには合言葉が設定されていません。");
-      return;
-    }
+    if(!savedPwd){alert(t("recover_none"));return;}
     if(savedPwd===pwd){
       addVerifiedOp(tid);
-      alert("✅ スレ主として認証されました。\nこの端末ではこのスレを管理できます。");
+      alert(t("recover_ok"));
       render();
-    }else{
-      alert("❌ 合言葉が違います。");
-    }
-  }catch(e){
-    alert("認証に失敗しました: "+(e.message||e));
-  }
+    }else{alert(t("recover_wrong"));}
+  }catch(e){alert(t("fail_auth")+(e.message||e));}
 }
 
 /* ============================================================
@@ -549,13 +801,8 @@ window.addEventListener("keydown",function(e){
     }
   }
 });
-
 function updateAdminBadge(){
-  if(adminMode){
-    document.body.classList.add("admin");
-  }else{
-    document.body.classList.remove("admin");
-  }
+  if(adminMode){document.body.classList.add("admin");}else{document.body.classList.remove("admin");}
   var el=document.getElementById("admin-badge");
   if(!el){
     el=document.createElement("div");
@@ -564,9 +811,7 @@ function updateAdminBadge(){
     el.title="クリックで解除";
     el.onclick=function(){
       if(confirm("管理者モードを解除しますか？")){
-        adminMode=false;
-        lsSet("kmh_admin","0");
-        updateAdminBadge();
+        adminMode=false;lsSet("kmh_admin","0");updateAdminBadge();
         if(typeof render==="function") render();
       }
     };
@@ -588,29 +833,24 @@ async function loadAll(){
     var pRes=await sb.from("posts").select("*").order("id",{ascending:true});
     var lRes=await sb.from("likes").select("*");
     var rRes=await sb.from("reports").select("*");
-
     if(tRes.error) throw tRes.error;
     if(pRes.error) throw pRes.error;
     if(lRes.error) throw lRes.error;
     if(rRes.error) throw rRes.error;
-
     var threads=tRes.data||[];
     var posts=pRes.data||[];
     var likes=lRes.data||[];
     var reports=rRes.data||[];
-
     var likeCount={},likedMine={};
     likes.forEach(function(lk){
       likeCount[lk.post_id]=(likeCount[lk.post_id]||0)+1;
       if(lk.uid===myIp) likedMine[lk.post_id]=true;
     });
-
     var reportCount={},reportedMine={};
     reports.forEach(function(rp){
       reportCount[rp.post_id]=(reportCount[rp.post_id]||0)+1;
       if(rp.uid===myIp) reportedMine[rp.post_id]=true;
     });
-
     var byThread={};
     posts.forEach(function(po){
       if(!byThread[po.thread_id]) byThread[po.thread_id]=[];
@@ -622,6 +862,7 @@ async function loadAll(){
         body:(po.deleted||autoHidden)?"":(po.body||""),
         ts:new Date(po.created_at).getTime(),
         uid:po.uid,
+        postLang:po.post_lang||null,
         deleted:!!po.deleted,
         autoHidden:autoHidden,
         medalHidden:!!po.medal_hidden,
@@ -631,45 +872,33 @@ async function loadAll(){
         reportedByMe:!!reportedMine[po.id]
       });
     });
-
-    th=threads.slice().reverse().map(function(t){
+    th=threads.slice().reverse().map(function(t2){
       var tags=[];
-      if(t.mag_tag) tags.push(t.mag_tag);
-      if(t.work_tag) tags.push(t.work_tag);
-      if(t.chara_tag) tags.push(t.chara_tag);
+      if(t2.mag_tag) tags.push(t2.mag_tag);
+      if(t2.work_tag) tags.push(t2.work_tag);
+      if(t2.chara_tag) tags.push(t2.chara_tag);
       return {
-        id:t.id,
-        title:t.title,
-        cat:t.cat,
-        tags:tags,
-        workTag:t.work_tag||"",
-        charaTag:t.chara_tag||"",
-        kanso:!!t.kanso,
-        hasOpPassword:!!t.op_password,  /* 合言葉が設定されているか(中身は持たない) */
-        posts:byThread[t.id]||[]
+        id:t2.id, title:t2.title, cat:t2.cat, tags:tags,
+        workTag:t2.work_tag||"", charaTag:t2.chara_tag||"",
+        kanso:!!t2.kanso, hasOpPassword:!!t2.op_password,
+        posts:byThread[t2.id]||[]
       };
     });
-
-    th=th.filter(function(t){return t.posts.length>0;});
-
+    th=th.filter(function(t2){return t2.posts.length>0;});
     loading=false;
-
     if(st.thread){
       var found=null;
       for(var i=0;i<th.length;i++){if(th[i].id===st.thread.id){found=th[i];break;}}
       st.thread=found;
     }else{
-      if(location.hash){
-        applyHash();
-        return;
-      }
+      if(location.hash){applyHash();return;}
     }
     render();
   }catch(e){
     loading=false;
     th=[];
     var main=document.getElementById("main");
-    if(main) main.innerHTML='<div class="empty">⚠️ データの読み込みに失敗しました。<br>通信環境を確認して、ページを再読み込みしてください。<br><br><span style="font-size:11px;color:#c00">'+esc(e.message||String(e))+'</span></div>';
+    if(main) main.innerHTML='<div class="empty">'+t("load_fail")+'<br><br><span style="font-size:11px;color:#c00">'+esc(e.message||String(e))+'</span></div>';
     console.error("loadAll error:",e);
   }
 }
@@ -678,10 +907,10 @@ async function loadAll(){
 function renderTagUI(){
   var pt=document.getElementById("preset-tags");
   if(pt){
-    pt.innerHTML=MAGS.map(function(t){
-      var on=fMag===t;
-      var s=on?' style="background:'+tcol(t)+';border-color:'+tcol(t)+'"':'';
-      return '<button class="ptag'+(on?" on":"")+'"'+s+' onclick="A.selectMag(this.dataset.t)" data-t="'+esc(t)+'">'+esc(t)+'</button>';
+    pt.innerHTML=MAGS.map(function(tg){
+      var on=fMag===tg;
+      var s=on?' style="background:'+tcol(tg)+';border-color:'+tcol(tg)+'"':'';
+      return '<button class="ptag'+(on?" on":"")+'"'+s+' onclick="A.selectMag(this.dataset.t)" data-t="'+esc(tg)+'">'+esc(tg)+'</button>';
     }).join("");
   }
   var s2=document.getElementById("sel-tags");
@@ -697,7 +926,7 @@ function renderTagUI(){
   var cr=document.getElementById("chara-row");
   if(cr) cr.style.display=(fWork&&!fChara)?"block":"none";
 }
-function selectMag(t){fMag=t;renderTagUI();}
+function selectMag(t2){fMag=t2;renderTagUI();}
 function clearMag(){fMag="";renderTagUI();}
 function clearWork(){fWork="";fChara="";renderTagUI();}
 function clearChara(){fChara="";renderTagUI();}
@@ -715,26 +944,24 @@ function setChara(){
   var s=document.getElementById("chara-suggest");if(s)s.style.display="none";
   renderTagUI();
 }
-
 function getWorkTags(){
   var all={};
-  th.forEach(function(t){if(t.workTag) all[t.workTag]=(all[t.workTag]||0)+1;});
+  th.forEach(function(t2){if(t2.workTag) all[t2.workTag]=(all[t2.workTag]||0)+1;});
   return Object.keys(all).sort(function(a,b){return all[b]-all[a];});
 }
 function getCharaTags(){
   var all={};
-  th.forEach(function(t){if(t.charaTag) all[t.charaTag]=(all[t.charaTag]||0)+1;});
+  th.forEach(function(t2){if(t2.charaTag) all[t2.charaTag]=(all[t2.charaTag]||0)+1;});
   return Object.keys(all).sort(function(a,b){return all[b]-all[a];});
 }
 function getAllTags(){
   var all={};
-  th.forEach(function(t){
-    if(t.workTag) all[t.workTag]=(all[t.workTag]||0)+1;
-    if(t.charaTag) all[t.charaTag]=(all[t.charaTag]||0)+1;
+  th.forEach(function(t2){
+    if(t2.workTag) all[t2.workTag]=(all[t2.workTag]||0)+1;
+    if(t2.charaTag) all[t2.charaTag]=(all[t2.charaTag]||0)+1;
   });
   return Object.keys(all).sort(function(a,b){return all[b]-all[a];});
 }
-
 function showSuggest(inpId,listId){
   var inp=document.getElementById(inpId),list=document.getElementById(listId);
   if(!inp||!list)return;
@@ -763,7 +990,7 @@ function toggleForm(){
   var fw=document.getElementById("fwrap"),nb=document.getElementById("new-btn");
   var open=fw.style.display==="block";
   fw.style.display=open?"none":"block";
-  if(nb)nb.textContent=open?"\uff0b \u30b9\u30ec\u3092\u7acb\u3066\u308b":"\u25b2 \u9589\u3058\u308b";
+  if(nb)nb.textContent=open?t("new_thread"):t("close_form");
   if(!open){fMag="";fWork="";fChara="";renderTagUI();}
 }
 function showErr(id,show){
@@ -778,69 +1005,51 @@ async function submit(){
   var opPass=(document.getElementById("f-oppass")||{}).value||"";
   if(!c) c="雑談";
   var ok=true;
-  showErr("err-cat",false);
   showErr("err-title",!title.trim());if(!title.trim())ok=false;
-  var catEl=document.getElementById("f-cat");if(catEl)catEl.className="";
   var titEl=document.getElementById("f-title");if(titEl)titEl.className=!title.trim()?"err":"";
   var bodEl=document.getElementById("f-body");if(bodEl)bodEl.className=!body.trim()?"err":"";
   if(!body.trim())ok=false;
-  /* スレ主合言葉のバリデーション: 入力された場合は4文字以上必須 */
   opPass=opPass.trim();
   if(opPass&&opPass.length<4){
-    alert("スレ主合言葉は4文字以上で設定してください。空欄でもOKです。");
+    alert(t("oppass_short"));
     var pwEl=document.getElementById("f-oppass");if(pwEl)pwEl.focus();
     return;
   }
   if(!ok)return;
-
   var name=(document.getElementById("f-name")||{}).value||"";
+  var postLang=lsGet("kmh_post_lang")||uiLang||"ja";
   var subBtn=document.querySelector("#fwrap .sub-btn");
-  if(subBtn){subBtn.disabled=true;subBtn.textContent="送信中...";}
-
+  if(subBtn){subBtn.disabled=true;subBtn.textContent=t("submitting");}
   try{
     var tIns=await sb.from("threads").insert({
-      title:title.trim(),
-      cat:c,
-      mag_tag:fMag||null,
-      work_tag:fWork||null,
-      chara_tag:fChara||null,
-      op_uid:myIp,
-      op_password:opPass||null
+      title:title.trim(), cat:c,
+      mag_tag:fMag||null, work_tag:fWork||null, chara_tag:fChara||null,
+      op_uid:myIp, op_password:opPass||null
     }).select();
     if(tIns.error) throw tIns.error;
     var newThread=tIns.data[0];
-
     var pIns=await sb.from("posts").insert({
-      thread_id:newThread.id,
-      name:name.trim(),
-      body:body.trim(),
-      uid:myIp
+      thread_id:newThread.id, name:name.trim(), body:body.trim(), uid:myIp, post_lang:postLang
     });
     if(pIns.error) throw pIns.error;
-
     fMag="";fWork="";fChara="";
     ["f-title","f-name","f-body","f-oppass"].forEach(function(id){var el=document.getElementById(id);if(el){el.value="";el.className="";}});
     var fcat=document.getElementById("f-cat");if(fcat){fcat.value="";fcat.className="";}
-    ["err-cat","err-title","err-body"].forEach(function(id){showErr(id,false);});
+    ["err-title"].forEach(function(id){showErr(id,false);});
     var fcc=document.getElementById("fcc");if(fcc)fcc.textContent="0/1000";
     document.getElementById("fwrap").style.display="none";
-    var nb=document.getElementById("new-btn");if(nb)nb.textContent="\uff0b \u30b9\u30ec\u3092\u7acb\u3066\u308b";
-
-    /* 合言葉設定済みの場合、その情報をユーザーに見せて忘れないように促す */
-    if(opPass){
-      alert("✅ スレを作成しました。\n\nスレ主合言葉「"+opPass+"」を控えておいてください。\n別の端末からこのスレを管理する際に必要です。");
-    }
-
+    var nb=document.getElementById("new-btn");if(nb)nb.textContent=t("new_thread");
+    if(opPass){alert(t("created_ok").replace("{p}",opPass));}
     var newThreadId=newThread.id;
     await loadAll();
     for(var i=0;i<th.length;i++){
       if(th[i].id===newThreadId){st.thread=th[i];updateHash();render();break;}
     }
   }catch(e){
-    alert("スレ作成に失敗しました: "+(e.message||e));
+    alert(t("fail_create")+(e.message||e));
     console.error("submit error:",e);
   }finally{
-    if(subBtn){subBtn.disabled=false;subBtn.textContent="スレを立てる";}
+    if(subBtn){subBtn.disabled=false;subBtn.textContent=t("submit_btn");}
   }
 }
 
@@ -861,7 +1070,7 @@ function updateTitle(){document.title=st.thread?st.thread.title+" - キャラ萌
 function render(){
   renderCats();renderBc();updateTitle();
   var main=document.getElementById("main");
-  if(loading){main.innerHTML='<div class="empty">読み込み中...</div>';return;}
+  if(loading){main.innerHTML='<div class="empty">'+t("loading")+'</div>';return;}
   main.innerHTML=st.thread?renderThread():renderList();
   window.scrollTo(0,0);
 }
@@ -869,163 +1078,149 @@ function doSearch(){var inp=document.getElementById("sq");if(inp){st.q=inp.value
 function clearSearch(){st.q="";var inp=document.getElementById("sq");if(inp)inp.value="";render();}
 function searchKey(e){if(e.key==="Enter")doSearch();}
 function searchByTag(tag){
-  st.thread=null;
-  st.cat="すべて";
-  st.q=tag;
-  updateHash();
-  render();
-  setTimeout(function(){
-    var inp=document.getElementById("sq");
-    if(inp) inp.value=tag;
-    window.scrollTo(0,0);
-  },50);
+  st.thread=null;st.cat="すべて";st.q=tag;updateHash();render();
+  setTimeout(function(){var inp=document.getElementById("sq");if(inp) inp.value=tag;window.scrollTo(0,0);},50);
 }
 
 function calcRanks(){
   var thRank=th.slice().sort(function(a,b){return b.posts.length-a.posts.length;}).slice(0,5);
   var workMap={};
-  th.forEach(function(t){
-    var w=t.workTag||((t.tags||[]).filter(function(tg){return MAGS.indexOf(tg)<0;})[0]);
+  th.forEach(function(t2){
+    var w=t2.workTag||((t2.tags||[]).filter(function(tg){return MAGS.indexOf(tg)<0;})[0]);
     if(w)workMap[w]=(workMap[w]||0)+1;
   });
   var workRank=Object.keys(workMap).map(function(k){return{name:k,val:workMap[k]};}).sort(function(a,b){return b.val-a.val;}).slice(0,5);
   var charaMap={};
-  th.forEach(function(t){
-    var c=t.charaTag||((t.tags||[]).filter(function(tg){return MAGS.indexOf(tg)<0;})[1]);
+  th.forEach(function(t2){
+    var c=t2.charaTag||((t2.tags||[]).filter(function(tg){return MAGS.indexOf(tg)<0;})[1]);
     if(c)charaMap[c]=(charaMap[c]||0)+1;
   });
   var charaRank=Object.keys(charaMap).map(function(k){return{name:k,val:charaMap[k]};}).sort(function(a,b){return b.val-a.val;}).slice(0,5);
   return{thRank:thRank,workRank:workRank,charaRank:charaRank};
 }
-
 function makeBadges(tags,cat){
   var html="";
   if(cat) html+='<span class="th-cat">'+esc(cat)+'</span>';
   (tags||[]).forEach(function(tg){html+='<span class="tag-lbl" style="background:'+tcol(tg)+'">'+esc(tg)+'</span>';});
   return html;
 }
-
 function sortBy(s){st.sort=s;render();}
 
 function renderList(){
-  var base=st.cat==="すべて"?th.slice():th.filter(function(t){return t.cat===st.cat;});
-  var list=st.q?base.filter(function(t){
+  var base=st.cat==="すべて"?th.slice():th.filter(function(t2){return t2.cat===st.cat;});
+  var list=st.q?base.filter(function(t2){
     var q=st.q.toLowerCase();
-    return t.title.toLowerCase().indexOf(q)>=0||(t.tags&&t.tags.some(function(tg){return tg.toLowerCase().indexOf(q)>=0;}));
+    return t2.title.toLowerCase().indexOf(q)>=0||(t2.tags&&t2.tags.some(function(tg){return tg.toLowerCase().indexOf(q)>=0;}));
   }):base;
-
   var now=Date.now();
   list=list.slice().sort(function(a,b){
     if(st.sort==="hot"){
-      var sa=(a.posts||[]).reduce(function(s,p){return s+(p.likeCount||0);},0)+a.posts.length;
-      var sb2=(b.posts||[]).reduce(function(s,p){return s+(p.likeCount||0);},0)+b.posts.length;
+      var sa=(a.posts||[]).reduce(function(s,p2){return s+(p2.likeCount||0);},0)+a.posts.length;
+      var sb2=(b.posts||[]).reduce(function(s,p2){return s+(p2.likeCount||0);},0)+b.posts.length;
       return sb2-sa;
     } else if(st.sort==="rising"){
-      var ha=(a.posts||[]).filter(function(p){return now-p.ts<3600000;}).length;
-      var hb=(b.posts||[]).filter(function(p){return now-p.ts<3600000;}).length;
+      var ha=(a.posts||[]).filter(function(p2){return now-p2.ts<3600000;}).length;
+      var hb=(b.posts||[]).filter(function(p2){return now-p2.ts<3600000;}).length;
       return hb-ha;
     }
     return b.posts[b.posts.length-1].ts - a.posts[a.posts.length-1].ts;
   });
-
-  var sorts=[["new","🕐 新着"],["hot","🔥 人気"],["rising","⚡ 急上昇"]];
+  var sorts=[["new",t("sort_new")],["hot",t("sort_hot")],["rising",t("sort_rising")]];
   var sortBtns='<div id="sort-bar">'+sorts.map(function(s){
     return '<button class="sort-btn'+(st.sort===s[0]?" on":"")+'" onclick="A.sortBy(this.dataset.s)" data-s="'+s[0]+'">'+s[1]+'</button>';
   }).join("")+'</div>';
-
-  var top='<div id="search-bar"><input id="sq" type="text" placeholder="キャラ名・作品名で検索..." onkeydown="A.searchKey(event)"><button onclick="A.doSearch()">🔍</button>'+(st.q?'<span class="search-clear" onclick="A.clearSearch()">✕</span>':"")+' </div>';
+  var top='<div id="search-bar"><input id="sq" type="text" placeholder="'+esc(t("search_ph"))+'" onkeydown="A.searchKey(event)"><button onclick="A.doSearch()">🔍</button>'+(st.q?'<span class="search-clear" onclick="A.clearSearch()">✕</span>':"")+' </div>';
   top+=sortBtns;
   if(st.cat==="すべて"&&th.length>0){
     var r=calcRanks();
-    var thH=r.thRank.length?r.thRank.map(function(t,i){
-      return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span><span class="rank-name"><a onclick="A.openT(this.dataset.id)" data-id="'+esc(t.id)+'">'+esc(t.title)+'</a></span><span class="rank-val">'+t.posts.length+'res</span></div>';
-    }).join(""):'<div class="rank-item" style="color:#bbb;font-size:11px">データなし</div>';
+    var thH=r.thRank.length?r.thRank.map(function(t2,i){
+      return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span><span class="rank-name"><a onclick="A.openT(this.dataset.id)" data-id="'+esc(t2.id)+'">'+esc(t2.title)+'</a></span><span class="rank-val">'+t2.posts.length+t("res_unit")+'</span></div>';
+    }).join(""):'<div class="rank-item" style="color:#bbb;font-size:11px">'+t("no_data")+'</div>';
     var wkH=r.workRank.length?r.workRank.map(function(x,i){
-      return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span><span class="rank-name"><a onclick="A.searchByTag(this.dataset.t)" data-t="'+esc(x.name)+'">'+esc(x.name)+'</a></span><span class="rank-val">'+x.val+'スレ</span></div>';
-    }).join(""):'<div class="rank-item" style="color:#bbb;font-size:11px">データなし</div>';
+      return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span><span class="rank-name"><a onclick="A.searchByTag(this.dataset.t)" data-t="'+esc(x.name)+'">'+esc(x.name)+'</a></span><span class="rank-val">'+x.val+t("thread_unit")+'</span></div>';
+    }).join(""):'<div class="rank-item" style="color:#bbb;font-size:11px">'+t("no_data")+'</div>';
     var chH=r.charaRank.length?r.charaRank.map(function(x,i){
-      return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span><span class="rank-name"><a onclick="A.searchByTag(this.dataset.t)" data-t="'+esc(x.name)+'">'+esc(x.name)+'</a></span><span class="rank-val">'+x.val+'スレ</span></div>';
-    }).join(""):'<div class="rank-item" style="color:#bbb;font-size:11px">データなし</div>';
-    top+='<div class="rank-wrap"><div class="rank-box"><div class="rank-hdr">📣 話題スレ TOP5</div>'+thH+'</div></div>';
+      return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span><span class="rank-name"><a onclick="A.searchByTag(this.dataset.t)" data-t="'+esc(x.name)+'">'+esc(x.name)+'</a></span><span class="rank-val">'+x.val+t("thread_unit")+'</span></div>';
+    }).join(""):'<div class="rank-item" style="color:#bbb;font-size:11px">'+t("no_data")+'</div>';
+    top+='<div class="rank-wrap"><div class="rank-box"><div class="rank-hdr">'+t("rank_thread")+'</div>'+thH+'</div></div>';
     top+='<div class="rank-wrap">'+
-      '<div class="rank-box"><div class="rank-hdr">🎬 話題作品 TOP5</div>'+wkH+'</div>'+
-      '<div class="rank-box"><div class="rank-hdr">⭐ 話題キャラ TOP5</div>'+chH+'</div>'+
+      '<div class="rank-box"><div class="rank-hdr">'+t("rank_work")+'</div>'+wkH+'</div>'+
+      '<div class="rank-box"><div class="rank-hdr">'+t("rank_chara")+'</div>'+chH+'</div>'+
       '</div>';
   }
-  if(!list.length)return top+'<div class="empty">まだスレッドがありません。最初のスレを立ててみよう！</div>';
-  return top+'<div id="thread-list">'+list.map(function(t){
-    var last=t.posts[t.posts.length-1];
-    var isK=t.kanso||t.posts.length>=KANSO;
-    var badges=makeBadges(t.tags,t.cat);
-    return '<button class="th-item" onclick="A.openT(this.dataset.id)" data-id="'+esc(t.id)+'">'+
+  if(!list.length)return top+'<div class="empty">'+t("empty_list")+'</div>';
+  return top+'<div id="thread-list">'+list.map(function(t2){
+    var last=t2.posts[t2.posts.length-1];
+    var isK=t2.kanso||t2.posts.length>=KANSO;
+    var badges=makeBadges(t2.tags,t2.cat);
+    return '<button class="th-item" onclick="A.openT(this.dataset.id)" data-id="'+esc(t2.id)+'">'+
       (badges?'<div class="th-badges">'+badges+'</div>':"")+
-      '<div class="th-top"><div class="th-title">'+esc(t.title)+(isK?'<span class="kanso-badge">完走</span>':"")+
-      '</div><span class="th-res">'+t.posts.length+'res</span></div>'+
+      '<div class="th-top"><div class="th-title">'+esc(t2.title)+(isK?'<span class="kanso-badge">'+t("kanso_badge")+'</span>':"")+
+      '</div><span class="th-res">'+t2.posts.length+t("res_unit")+'</span></div>'+
       '<div class="th-meta">'+fmt(last.ts)+'</div></button>';
   }).join("")+'</div>';
 }
 
-function getMedalPost(t){
-  if(!t.kanso&&t.posts.length<KANSO)return null;
+function getMedalPost(t2){
+  if(!t2.kanso&&t2.posts.length<KANSO)return null;
   var best=null,bc=-1;
-  t.posts.forEach(function(pst){var c=pst.likeCount||0;if(c>bc){bc=c;best=pst;}});
+  t2.posts.forEach(function(pst){var c=pst.likeCount||0;if(c>bc){bc=c;best=pst;}});
   return bc>0?best:null;
 }
 
 function renderThread(){
-  var t=st.thread;
-  var isK=t.kanso||t.posts.length>=KANSO;
-  var medalPost=getMedalPost(t);
-  /* スレ主判定: 1レス目のuid一致 OR この端末で合言葉認証済み */
-  var isOPByUid=t.posts.length>0&&t.posts[0].uid===myIp;
-  var isOPByPassword=isVerifiedOp(t.id);
+  var t2=st.thread;
+  var isK=t2.kanso||t2.posts.length>=KANSO;
+  var medalPost=getMedalPost(t2);
+  var isOPByUid=t2.posts.length>0&&t2.posts[0].uid===myIp;
+  var isOPByPassword=isVerifiedOp(t2.id);
   var isOP=isOPByUid||isOPByPassword;
   var canModerateThread=isOP||adminMode;
-  /* 「このスレを立てた方へ」リンクの表示条件: 自分はスレ主ではない、かつ合言葉が設定されている */
-  var showRecover=!isOP&&t.hasOpPassword;
-  var badges=makeBadges(t.tags,t.cat);
-  var posts=t.posts.map(function(pst,i){
-    if(pst.deleted)return '<div class="post"><div class="pmeta"><span class="pno">'+(i+1)+'</span></div><div class="pbody" style="color:#bbb;font-size:12px">このレスは削除されています</div></div>';
-    if(pst.autoHidden)return '<div class="post"><div class="pmeta"><span class="pno">'+(i+1)+'</span></div><div class="pbody" style="color:#bbb;font-size:12px">⚠️ このレスは複数の報告により非表示になっています</div></div>';
-    var name=pst.name||"萌えてる匿名さん";
+  var showRecover=!isOP&&t2.hasOpPassword;
+  var badges=makeBadges(t2.tags,t2.cat);
+  var posts=t2.posts.map(function(pst,i){
+    if(pst.deleted)return '<div class="post"><div class="pmeta"><span class="pno">'+(i+1)+'</span></div><div class="pbody" style="color:#bbb;font-size:12px">'+t("deleted_post")+'</div></div>';
+    if(pst.autoHidden)return '<div class="post"><div class="pmeta"><span class="pno">'+(i+1)+'</span></div><div class="pbody" style="color:#bbb;font-size:12px">'+t("hidden_post")+'</div></div>';
+    var name=pst.name||t("anon_name");
     var isOPp=i===0;
     var isMedal=medalPost&&medalPost.id===pst.id;
     var showMedal=isMedal&&!pst.medalHidden;
     var likeCnt=pst.likeCount||0;
     var isMine=pst.likedByMe;
     var isOwner=pst.uid===myIp;
-    /* 合言葉認証済み or 管理者モードなら自分のレスじゃなくても削除可 */
     var canDeletePost=isOwner||adminMode||isOPByPassword;
+    var langCls=isOPp?"":nameLangClass(pst.postLang); /* OPは赤を優先 */
+    var flag=pst.postLang&&LANGFLAG[pst.postLang]?'<span class="langflag">'+LANGFLAG[pst.postLang]+'</span>':"";
     return '<div class="post'+(showMedal?" medal-post":"")+'">'+
       '<div class="pmeta">'+
       (showMedal?'<span style="font-size:14px;margin-right:3px">🥇</span>':"")+
       '<span class="pno">'+(i+1)+'</span>'+
-      '<span class="pname'+(isOPp?" op":"")+'">'+(isOPp?'<span class="opbg">OP</span>':"")+esc(name)+'</span>'+
+      '<span class="pname'+(isOPp?" op":"")+langCls+'">'+(isOPp?'<span class="opbg">OP</span>':"")+esc(name)+flag+'</span>'+
       '<span class="pdate">'+fmt(pst.ts)+'</span>'+
-      '&nbsp;<span style="font-size:11px;color:'+(pst.reportedByMe?"#888":"#ddd")+';cursor:pointer" onclick="A.report(this.dataset.pid)" data-pid="'+esc(pst.id)+'">'+(pst.reportedByMe?"報告済":"報告")+'</span>'+
-      (canDeletePost?'&nbsp;<span style="font-size:11px;color:#ddd;cursor:pointer" onclick="A.deletePost(this.dataset.tid,this.dataset.pid)" data-tid="'+esc(t.id)+'" data-pid="'+esc(pst.id)+'">削除</span>':"")+
+      '&nbsp;<span style="font-size:11px;color:'+(pst.reportedByMe?"#888":"#ddd")+';cursor:pointer" onclick="A.report(this.dataset.pid)" data-pid="'+esc(pst.id)+'">'+(pst.reportedByMe?t("reported"):t("report"))+'</span>'+
+      (canDeletePost?'&nbsp;<span style="font-size:11px;color:#ddd;cursor:pointer" onclick="A.deletePost(this.dataset.tid,this.dataset.pid)" data-tid="'+esc(t2.id)+'" data-pid="'+esc(pst.id)+'">'+t("del")+'</span>':"")+
       '<br><span class="pid">ID:'+pst.uid+'</span></div>'+
       '<div class="pbody"'+(likeCnt>=20?' style="font-weight:700"':'')+'>'+esc(pst.body)+'</div>'+
-      '<div class="like-row"><button class="like-btn'+(isMine?" liked":"")+'" onclick="A.doLike(this.dataset.pid)" data-pid="'+esc(pst.id)+'">'+(isMine?"♥ いいね済":"♡ いいね")+'</button>'+
+      '<div class="like-row"><button class="like-btn'+(isMine?" liked":"")+'" onclick="A.doLike(this.dataset.pid)" data-pid="'+esc(pst.id)+'">'+(isMine?t("liked"):t("like"))+'</button>'+
       '<span class="like-cnt">'+likeCnt+'</span>'+
       (isMedal&&isOwner?'<a onclick="A.toggleMedal(this.dataset.pid)" data-pid="'+esc(pst.id)+'" style="font-size:11px;margin-left:6px">[🥇'+(pst.medalHidden?"表示":"非表示")+']</a>':"")+
       '</div></div>';
   }).join("");
-  return '<a class="back-btn" onclick="A.top()">← スレ一覧に戻る</a>'+
+  return '<a class="back-btn" onclick="A.top()">'+t("back_list")+'</a>'+
     '<div id="tv-hdr">'+
     (badges?'<div class="tv-badges">'+badges+'</div>':"")+
-    '<div class="tv-title">'+esc(t.title)+(isK?'&nbsp;<span class="kanso-badge">完走</span>':"")+
-    '</div><div class="tv-meta">'+t.posts.length+'件のレス / 最終更新: '+fmt(t.posts[t.posts.length-1].ts)+'</div>'+
-    (canModerateThread&&!isK&&t.posts.length>1?'<br><button class="kanso-op-btn" onclick="A.doKanso(this.dataset.tid)" data-tid="'+esc(t.id)+'">✅ 完走にする</button>':"")+
-    (canModerateThread?'&nbsp;<button class="kanso-op-btn" style="border-color:#c00;color:#c00" onclick="A.deleteThread(this.dataset.tid)" data-tid="'+esc(t.id)+'">🗑 スレを削除</button>':"")+
-    (isK?'<br><span class="kanso-done-label">✅ 完走スレ</span>':"")+
-    (showRecover?'<br><a class="op-recover" onclick="A.recoverOp(this.dataset.tid)" data-tid="'+esc(t.id)+'">🔑 このスレを立てた方へ（合言葉を入力）</a>':"")+
+    '<div class="tv-title">'+esc(t2.title)+(isK?'&nbsp;<span class="kanso-badge">'+t("kanso_badge")+'</span>':"")+
+    '</div><div class="tv-meta">'+t2.posts.length+t("res_count")+' / '+t("last_update")+fmt(t2.posts[t2.posts.length-1].ts)+'</div>'+
+    (canModerateThread&&!isK&&t2.posts.length>1?'<br><button class="kanso-op-btn" onclick="A.doKanso(this.dataset.tid)" data-tid="'+esc(t2.id)+'">'+t("kanso_btn")+'</button>':"")+
+    (canModerateThread?'&nbsp;<button class="kanso-op-btn" style="border-color:#c00;color:#c00" onclick="A.deleteThread(this.dataset.tid)" data-tid="'+esc(t2.id)+'">'+t("del_thread_btn")+'</button>':"")+
+    (isK?'<br><span class="kanso-done-label">'+t("kanso_done_label")+'</span>':"")+
+    (showRecover?'<br><a class="op-recover" onclick="A.recoverOp(this.dataset.tid)" data-tid="'+esc(t2.id)+'">'+t("recover_op")+'</a>':"")+
     '</div>'+
     '<div id="posts-wrap">'+posts+'</div>'+
-    '<div id="reply-box"><h3>■ 返信する</h3>'+
-    '<input id="r-name" placeholder="名前（省略可）">'+
-    '<textarea id="r-body" placeholder="本文（必須・1000文字以内）" maxlength="1000"></textarea>'+
-    '<div class="form-foot"><span></span><button class="sub-btn" onclick="A.reply()">書き込む</button></div></div>';
+    '<div id="reply-box"><h3>'+t("reply_h3")+'</h3>'+
+    '<input id="r-name" placeholder="'+esc(t("reply_name_ph"))+'">'+
+    '<textarea id="r-body" placeholder="'+esc(t("reply_body_ph"))+'" maxlength="1000"></textarea>'+
+    '<div class="form-foot"><span></span><button class="sub-btn" onclick="A.reply()">'+t("reply_btn")+'</button></div></div>';
 }
 
 /* アクション */
@@ -1035,28 +1230,17 @@ function updateHash(){
   if(st.thread) newHash="#t="+st.thread.id;
   if(location.hash===newHash) return;
   skipNextHashChange=true;
-  if(newHash){
-    location.hash=newHash;
-  }else{
-    history.pushState("",document.title,location.pathname+location.search);
-  }
+  if(newHash){location.hash=newHash;}
+  else{history.pushState("",document.title,location.pathname+location.search);}
 }
-
 function applyHash(){
   var m=location.hash.match(/^#t=(\d+)$/);
   if(m){
     var id=Number(m[1]);
-    for(var i=0;i<th.length;i++){
-      if(th[i].id===id){st.thread=th[i];render();return;}
-    }
-    st.thread=null;
-    render();
-  }else{
-    st.thread=null;
-    render();
-  }
+    for(var i=0;i<th.length;i++){if(th[i].id===id){st.thread=th[i];render();return;}}
+    st.thread=null;render();
+  }else{st.thread=null;render();}
 }
-
 window.addEventListener("hashchange",function(){
   if(skipNextHashChange){skipNextHashChange=false;return;}
   applyHash();
@@ -1076,24 +1260,19 @@ async function doLike(pid){
     }
   }
   if(!post||post.likedByMe)return;
-
   post.likedByMe=true;
   post.likeCount=(post.likeCount||0)+1;
   render();
-
   try{
     var res=await sb.from("likes").insert({post_id:Number(pid),uid:myIp});
-    if(res.error){
-      if(res.error.code!=="23505") throw res.error;
-    }
+    if(res.error){if(res.error.code!=="23505") throw res.error;}
   }catch(e){
     post.likedByMe=false;
     post.likeCount=Math.max(0,(post.likeCount||1)-1);
     render();
-    alert("いいねに失敗しました: "+(e.message||e));
+    alert(t("fail_like")+(e.message||e));
   }
 }
-
 async function toggleMedal(pid){
   var post=null;
   if(st.thread){
@@ -1106,47 +1285,33 @@ async function toggleMedal(pid){
   try{
     var res=await sb.from("posts").update({medal_hidden:next}).eq("id",Number(pid));
     if(res.error) throw res.error;
-    post.medalHidden=next;
-    render();
-  }catch(e){
-    alert("操作に失敗しました: "+(e.message||e));
-  }
+    post.medalHidden=next;render();
+  }catch(e){alert(t("fail_op")+(e.message||e));}
 }
-
 async function doKanso(tid){
-  if(!confirm("このスレッドを完走にしますか？"))return;
+  if(!confirm(t("confirm_kanso")))return;
   try{
     var res=await sb.from("threads").update({kanso:true}).eq("id",Number(tid));
     if(res.error) throw res.error;
     await loadAll();
-  }catch(e){
-    alert("完走処理に失敗しました: "+(e.message||e));
-  }
+  }catch(e){alert(t("fail_kanso")+(e.message||e));}
 }
-
 async function deleteThread(tid){
-  if(!confirm("このスレッドを削除しますか？元に戻せません。"))return;
+  if(!confirm(t("confirm_del_thread")))return;
   try{
     var res=await sb.from("threads").delete().eq("id",Number(tid));
     if(res.error) throw res.error;
-    st.thread=null;
-    await loadAll();
-  }catch(e){
-    alert("削除に失敗しました: "+(e.message||e));
-  }
+    st.thread=null;await loadAll();
+  }catch(e){alert(t("fail_del")+(e.message||e));}
 }
-
 async function deletePost(tid,pid){
-  if(!confirm("このレスを削除しますか？"))return;
+  if(!confirm(t("confirm_del_post")))return;
   try{
     var res=await sb.from("posts").update({deleted:true,body:"",name:""}).eq("id",Number(pid));
     if(res.error) throw res.error;
     await loadAll();
-  }catch(e){
-    alert("削除に失敗しました: "+(e.message||e));
-  }
+  }catch(e){alert(t("fail_del")+(e.message||e));}
 }
-
 function showDoc(name){
   var el=document.getElementById("doc-"+name);
   if(el) el.classList.add("on");
@@ -1157,7 +1322,6 @@ function hideDoc(name){
   if(el) el.classList.remove("on");
   document.body.style.overflow="";
 }
-
 async function report(pid){
   if(!pid){return;}
   var post=null;
@@ -1166,78 +1330,74 @@ async function report(pid){
       if(String(st.thread.posts[i].id)===String(pid)){post=st.thread.posts[i];break;}
     }
   }
-  if(post&&post.reportedByMe){
-    alert("このレスは既に報告済みです。");
-    return;
-  }
-  if(!confirm("このレスを通報しますか？\n（規約違反のレスに対してのみ使用してください）"))return;
-
+  if(post&&post.reportedByMe){alert(t("already_reported"));return;}
+  if(!confirm(t("confirm_report")))return;
   try{
     var res=await sb.from("reports").insert({post_id:Number(pid),uid:myIp});
     if(res.error){
-      if(res.error.code==="23505"){
-        alert("このレスは既に報告済みです。");
-        return;
-      }
+      if(res.error.code==="23505"){alert(t("already_reported"));return;}
       throw res.error;
     }
     if(post){
       post.reportedByMe=true;
       post.reportCount=(post.reportCount||0)+1;
-      if(post.reportCount>=10){
-        post.autoHidden=true;
-        post.body="";
-      }
+      if(post.reportCount>=10){post.autoHidden=true;post.body="";}
     }
-    alert("報告を受け付けました。ご協力ありがとうございます。");
-    render();
+    alert(t("report_done"));render();
   }catch(e){
-    alert("報告に失敗しました: "+(e.message||e));
+    alert(t("fail_report")+(e.message||e));
     console.error("report error:",e);
   }
 }
-
 async function reply(){
   var body=(document.getElementById("r-body")||{}).value||"";
   if(!body.trim())return;
   var name=(document.getElementById("r-name")||{}).value||"";
   if(name.trim()==="スレ主"){
-    /* スレ主名乗りの判定: uid一致 OR 合言葉認証済み */
     var isOPByUid=st.thread&&st.thread.posts.length>0&&st.thread.posts[0].uid===myIp;
     var isOPByPassword=st.thread&&isVerifiedOp(st.thread.id);
-    if(!(isOPByUid||isOPByPassword)){alert("「スレ主」はスレを立てた方専用です。");return;}
+    if(!(isOPByUid||isOPByPassword)){alert(t("op_only"));return;}
   }
-
+  var postLang=lsGet("kmh_post_lang")||uiLang||"ja";
   var replyBtn=document.querySelector("#reply-box .sub-btn");
-  if(replyBtn){replyBtn.disabled=true;replyBtn.textContent="送信中...";}
-
+  if(replyBtn){replyBtn.disabled=true;replyBtn.textContent=t("submitting");}
   try{
     var res=await sb.from("posts").insert({
-      thread_id:Number(st.thread.id),
-      name:name.trim(),
-      body:body.trim(),
-      uid:myIp
+      thread_id:Number(st.thread.id), name:name.trim(), body:body.trim(), uid:myIp, post_lang:postLang
     });
     if(res.error) throw res.error;
     await loadAll();
     setTimeout(function(){window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"});},80);
   }catch(e){
-    alert("書き込みに失敗しました: "+(e.message||e));
+    alert(t("fail_reply")+(e.message||e));
     console.error("reply error:",e);
   }finally{
-    if(replyBtn){replyBtn.disabled=false;replyBtn.textContent="書き込む";}
+    if(replyBtn){replyBtn.disabled=false;replyBtn.textContent=t("reply_btn");}
   }
 }
 
-/* 起動 */
-loadAll();
+/* ============================================================
+   起動処理
+   ============================================================ */
+function boot(){
+  if(!uiLang){
+    /* 初回アクセス: 言語選択ポップを表示。選択後 loadAll() */
+    var lm=document.getElementById("lang-modal");if(lm)lm.classList.add("on");
+  }else{
+    document.documentElement.lang=uiLang;
+    applyStaticI18n();
+    loadAll();
+  }
+}
+boot();
 
 return{top:top,cat:cat,openT:openT,toggleForm:toggleForm,submit:submit,reply:reply,
   doLike:doLike,toggleMedal:toggleMedal,doKanso:doKanso,deleteThread:deleteThread,deletePost:deletePost,
   searchKey:searchKey,doSearch:doSearch,clearSearch:clearSearch,searchByTag:searchByTag,report:report,
   selectMag:selectMag,clearMag:clearMag,clearWork:clearWork,clearChara:clearChara,
   setWork:setWork,setChara:setChara,renderTagUI:renderTagUI,showSuggest:showSuggest,pickSuggest:pickSuggest,
-  sortBy:sortBy,showDoc:showDoc,hideDoc:hideDoc,recoverOp:recoverOp};
+  sortBy:sortBy,showDoc:showDoc,hideDoc:hideDoc,recoverOp:recoverOp,
+  chooseLang:chooseLang,acceptNotice:acceptNotice,setLang:setLang};
 })();
 </script>
 </body>
