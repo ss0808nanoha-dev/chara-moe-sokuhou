@@ -1083,7 +1083,7 @@ async function submit(){
     var newThreadId=newThread.id;
     await loadAll();
     for(var i=0;i<th.length;i++){
-      if(th[i].id===newThreadId){st.thread=th[i];updateHash();render();break;}
+      if(th[i].id===newThreadId){st.thread=th[i];updateHash();render();window.scrollTo(0,0);break;}
     }
   }catch(e){
     alert(t("fail_create")+(e.message||e));
@@ -1112,7 +1112,6 @@ function render(){
   var main=document.getElementById("main");
   if(loading){main.innerHTML='<div class="empty">'+t("loading")+'</div>';return;}
   main.innerHTML=st.thread?renderThread():renderList();
-  window.scrollTo(0,0);
 }
 function doSearch(){var inp=document.getElementById("sq");if(inp){st.q=inp.value.trim();render();}}
 function clearSearch(){st.q="";var inp=document.getElementById("sq");if(inp)inp.value="";render();}
@@ -1196,7 +1195,7 @@ function renderList(){
     var last=t2.posts[t2.posts.length-1];
     var isK=t2.kanso||t2.posts.length>=KANSO;
     var badges=makeBadges(t2.tags,t2.cat);
-    var canTlTitle=t2.titleLang&&t2.titleLang!==(uiLang||"ja");
+    var canTlTitle=(t2.titleLang||"ja")!==(uiLang||"ja");
     var tlTitleBtn=canTlTitle?'<span class="tl-btn" onclick="event.stopPropagation();A.translateTitle(this.dataset.tid)" data-tid="'+esc(t2.id)+'">'+(t2.titleTranslating?t("tl_translating"):(t2.showTitleTl&&t2.titleTranslated?t("show_original"):t("translate")))+'</span>':"";
     return '<div class="th-item" onclick="A.openT(this.dataset.id)" data-id="'+esc(t2.id)+'" role="button" tabindex="0">'+
       (badges?'<div class="th-badges">'+badges+'</div>':"")+
@@ -1224,7 +1223,7 @@ function renderThread(){
   var canModerateThread=isOP||adminMode;
   var showRecover=!isOP&&t2.hasOpPassword;
   var badges=makeBadges(t2.tags,t2.cat);
-  var canTlTitle=t2.titleLang&&t2.titleLang!==(uiLang||"ja");
+  var canTlTitle=(t2.titleLang||"ja")!==(uiLang||"ja");
   var tlTitleBtn=canTlTitle?'<button class="tl-btn" onclick="A.translateTitle(this.dataset.tid)" data-tid="'+esc(t2.id)+'">'+(t2.titleTranslating?t("tl_translating"):(t2.showTitleTl&&t2.titleTranslated?t("show_original"):t("translate")))+'</button>':"";
   var posts=t2.posts.map(function(pst,i){
     if(pst.deleted)return '<div class="post"><div class="pmeta"><span class="pno">'+(i+1)+'</span></div><div class="pbody" style="color:#bbb;font-size:12px">'+t("deleted_post")+'</div></div>';
@@ -1239,7 +1238,7 @@ function renderThread(){
     var canDeletePost=isOwner||adminMode||isOPByPassword;
     var langCls=isOPp?"":nameLangClass(pst.postLang); /* OPは赤を優先 */
     var flag=pst.postLang&&LANGLABEL[pst.postLang]?'<span class="langflag">【'+LANGLABEL[pst.postLang]+'】</span>':"";
-    var canTranslate=pst.postLang&&pst.postLang!==(uiLang||"ja");
+    var canTranslate=(pst.postLang||"ja")!==(uiLang||"ja");
     var tlBtnTxt=pst.translating?t("tl_translating"):(pst.showTranslated&&pst.translated?t("show_original"):t("translate"));
     return '<div class="post'+(showMedal?" medal-post":"")+'">'+
       '<div class="pmeta">'+
@@ -1291,19 +1290,19 @@ function applyHash(){
   var m=location.hash.match(/^#t=(\d+)$/);
   if(m){
     var id=Number(m[1]);
-    for(var i=0;i<th.length;i++){if(th[i].id===id){st.thread=th[i];render();return;}}
-    st.thread=null;render();
-  }else{st.thread=null;render();}
+    for(var i=0;i<th.length;i++){if(th[i].id===id){st.thread=th[i];render();window.scrollTo(0,0);return;}}
+    st.thread=null;render();window.scrollTo(0,0);
+  }else{st.thread=null;render();window.scrollTo(0,0);}
 }
 window.addEventListener("hashchange",function(){
   if(skipNextHashChange){skipNextHashChange=false;return;}
   applyHash();
 });
 
-function top(){st.thread=null;st.q=""; var fw=document.getElementById("fwrap"); if(fw)fw.style.display="none"; updateHash(); render();}
-function cat(c){st.cat=c;st.thread=null; updateHash(); render();}
+function top(){st.thread=null;st.q=""; var fw=document.getElementById("fwrap"); if(fw)fw.style.display="none"; updateHash(); render(); window.scrollTo(0,0);}
+function cat(c){st.cat=c;st.thread=null; updateHash(); render(); window.scrollTo(0,0);}
 function openT(id){
-  for(var i=0;i<th.length;i++){if(String(th[i].id)===String(id)){st.thread=th[i]; updateHash(); render();return;}}
+  for(var i=0;i<th.length;i++){if(String(th[i].id)===String(id)){st.thread=th[i]; updateHash(); render(); window.scrollTo(0,0); return;}}
 }
 
 async function doLike(pid){
