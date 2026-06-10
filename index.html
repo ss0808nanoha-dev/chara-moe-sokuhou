@@ -112,6 +112,10 @@ input.err,textarea.err,select.err{border-color:#c00 !important}
 .pdate{margin-right:5px}
 .pid{color:#ccc;font-family:monospace;font-size:11px}
 .pbody{font-size:13px;line-height:1.85;white-space:pre-wrap;color:#222;padding-left:4px;margin-top:2px}
+.tl-btn{font-size:11px;border:1px solid #b8cce0;padding:2px 10px;color:#3a78b5;border-radius:2px;background:#f4f8ff;margin-left:6px}
+.tl-btn:hover{background:#3a78b5;color:#fff;border-color:#3a78b5}
+.pbody-tl{font-size:13px;line-height:1.85;white-space:pre-wrap;color:#1a3a5a;background:#f1f6ff;border-left:3px solid #9bc4f0;padding:6px 9px;margin:5px 0 0 4px;border-radius:0 3px 3px 0}
+.pbody-tl .tl-tag{font-size:10px;color:#6aa0d8;font-weight:700;display:block;margin-bottom:2px}
 .like-row{display:flex;align-items:center;gap:6px;margin-top:5px;padding-left:4px}
 .like-btn{font-size:11px;border:1px solid #ddd;padding:2px 10px;color:#aaa;border-radius:2px;background:#fff}
 .like-btn.liked{border-color:#e05a00;color:#e05a00;font-weight:700}
@@ -186,6 +190,10 @@ body.admin .ctag-add:hover{background:#ff7733;color:#fff;border-color:#ff7733}
 body.admin .th-title,body.admin .tv-title,body.admin .pname{color:#e0e0e0}
 body.admin .pdate,body.admin .pid,body.admin .th-meta,body.admin .tv-meta{color:#888}
 body.admin .pbody{color:#d0d0d0}
+body.admin .tl-btn{background:#1f2a3a;color:#8bc4ff;border-color:#3a5068}
+body.admin .tl-btn:hover{background:#3a6ea5;color:#fff;border-color:#3a6ea5}
+body.admin .pbody-tl{background:#1e2733;color:#cfe0f0;border-left-color:#46698f}
+body.admin .pbody-tl .tl-tag{color:#7ab0e0}
 body.admin .like-btn{background:#333;color:#bbb;border-color:#555}
 body.admin .like-btn.liked{background:#cc4422;color:#fff;border-color:#cc4422}
 body.admin .like-cnt{color:#aaa}
@@ -289,10 +297,10 @@ body.admin .notice-text{color:#d0d0d0}
     <div id="g-required" style="font-size:11px;color:#888;margin-bottom:8px">タイトル・本文は必須です</div>
     <select id="f-cat">
       <option value="">カテゴリを選択（未選択の場合は雑談になります）</option>
-      <option>キャラ萌え</option>
-      <option>解釈・考察</option>
-      <option>作品語り</option>
-      <option>雑談</option>
+      <option value="キャラ萌え">キャラ萌え</option>
+      <option value="解釈・考察">解釈・考察</option>
+      <option value="作品語り">作品語り</option>
+      <option value="雑談">雑談</option>
     </select>
     <div id="g-maglabel" style="font-size:11px;color:#888;margin-bottom:4px">掲載誌（選択）</div>
     <div class="ptags" id="preset-tags"></div>
@@ -551,7 +559,8 @@ var I18N={
     fail_kanso:"完走処理に失敗しました: ", fail_del:"削除に失敗しました: ", fail_report:"報告に失敗しました: ",
     fail_reply:"書き込みに失敗しました: ", fail_auth:"認証に失敗しました: ",
     notice:"⚠️ このサイトは翻訳機能を使用しています。\n元の言語以外では、表示に多少のずれが生じる場合があります。\nあらかじめご了承ください。",
-    notice_ok:"OK・サイトへ進む"
+    notice_ok:"OK・サイトへ進む",
+    translate:"🌐 翻訳", show_original:"🔼 原文に戻す", tl_translating:"翻訳中...", tl_tag:"翻訳", tl_fail:"翻訳に失敗しました。少し時間をおいてお試しください。"
   },
   en:{
     new_thread:"+ New Thread", close_form:"▲ Close", form_h2:"■ Create a New Thread",
@@ -594,7 +603,8 @@ var I18N={
     fail_kanso:"Failed to mark as done: ", fail_del:"Failed to delete: ", fail_report:"Failed to report: ",
     fail_reply:"Failed to post: ", fail_auth:"Authentication failed: ",
     notice:"⚠️ This site uses machine translation.\nThere may be slight inaccuracies outside the original language.\nThank you for understanding.",
-    notice_ok:"OK, enter the site"
+    notice_ok:"OK, enter the site",
+    translate:"🌐 Translate", show_original:"🔼 Show original", tl_translating:"Translating...", tl_tag:"Translation", tl_fail:"Translation failed. Please try again in a moment."
   },
   ko:{
     new_thread:"+ 새 글 작성", close_form:"▲ 닫기", form_h2:"■ 새 스레드 작성",
@@ -637,12 +647,23 @@ var I18N={
     fail_kanso:"완주 처리 실패: ", fail_del:"삭제 실패: ", fail_report:"신고 실패: ",
     fail_reply:"작성 실패: ", fail_auth:"인증 실패: ",
     notice:"⚠️ 이 사이트는 번역 기능을 사용합니다.\n원래 언어가 아닌 경우 표시에 다소 차이가 있을 수 있습니다.\n양해 부탁드립니다.",
-    notice_ok:"확인, 사이트로 이동"
+    notice_ok:"확인, 사이트로 이동",
+    translate:"🌐 번역", show_original:"🔼 원문 보기", tl_translating:"번역 중...", tl_tag:"번역", tl_fail:"번역에 실패했습니다. 잠시 후 다시 시도해 주세요."
   }
 };
 
-/* 言語フラグ表示(投稿者名の横) */
-var LANGFLAG={ja:"🇯🇵日本語", en:"🇺🇸English", ko:"🇰🇷한국어", other:"🌐"};
+/* 投稿者名の横に出す言語ラベル(国旗は環境依存で化けるためテキスト表記) */
+var LANGLABEL={ja:"日本語", en:"English", ko:"한국어", other:"その他"};
+/* カテゴリ名の翻訳(DB値は日本語のまま、表示だけ切替) */
+var CAT_I18N={
+  en:{"すべて":"All","キャラ萌え":"Character Love","解釈・考察":"Analysis & Theory","作品語り":"Series Talk","雑談":"Chat"},
+  ko:{"すべて":"전체","キャラ萌え":"캐릭터 모에","解釈・考察":"해석·고찰","作品語り":"작품 이야기","雑談":"잡담"}
+};
+/* 掲載誌タグの翻訳(DB値は日本語のまま、表示だけ切替) */
+var MAG_I18N={
+  en:{"週刊少年ジャンプ":"Weekly Shonen Jump","週刊少年マガジン":"Weekly Shonen Magazine","週刊少年サンデー":"Weekly Shonen Sunday","少年チャンピオン":"Shonen Champion","ジャンプ＋":"Jump+","その他漫画":"Other Manga","アニメ":"Anime","ゲーム":"Game"},
+  ko:{"週刊少年ジャンプ":"주간 소년 점프","週刊少年マガジン":"주간 소년 매거진","週刊少年サンデー":"주간 소년 선데이","少年チャンピオン":"소년 챔피언","ジャンプ＋":"점프 플러스","その他漫画":"기타 만화","アニメ":"애니메이션","ゲーム":"게임"}
+};
 
 var A=(function(){
 var CATS=["すべて","キャラ萌え","解釈・考察","作品語り","雑談"];
@@ -673,6 +694,17 @@ function nameLangClass(lang){
   if(lang==="ja"||lang==="en"||lang==="ko") return " lang-"+lang;
   if(lang==="other") return " lang-other";
   return "";
+}
+/* カテゴリ名・掲載誌名を現在のUI言語で表示する(DB値は日本語のまま) */
+function catLabel(cat){
+  var l=uiLang||"ja";
+  if(l==="ja") return cat;
+  return (CAT_I18N[l]&&CAT_I18N[l][cat])||cat;
+}
+function magLabel(tag){
+  var l=uiLang||"ja";
+  if(l==="ja") return tag;
+  return (MAG_I18N[l]&&MAG_I18N[l][tag])||tag;
 }
 
 var myIp=(function(){var v=lsGet("kmh_ip");if(!v){v=Math.random().toString(36).slice(2,10).toUpperCase();lsSet("kmh_ip",v);}return v;})();
@@ -719,9 +751,15 @@ function applyStaticI18n(){
   if(nb) nb.textContent=formOpen?t("close_form"):t("new_thread");
   setText("g-formh2","form_h2");
   setText("g-required","required_note");
-  /* カテゴリ選択の先頭option */
+  /* カテゴリ選択の先頭option＋各カテゴリ名 */
   var fcat=document.getElementById("f-cat");
-  if(fcat&&fcat.options.length>0) fcat.options[0].text=t("cat_ph");
+  if(fcat&&fcat.options.length>0){
+    fcat.options[0].text=t("cat_ph");
+    var catKeys=["キャラ萌え","解釈・考察","作品語り","雑談"];
+    for(var ci=0;ci<catKeys.length;ci++){
+      if(fcat.options[ci+1]) fcat.options[ci+1].text=catLabel(catKeys[ci]);
+    }
+  }
   setText("g-maglabel","mag_label");
   setText("g-worklabel","work_label");
   setPH("work-inp","work_ph");
@@ -910,13 +948,13 @@ function renderTagUI(){
     pt.innerHTML=MAGS.map(function(tg){
       var on=fMag===tg;
       var s=on?' style="background:'+tcol(tg)+';border-color:'+tcol(tg)+'"':'';
-      return '<button class="ptag'+(on?" on":"")+'"'+s+' onclick="A.selectMag(this.dataset.t)" data-t="'+esc(tg)+'">'+esc(tg)+'</button>';
+      return '<button class="ptag'+(on?" on":"")+'"'+s+' onclick="A.selectMag(this.dataset.t)" data-t="'+esc(tg)+'">'+esc(magLabel(tg))+'</button>';
     }).join("");
   }
   var s2=document.getElementById("sel-tags");
   if(s2){
     var tags=[];
-    if(fMag) tags.push('<span class="tag-lbl" style="background:'+tcol(fMag)+'">'+esc(fMag)+' <span onclick="A.clearMag()" style="cursor:pointer">✕</span></span>');
+    if(fMag) tags.push('<span class="tag-lbl" style="background:'+tcol(fMag)+'">'+esc(magLabel(fMag))+' <span onclick="A.clearMag()" style="cursor:pointer">✕</span></span>');
     if(fWork) tags.push('<span class="tag-lbl" style="background:#444">'+esc(fWork)+' <span onclick="A.clearWork()" style="cursor:pointer">✕</span></span>');
     if(fChara) tags.push('<span class="tag-lbl" style="background:#666">'+esc(fChara)+' <span onclick="A.clearChara()" style="cursor:pointer">✕</span></span>');
     s2.innerHTML=tags.join(" ");
@@ -1057,7 +1095,7 @@ async function submit(){
 function renderCats(){
   document.getElementById("catnav-in").innerHTML=CATS.map(function(c){
     var on=st.cat===c&&!st.thread;
-    return '<button class="cnav'+(on?" on":"")+'" onclick="A.cat(this.dataset.c)" data-c="'+esc(c)+'">'+esc(c)+'</button>';
+    return '<button class="cnav'+(on?" on":"")+'" onclick="A.cat(this.dataset.c)" data-c="'+esc(c)+'">'+esc(catLabel(c))+'</button>';
   }).join("");
 }
 function renderBc(){
@@ -1100,8 +1138,11 @@ function calcRanks(){
 }
 function makeBadges(tags,cat){
   var html="";
-  if(cat) html+='<span class="th-cat">'+esc(cat)+'</span>';
-  (tags||[]).forEach(function(tg){html+='<span class="tag-lbl" style="background:'+tcol(tg)+'">'+esc(tg)+'</span>';});
+  if(cat) html+='<span class="th-cat">'+esc(catLabel(cat))+'</span>';
+  (tags||[]).forEach(function(tg){
+    var label=(MAGS.indexOf(tg)>=0)?magLabel(tg):tg;
+    html+='<span class="tag-lbl" style="background:'+tcol(tg)+'">'+esc(label)+'</span>';
+  });
   return html;
 }
 function sortBy(s){st.sort=s;render();}
@@ -1190,7 +1231,9 @@ function renderThread(){
     var isOwner=pst.uid===myIp;
     var canDeletePost=isOwner||adminMode||isOPByPassword;
     var langCls=isOPp?"":nameLangClass(pst.postLang); /* OPは赤を優先 */
-    var flag=pst.postLang&&LANGFLAG[pst.postLang]?'<span class="langflag">'+LANGFLAG[pst.postLang]+'</span>':"";
+    var flag=pst.postLang&&LANGLABEL[pst.postLang]?'<span class="langflag">【'+LANGLABEL[pst.postLang]+'】</span>':"";
+    var canTranslate=pst.postLang&&pst.postLang!==(uiLang||"ja");
+    var tlBtnTxt=pst.translating?t("tl_translating"):(pst.showTranslated&&pst.translated?t("show_original"):t("translate"));
     return '<div class="post'+(showMedal?" medal-post":"")+'">'+
       '<div class="pmeta">'+
       (showMedal?'<span style="font-size:14px;margin-right:3px">🥇</span>':"")+
@@ -1201,8 +1244,10 @@ function renderThread(){
       (canDeletePost?'&nbsp;<span style="font-size:11px;color:#ddd;cursor:pointer" onclick="A.deletePost(this.dataset.tid,this.dataset.pid)" data-tid="'+esc(t2.id)+'" data-pid="'+esc(pst.id)+'">'+t("del")+'</span>':"")+
       '<br><span class="pid">ID:'+pst.uid+'</span></div>'+
       '<div class="pbody"'+(likeCnt>=20?' style="font-weight:700"':'')+'>'+esc(pst.body)+'</div>'+
+      (pst.showTranslated&&pst.translated?'<div class="pbody-tl"><span class="tl-tag">'+t("tl_tag")+'</span>'+esc(pst.translated)+'</div>':"")+
       '<div class="like-row"><button class="like-btn'+(isMine?" liked":"")+'" onclick="A.doLike(this.dataset.pid)" data-pid="'+esc(pst.id)+'">'+(isMine?t("liked"):t("like"))+'</button>'+
       '<span class="like-cnt">'+likeCnt+'</span>'+
+      (canTranslate?'<button class="tl-btn" onclick="A.translatePost(this.dataset.pid)" data-pid="'+esc(pst.id)+'">'+tlBtnTxt+'</button>':"")+
       (isMedal&&isOwner?'<a onclick="A.toggleMedal(this.dataset.pid)" data-pid="'+esc(pst.id)+'" style="font-size:11px;margin-left:6px">[🥇'+(pst.medalHidden?"表示":"非表示")+']</a>':"")+
       '</div></div>';
   }).join("");
@@ -1349,6 +1394,39 @@ async function report(pid){
     console.error("report error:",e);
   }
 }
+/* 投稿本文のオンデマンド翻訳(押した時だけ翻訳・MyMemory無料API) */
+async function translatePost(pid){
+  if(!st.thread)return;
+  var post=null;
+  for(var i=0;i<st.thread.posts.length;i++){
+    if(String(st.thread.posts[i].id)===String(pid)){post=st.thread.posts[i];break;}
+  }
+  if(!post||!post.body)return;
+  /* すでに翻訳済みなら表示/非表示をトグル */
+  if(post.translated){post.showTranslated=!post.showTranslated;render();return;}
+  if(post.translating)return;
+  var src=post.postLang||"ja";
+  var tgt=uiLang||"ja";
+  if(src===tgt)return;
+  post.translating=true;render();
+  try{
+    var url="https://api.mymemory.translated.net/get?q="+encodeURIComponent(post.body)+"&langpair="+encodeURIComponent(src+"|"+tgt);
+    var resp=await fetch(url);
+    var data=await resp.json();
+    var txt=data&&data.responseData&&data.responseData.translatedText;
+    if(!txt) throw new Error("no translation");
+    post.translated=txt;
+    post.showTranslated=true;
+    post.translating=false;
+    render();
+  }catch(e){
+    post.translating=false;
+    render();
+    alert(t("tl_fail"));
+    console.error("translate error:",e);
+  }
+}
+
 async function reply(){
   var body=(document.getElementById("r-body")||{}).value||"";
   if(!body.trim())return;
@@ -1397,7 +1475,7 @@ return{top:top,cat:cat,openT:openT,toggleForm:toggleForm,submit:submit,reply:rep
   selectMag:selectMag,clearMag:clearMag,clearWork:clearWork,clearChara:clearChara,
   setWork:setWork,setChara:setChara,renderTagUI:renderTagUI,showSuggest:showSuggest,pickSuggest:pickSuggest,
   sortBy:sortBy,showDoc:showDoc,hideDoc:hideDoc,recoverOp:recoverOp,
-  chooseLang:chooseLang,acceptNotice:acceptNotice,setLang:setLang};
+  chooseLang:chooseLang,acceptNotice:acceptNotice,setLang:setLang,translatePost:translatePost};
 })();
 </script>
 </body>
