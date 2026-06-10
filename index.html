@@ -285,7 +285,7 @@ body.admin .ad-label{color:#888;border-bottom-color:#444}
 
 <div id="hd">
   <div id="hd-top">
-    <button id="logo-btn" onclick="A.top()">
+    <button id="logo-btn" onclick="A.logoTap()">
       <div id="logo">ダラルズ</div>
       <div id="logo-tagline">キャラ萌え速報</div>
     </button>
@@ -880,6 +880,30 @@ function updateAdminBadge(){
   el.style.display=adminMode?"block":"none";
 }
 setTimeout(updateAdminBadge,100);
+
+/* スマホ用: ロゴを2秒以内に5回タップ → 合言葉入力で管理者モード切替 */
+var logoTapCount=0, logoTapTimer=null;
+function logoTap(){
+  top(); /* 通常の「TOPへ戻る」動作は維持 */
+  logoTapCount++;
+  if(logoTapTimer) clearTimeout(logoTapTimer);
+  logoTapTimer=setTimeout(function(){logoTapCount=0;},2000);
+  if(logoTapCount>=5){
+    logoTapCount=0;
+    if(logoTapTimer) clearTimeout(logoTapTimer);
+    var pwd=prompt("管理者の合言葉を入力してください：");
+    if(pwd===null) return;
+    if(pwd.trim()===ADMIN_KEY){
+      adminMode=!adminMode;
+      lsSet("kmh_admin",adminMode?"1":"0");
+      updateAdminBadge();
+      if(typeof render==="function") render();
+      alert(adminMode?"🔐 管理者モードを有効にしました":"管理者モードを解除しました");
+    }else{
+      alert("合言葉が違います。");
+    }
+  }
+}
 
 /* ============================================================
    Supabaseとのデータやりとり
@@ -1540,7 +1564,7 @@ return{top:top,cat:cat,openT:openT,toggleForm:toggleForm,submit:submit,reply:rep
   selectMag:selectMag,clearMag:clearMag,clearWork:clearWork,clearChara:clearChara,
   setWork:setWork,setChara:setChara,renderTagUI:renderTagUI,showSuggest:showSuggest,pickSuggest:pickSuggest,
   sortBy:sortBy,showDoc:showDoc,hideDoc:hideDoc,recoverOp:recoverOp,
-  chooseLang:chooseLang,acceptNotice:acceptNotice,setLang:setLang,translatePost:translatePost,translateTitle:translateTitle};
+  chooseLang:chooseLang,acceptNotice:acceptNotice,setLang:setLang,translatePost:translatePost,translateTitle:translateTitle,logoTap:logoTap};
 })();
 </script>
 </body>
