@@ -15,7 +15,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#fff4f0;color:#222;font:13px/1.7 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif;min-height:100vh}
+body{background:#fff4f0;color:#222;font:13px/1.7 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif;min-height:100vh;position:relative}
 a{color:#c00;text-decoration:underline;cursor:pointer}
 button{cursor:pointer;font:inherit;border:none;background:none;color:inherit}
 input,textarea,select{font:inherit;border:1px solid #ccc;padding:5px 8px;background:#fff;border-radius:2px;outline:none}
@@ -193,7 +193,7 @@ input.err,textarea.err,select.err{border-color:#c00 !important}
 .hero-jack .hj-thumb{position:absolute;right:14px;top:0;bottom:0;display:flex;align-items:center}
 .hero-jack .hj-thumb img{width:80px;height:80px;object-fit:cover;border-radius:50%;border:3px solid rgba(255,255,255,.75);box-shadow:0 3px 10px rgba(0,0,0,.25)}
 /* 1位キャラの商品画像を背景に薄く敷く透かし(クリック不可) */
-#bg-watermark{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;display:flex;flex-wrap:wrap;align-content:flex-start;gap:10px;padding:10px;opacity:.08}
+#bg-watermark{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;display:flex;flex-wrap:wrap;align-content:flex-start;gap:10px;padding:10px;opacity:.16}
 #bg-watermark img{width:90px;height:90px;object-fit:contain;flex:0 0 auto;pointer-events:none}
 #hd,#bc,#wrap{position:relative;z-index:1}
 
@@ -281,7 +281,7 @@ body.admin .ad-label{color:#888;border-bottom-color:#444}
 body.admin .hero-jack{background:linear-gradient(135deg,#cc4422,#3a1500);box-shadow:none}
 body.admin .hero-jack .hj-cta{background:#ff7733;color:#fff}
 body.admin .hero-jack .hj-cta:hover{background:#ff8a44}
-body.admin #bg-watermark{opacity:.05}
+body.admin #bg-watermark{opacity:.10}
 </style>
 </head>
 <body>
@@ -1235,9 +1235,11 @@ function updateTitle(){document.title=st.thread?st.thread.title+" - キャラ萌
 function render(){
   renderCats();renderBc();updateTitle();
   var main=document.getElementById("main");
-  if(loading){main.innerHTML='<div class="empty">'+t("loading")+'</div>';return;}
+  if(loading){main.innerHTML='<div class="empty">'+t("loading")+'</div>';updateWatermark();return;}
   ensureTopItems();
   main.innerHTML=st.thread?renderThread():renderList();
+  updateWatermark();
+  setTimeout(updateWatermark,60);
 }
 function doSearch(){var inp=document.getElementById("sq");if(inp){st.q=inp.value.trim();render();}}
 function clearSearch(){st.q="";var inp=document.getElementById("sq");if(inp)inp.value="";render();}
@@ -1340,45 +1342,66 @@ function autoAdSlot(thread){
    ・主役が変わったときだけ楽天を取り直す(同じ間は使い回す)
    ============================================================ */
 var topAd={key:null,items:undefined,loading:false};
-/* 背景の薄い透かし。1位キャラの商品画像をタイル状に敷く。クリック不可(飾り)。 */
-function applyWatermark(items){
+var watermarkItems=[]; /* 背景透かしに使う現在の商品配列 */
+
+/* 今トップ画面(=「すべて」表示・検索なし・スレ未表示)かどうか */
+function isTopPage(){ return !st.thread && st.cat==="すべて" && !st.q; }
+
+/* 背景透かしを、ページの高さいっぱいに敷き詰める(クリック不可の飾り) */
+function fillWatermark(){
   var box=document.getElementById("bg-watermark");
   if(!box) return;
-  var imgs=(items||[]).filter(function(it){return it&&it.img;});
-  var key=imgs.map(function(it){return it.img;}).join("|");
-  if(box.getAttribute("data-key")===key) return; /* 既に同じ内容なら何もしない */
+  var items=watermarkItems;
+  if(!items||!items.length){ box.innerHTML=""; box.setAttribute("data-key",""); return; }
+  var w=window.innerWidth||document.documentElement.clientWidth||360;
+  var h=Math.max(document.documentElement.scrollHeight||0,(document.body&&document.body.scrollHeight)||0,window.innerHeight||600);
+  var tile=100; /* 画像90px + すき間10px */
+  var cols=Math.max(1,Math.ceil(w/tile));
+  var rows=Math.ceil(h/tile)+2;
+  var total=cols*rows;
+  if(total>600) total=600; /* 上限(保険) */
+  var key=items.map(function(it){return it.img;}).join("|")+"#"+total;
+  if(box.getAttribute("data-key")===key) return; /* 内容が同じなら作り直さない */
   box.setAttribute("data-key",key);
-  if(!imgs.length){ box.innerHTML=""; return; }
-  var cells=[],TOTAL=60;
-  for(var i=0;i<TOTAL;i++){
-    var it=imgs[i%imgs.length];
-    cells.push('<img src="'+esc(it.img)+'" alt="" aria-hidden="true">');
-  }
+  var cells=[];
+  for(var i=0;i<total;i++){ var it=items[i%items.length]; cells.push('<img src="'+esc(it.img)+'" alt="" aria-hidden="true">'); }
   box.innerHTML=cells.join("");
 }
-/* 現在の主役(1位)の商品を用意して、背景透かしとトップ広告を更新する。
+/* トップ画面のときだけ背景透かしを表示。スレ内・カテゴリ・検索中は消す。 */
+function updateWatermark(){
+  var box=document.getElementById("bg-watermark");
+  if(!box) return;
+  if(!isTopPage() || !topAd.items || !topAd.items.length){
+    box.style.display="none"; box.innerHTML=""; box.setAttribute("data-key","");
+    return;
+  }
+  box.style.display="";
+  watermarkItems=topAd.items;
+  fillWatermark();
+}
+/* 現在の主役(1位)の商品を用意して、トップ広告と背景透かしを更新する。
    render() から毎回呼ばれるが、主役が変わったときだけ実際に取得する。 */
 function ensureTopItems(){
   var r=calcRanks();
   var queries=[];
   if(r.charaRank&&r.charaRank[0]) queries.push(r.charaRank[0].name);
   if(r.workRank&&r.workRank[0]) queries.push(r.workRank[0].name);
-  if(!queries.length){ topAd.key=null; topAd.items=[]; applyWatermark([]); return; }
+  if(!queries.length){ topAd.key=null; topAd.items=[]; return; }
   var key=queries.join("|");
-  if(topAd.key===key && topAd.items!==undefined){ applyWatermark(topAd.items); return; }
+  if(topAd.key===key && topAd.items!==undefined){ return; }
   if(topAd.key!==key){ topAd.key=key; topAd.items=undefined; topAd.loading=false; }
   if(topAd.loading) return;
   topAd.loading=true;
   fetchRakutenItems(queries).then(function(items){
     topAd.loading=false;
     topAd.items=items||[];
-    applyWatermark(topAd.items);
     var el=document.getElementById("topautoad");
     if(el){ if(topAd.items.length) el.outerHTML=adBlockHtml(topAd.items); else el.style.display="none"; }
+    updateWatermark();
   }).catch(function(e){
     topAd.loading=false; topAd.items=[];
-    applyWatermark([]);
     var el=document.getElementById("topautoad"); if(el) el.style.display="none";
+    updateWatermark();
     console.error("topAd error:",e);
   });
 }
@@ -1387,6 +1410,9 @@ function topAdSlot(){
   if(topAd.items!==undefined){ return topAd.items.length?adBlockHtml(topAd.items):""; }
   return adSlotPlaceholder("topautoad");
 }
+/* 画面サイズが変わったら透かしを敷き直す */
+var wmResizeTimer=null;
+window.addEventListener("resize",function(){ if(wmResizeTimer) clearTimeout(wmResizeTimer); wmResizeTimer=setTimeout(updateWatermark,150); });
 
 /* 作品名/キャラ名の代表サムネ(その名前のスレで最初に見つかったサムネ) */
 function repThumbForWork(name){
