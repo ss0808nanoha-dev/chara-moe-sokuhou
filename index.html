@@ -177,7 +177,10 @@ input.err,textarea.err,select.err{border-color:#c00 !important}
 .ad-label{font-size:10px;color:#aaa;text-align:center;letter-spacing:2px;margin-bottom:8px;border-bottom:1px dashed #e8d0c0;padding-bottom:5px}
 .rakuten-ad{margin:8px 0;display:flex;justify-content:center;gap:8px;align-items:flex-start}
 .rakuten-ad img{width:47%;max-width:240px;height:auto;border-radius:4px;margin:0!important}
-.auto-ad-row{flex-wrap:wrap}
+.auto-ad-row{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin:8px 0}
+.auto-ad-row a{display:block;line-height:0}
+.auto-ad-row img{width:100%;max-width:none;height:auto;border-radius:4px;margin:0!important}
+@media(min-width:600px){.auto-ad-row{grid-template-columns:repeat(4,1fr)}}
 
 /* 言語選択 / 注意書きモーダル */
 .lang-modal{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}
@@ -698,13 +701,6 @@ var MAG_I18N={
   en:{"週刊少年ジャンプ":"Weekly Shonen Jump","週刊少年マガジン":"Weekly Shonen Magazine","週刊少年サンデー":"Weekly Shonen Sunday","少年チャンピオン":"Shonen Champion","ジャンプ＋":"Jump+","その他漫画":"Other Manga","アニメ":"Anime","ゲーム":"Game"},
   ko:{"週刊少年ジャンプ":"주간 소년 점프","週刊少年マガジン":"주간 소년 매거진","週刊少年サンデー":"주간 소년 선데이","少年チャンピオン":"소년 챔피언","ジャンプ＋":"점프 플러스","その他漫画":"기타 만화","アニメ":"애니메이션","ゲーム":"게임"}
 };
-
-/* 楽天アフィリエイト広告(画像のみ)。左から順に表示される。
-   差し替え・追加する場合はこの配列の中身を入れ替える。 */
-var RAKUTEN_ADS=[
-`<a href="https://hb.afl.rakuten.co.jp/ichiba/54c2b556.715eed90.54c2b557.1f16c205/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fbookfan%2Fbk-4065279135%2F&link_type=pict&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MSwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9" target="_blank" rel="nofollow sponsored noopener" style="word-wrap:break-word;"><img src="https://hbb.afl.rakuten.co.jp/hgb/54c2b556.715eed90.54c2b557.1f16c205/?me_id=1285657&item_id=12667449&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fbookfan%2Fcabinet%2F01005%2Fbk4065279135.jpg%3F_ex%3D240x240&s=240x240&t=pict" border="0" style="margin:2px" alt="ブルーロック 19巻" title="ブルーロック 19巻"></a>`,
-`<a href="https://hb.afl.rakuten.co.jp/ichiba/54c2b556.715eed90.54c2b557.1f16c205/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fbookfan%2Fbk-4065285011%2F&link_type=pict&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9" target="_blank" rel="nofollow sponsored noopener" style="word-wrap:break-word;"><img src="https://hbb.afl.rakuten.co.jp/hgb/54c2b556.715eed90.54c2b557.1f16c205/?me_id=1285657&item_id=12707162&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fbookfan%2Fcabinet%2F01012%2Fbk4065285011.jpg%3F_ex%3D240x240&s=240x240&t=pict" border="0" style="margin:2px" alt="ブルーロック 20巻" title="ブルーロック 20巻"></a>`
-];
 
 var A=(function(){
 var CATS=["すべて","キャラ萌え","解釈・考察","作品語り","雑談"];
@@ -1257,50 +1253,92 @@ function makeBadges(tags,cat){
 }
 function sortBy(s){st.sort=s;render();}
 
-/* 楽天広告ブロックのHTML(PR表示付き) */
-function rakutenAdHtml(){
-  if(!RAKUTEN_ADS||!RAKUTEN_ADS.length) return "";
-  return '<div class="ad-block"><div class="ad-label">'+t("ad_label")+'</div><div class="rakuten-ad">'+RAKUTEN_ADS.join("")+'</div></div>';
+/* 関連商品の広告ブロックHTML(最大8個・グリッド表示) */
+function adBlockHtml(imgs){
+  return '<div class="ad-block"><div class="ad-label">'+t("ad_related")+'</div><div class="rakuten-ad auto-ad-row">'+imgs+'</div></div>';
 }
-
-/* タグ(作品名・キャラ名)から楽天を自動検索して関連商品を表示 */
+/* 読み込み中のプレースホルダー(枠だけ先に出しておく) */
+function adSlotPlaceholder(slotId){
+  return '<div class="ad-block" id="'+slotId+'"><div class="ad-label">'+t("ad_related")+'</div><div style="text-align:center;color:#bbb;font-size:11px;padding:6px">…</div></div>';
+}
+/* キーワード候補(queries)を順番に楽天検索し、最初にヒットした商品(最大8個)の
+   画像HTMLを返す。1つ目で0件なら次の候補へフォールバックする。 */
+async function fetchRakutenItems(queries){
+  for(var qi=0;qi<queries.length;qi++){
+    var q=queries[qi];
+    if(!q) continue;
+    try{
+      var url=SUPABASE_URL+"/functions/v1/rakuten-search?keyword="+encodeURIComponent(q);
+      var resp=await fetch(url,{headers:{"Authorization":"Bearer "+SUPABASE_KEY,"apikey":SUPABASE_KEY}});
+      var data=await resp.json();
+      var items=(data&&data.items)||[];
+      var imgs=items.slice(0,8).map(function(it){
+        if(!it.img) return "";
+        return '<a href="'+esc(it.link)+'" target="_blank" rel="nofollow sponsored noopener"><img src="'+esc(it.img)+'" alt="" loading="lazy"></a>';
+      }).filter(Boolean).join("");
+      if(imgs) return imgs; /* ヒットしたらここで確定(次の候補は試さない) */
+    }catch(e){
+      console.error("rakuten fetch error:",e);
+    }
+  }
+  return "";
+}
+/* スレ用の関連商品枠。検索キーワードは「キャラ名 → 作品名 → スレタイ」の順。
+   キャラ名で0件なら作品名、それでも0件ならスレタイへ自動で切り替わる。 */
 function autoAdSlot(thread){
-  var q=thread.workTag||thread.charaTag||thread.title;
-  if(!q) return "";
+  var queries=[];
+  if(thread.charaTag) queries.push(thread.charaTag);
+  if(thread.workTag) queries.push(thread.workTag);
+  if(thread.title) queries.push(thread.title);
+  if(!queries.length) return "";
   if(thread.autoAdHtml!==undefined) return thread.autoAdHtml; /* 取得済み(空文字なら表示なし) */
   var slotId="autoad_"+thread.id;
   if(!thread.autoAdLoading){
     thread.autoAdLoading=true;
-    setTimeout(function(){fetchAutoAd(thread,q,slotId);},0);
+    setTimeout(function(){
+      fetchRakutenItems(queries).then(function(imgs){
+        thread.autoAdLoading=false;
+        thread.autoAdHtml=imgs?adBlockHtml(imgs):"";
+        var el=document.getElementById(slotId);
+        if(el){ if(imgs) el.outerHTML=thread.autoAdHtml; else el.style.display="none"; }
+      }).catch(function(e){
+        thread.autoAdLoading=false; thread.autoAdHtml="";
+        var el=document.getElementById(slotId); if(el) el.style.display="none";
+        console.error("autoAd error:",e);
+      });
+    },0);
   }
-  return '<div class="ad-block" id="'+slotId+'"><div class="ad-label">'+t("ad_related")+'</div><div style="text-align:center;color:#bbb;font-size:11px;padding:6px">…</div></div>';
+  return adSlotPlaceholder(slotId);
 }
-/* 楽天APIをJSONPで呼ぶ(ブラウザのCORS制限を回避) */
-async function fetchAutoAd(thread,q,slotId){
-  try{
-    var url=SUPABASE_URL+"/functions/v1/rakuten-search?keyword="+encodeURIComponent(q);
-    var resp=await fetch(url,{headers:{"Authorization":"Bearer "+SUPABASE_KEY,"apikey":SUPABASE_KEY}});
-    var data=await resp.json();
-    var items=(data&&data.items)||[];
-    var imgs=items.slice(0,4).map(function(it){
-      if(!it.img) return "";
-      return '<a href="'+esc(it.link)+'" target="_blank" rel="nofollow sponsored noopener"><img src="'+esc(it.img)+'" alt="" loading="lazy"></a>';
-    }).filter(Boolean).join("");
-    thread.autoAdLoading=false;
-    if(!imgs){
-      thread.autoAdHtml="";
-      var el0=document.getElementById(slotId);if(el0)el0.style.display="none";
-      return;
-    }
-    thread.autoAdHtml='<div class="ad-block"><div class="ad-label">'+t("ad_related")+'</div><div class="rakuten-ad auto-ad-row">'+imgs+'</div></div>';
-    var el=document.getElementById(slotId);
-    if(el) el.outerHTML=thread.autoAdHtml;
-  }catch(e){
-    thread.autoAdLoading=false;
-    thread.autoAdHtml="";
-    var el2=document.getElementById(slotId);if(el2)el2.style.display="none";
-    console.error("autoAd error:",e);
+/* トップ画面用の関連商品枠。検索キーワードは「話題キャラ TOP5 1位 → 話題作品 TOP5 1位」の順。
+   1位の名前が変わったときだけ取り直す(同じ間は使い回してAPIを無駄に呼ばない)。 */
+var topAd={key:null,html:undefined,loading:false};
+function topAdSlot(){
+  var r=calcRanks();
+  var queries=[];
+  if(r.charaRank&&r.charaRank[0]) queries.push(r.charaRank[0].name);
+  if(r.workRank&&r.workRank[0]) queries.push(r.workRank[0].name);
+  if(!queries.length) return "";
+  var key=queries.join("|");
+  if(topAd.key!==key){ topAd.key=key; topAd.html=undefined; topAd.loading=false; }
+  if(topAd.html!==undefined) return topAd.html;
+  var slotId="topautoad";
+  if(!topAd.loading){
+    topAd.loading=true;
+    setTimeout(function(){
+      fetchRakutenItems(queries).then(function(imgs){
+        topAd.loading=false;
+        topAd.html=imgs?adBlockHtml(imgs):"";
+        var el=document.getElementById(slotId);
+        if(el){ if(imgs) el.outerHTML=topAd.html; else el.style.display="none"; }
+      }).catch(function(e){
+        topAd.loading=false; topAd.html="";
+        var el=document.getElementById(slotId); if(el) el.style.display="none";
+        console.error("topAd error:",e);
+      });
+    },0);
   }
+  return adSlotPlaceholder(slotId);
 }
 
 /* 作品名/キャラ名の代表サムネ(その名前のスレで最初に見つかったサムネ) */
@@ -1364,6 +1402,7 @@ function renderList(){
       '<div class="rank-box"><div class="rank-hdr">'+t("rank_chara")+'</div>'+chH+'</div>'+
       '</div>';
   }
+  if(st.cat==="すべて"&&th.length){ top+=topAdSlot(); }
   if(!list.length)return top+'<div class="empty">'+t("empty_list")+'</div>';
   return top+'<div id="thread-list">'+list.map(function(t2){
     var last=t2.posts[t2.posts.length-1];
@@ -1445,7 +1484,6 @@ function renderThread(){
     (showRecover?'<br><a class="op-recover" onclick="A.recoverOp(this.dataset.tid)" data-tid="'+esc(t2.id)+'">'+t("recover_op")+'</a>':"")+
     '</div>'+
     '<div id="posts-wrap">'+posts+'</div>'+
-    rakutenAdHtml()+
     autoAdSlot(t2)+
     '<div id="reply-box"><h3>'+t("reply_h3")+'</h3>'+
     '<input id="r-name" placeholder="'+esc(t("reply_name_ph"))+'">'+
