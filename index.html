@@ -22,7 +22,8 @@ input,textarea,select{font:inherit;border:1px solid #ccc;padding:5px 8px;backgro
 input:focus,textarea:focus,select:focus{border-color:#e05a00}
 #hd{background:#e05a00;padding:0;border-bottom:3px solid #c04a00}
 #hd-top{max-width:780px;margin:0 auto;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
-#logo-btn{display:flex;flex-direction:column;gap:1px}
+#logo-btn{display:flex;flex-direction:column;gap:1px;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+#logo,#logo-tagline{-webkit-user-select:none;user-select:none}
 #logo{font-size:20px;font-weight:900;color:#fff;letter-spacing:1px;font-family:'Hiragino Mincho ProN','Yu Mincho',serif;line-height:1}
 #logo-tagline{font-size:10px;color:rgba(255,255,255,.8);letter-spacing:.5px}
 #hd-r{display:flex;align-items:center;gap:8px;flex-shrink:0}
@@ -176,6 +177,7 @@ input.err,textarea.err,select.err{border-color:#c00 !important}
 .ad-label{font-size:10px;color:#aaa;text-align:center;letter-spacing:2px;margin-bottom:8px;border-bottom:1px dashed #e8d0c0;padding-bottom:5px}
 .rakuten-ad{margin:8px 0;display:flex;justify-content:center;gap:8px;align-items:flex-start}
 .rakuten-ad img{width:47%;max-width:240px;height:auto;border-radius:4px;margin:0!important}
+.auto-ad-row{flex-wrap:wrap}
 
 /* 言語選択 / 注意書きモーダル */
 .lang-modal{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}
@@ -590,7 +592,7 @@ var I18N={
     notice:"⚠️ このサイトは翻訳機能を使用しています。\n元の言語以外では、表示に多少のずれが生じる場合があります。\nあらかじめご了承ください。",
     notice_ok:"OK・サイトへ進む",
     translate:"🌐 翻訳", show_original:"🔼 原文に戻す", tl_translating:"翻訳中...", tl_tag:"翻訳", tl_fail:"翻訳に失敗しました。少し時間をおいてお試しください。", ad_label:"PR・広告",
-    thumb_label:"🖼 サムネイル画像（任意）", thumb_uploading:"画像をアップロード中...", thumb_toobig:"画像は5MB以下にしてください。", thumb_fail:"画像のアップロードに失敗しました: "
+    thumb_label:"🖼 サムネイル画像（任意）", thumb_uploading:"画像をアップロード中...", thumb_toobig:"画像は5MB以下にしてください。", thumb_fail:"画像のアップロードに失敗しました: ", ad_related:"PR・関連商品"
   },
   en:{
     new_thread:"+ New Thread", close_form:"▲ Close", form_h2:"■ Create a New Thread",
@@ -635,7 +637,7 @@ var I18N={
     notice:"⚠️ This site uses machine translation.\nThere may be slight inaccuracies outside the original language.\nThank you for understanding.",
     notice_ok:"OK, enter the site",
     translate:"🌐 Translate", show_original:"🔼 Show original", tl_translating:"Translating...", tl_tag:"Translation", tl_fail:"Translation failed. Please try again in a moment.", ad_label:"PR / Ad",
-    thumb_label:"🖼 Thumbnail image (optional)", thumb_uploading:"Uploading image...", thumb_toobig:"Please use an image under 5MB.", thumb_fail:"Image upload failed: "
+    thumb_label:"🖼 Thumbnail image (optional)", thumb_uploading:"Uploading image...", thumb_toobig:"Please use an image under 5MB.", thumb_fail:"Image upload failed: ", ad_related:"PR / Related items"
   },
   ko:{
     new_thread:"+ 새 글 작성", close_form:"▲ 닫기", form_h2:"■ 새 스레드 작성",
@@ -680,7 +682,7 @@ var I18N={
     notice:"⚠️ 이 사이트는 번역 기능을 사용합니다.\n원래 언어가 아닌 경우 표시에 다소 차이가 있을 수 있습니다.\n양해 부탁드립니다.",
     notice_ok:"확인, 사이트로 이동",
     translate:"🌐 번역", show_original:"🔼 원문 보기", tl_translating:"번역 중...", tl_tag:"번역", tl_fail:"번역에 실패했습니다. 잠시 후 다시 시도해 주세요.", ad_label:"PR · 광고",
-    thumb_label:"🖼 썸네일 이미지 (선택)", thumb_uploading:"이미지 업로드 중...", thumb_toobig:"이미지는 5MB 이하로 해주세요.", thumb_fail:"이미지 업로드에 실패했습니다: "
+    thumb_label:"🖼 썸네일 이미지 (선택)", thumb_uploading:"이미지 업로드 중...", thumb_toobig:"이미지는 5MB 이하로 해주세요.", thumb_fail:"이미지 업로드에 실패했습니다: ", ad_related:"PR · 관련 상품"
   }
 };
 
@@ -703,6 +705,10 @@ var RAKUTEN_ADS=[
 `<a href="https://hb.afl.rakuten.co.jp/ichiba/54c2b556.715eed90.54c2b557.1f16c205/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fbookfan%2Fbk-4065279135%2F&link_type=pict&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MSwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9" target="_blank" rel="nofollow sponsored noopener" style="word-wrap:break-word;"><img src="https://hbb.afl.rakuten.co.jp/hgb/54c2b556.715eed90.54c2b557.1f16c205/?me_id=1285657&item_id=12667449&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fbookfan%2Fcabinet%2F01005%2Fbk4065279135.jpg%3F_ex%3D240x240&s=240x240&t=pict" border="0" style="margin:2px" alt="ブルーロック 19巻" title="ブルーロック 19巻"></a>`,
 `<a href="https://hb.afl.rakuten.co.jp/ichiba/54c2b556.715eed90.54c2b557.1f16c205/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fbookfan%2Fbk-4065285011%2F&link_type=pict&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9" target="_blank" rel="nofollow sponsored noopener" style="word-wrap:break-word;"><img src="https://hbb.afl.rakuten.co.jp/hgb/54c2b556.715eed90.54c2b557.1f16c205/?me_id=1285657&item_id=12707162&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fbookfan%2Fcabinet%2F01012%2Fbk4065285011.jpg%3F_ex%3D240x240&s=240x240&t=pict" border="0" style="margin:2px" alt="ブルーロック 20巻" title="ブルーロック 20巻"></a>`
 ];
+
+/* 楽天市場API(タグ自動検索)用のID */
+var RAKUTEN_APP_ID="eaf53987-c5be-43f8-a2bc-8e2d79e7f8de";
+var RAKUTEN_AFFILIATE_ID="54e9837f.5668ebc8.54e98380.1d273218";
 
 var A=(function(){
 var CATS=["すべて","キャラ萌え","解釈・考察","作品語り","雑談"];
@@ -1261,6 +1267,49 @@ function rakutenAdHtml(){
   return '<div class="ad-block"><div class="ad-label">'+t("ad_label")+'</div><div class="rakuten-ad">'+RAKUTEN_ADS.join("")+'</div></div>';
 }
 
+/* タグ(作品名・キャラ名)から楽天を自動検索して関連商品を表示 */
+function autoAdSlot(thread){
+  var q=thread.workTag||thread.charaTag||thread.title;
+  if(!q) return "";
+  if(thread.autoAdHtml!==undefined) return thread.autoAdHtml; /* 取得済み(空文字なら表示なし) */
+  var slotId="autoad_"+thread.id;
+  if(!thread.autoAdLoading){
+    thread.autoAdLoading=true;
+    setTimeout(function(){fetchAutoAd(thread,q,slotId);},0);
+  }
+  return '<div class="ad-block" id="'+slotId+'"><div class="ad-label">'+t("ad_related")+'</div><div style="text-align:center;color:#bbb;font-size:11px;padding:6px">…</div></div>';
+}
+async function fetchAutoAd(thread,q,slotId){
+  try{
+    var url="https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601?format=json&formatVersion=2&imageFlag=1&hits=4&applicationId="+encodeURIComponent(RAKUTEN_APP_ID)+"&affiliateId="+encodeURIComponent(RAKUTEN_AFFILIATE_ID)+"&keyword="+encodeURIComponent(q);
+    var resp=await fetch(url);
+    var data=await resp.json();
+    var items=(data&&data.Items)||[];
+    var imgs=items.slice(0,4).map(function(it){
+      var img=(it.mediumImageUrls&&it.mediumImageUrls[0])||"";
+      if(!img) return "";
+      img=img.replace(/_ex=128x128/,"_ex=240x240");
+      var link=it.affiliateUrl||it.itemUrl||"#";
+      var nm=it.itemName||"";
+      return '<a href="'+esc(link)+'" target="_blank" rel="nofollow sponsored noopener"><img src="'+esc(img)+'" alt="'+esc(nm).slice(0,40)+'" loading="lazy"></a>';
+    }).filter(Boolean).join("");
+    thread.autoAdLoading=false;
+    if(!imgs){
+      thread.autoAdHtml="";
+      var el0=document.getElementById(slotId);if(el0)el0.style.display="none";
+      return;
+    }
+    thread.autoAdHtml='<div class="ad-block"><div class="ad-label">'+t("ad_related")+'</div><div class="rakuten-ad auto-ad-row">'+imgs+'</div></div>';
+    var el=document.getElementById(slotId);
+    if(el) el.outerHTML=thread.autoAdHtml;
+  }catch(e){
+    thread.autoAdLoading=false;
+    thread.autoAdHtml="";
+    var el2=document.getElementById(slotId);if(el2)el2.style.display="none";
+    console.error("autoAd error:",e);
+  }
+}
+
 /* 作品名/キャラ名の代表サムネ(その名前のスレで最初に見つかったサムネ) */
 function repThumbForWork(name){
   for(var i=0;i<th.length;i++){if(th[i].workTag===name&&th[i].thumbUrl) return th[i].thumbUrl;}
@@ -1404,6 +1453,7 @@ function renderThread(){
     '</div>'+
     '<div id="posts-wrap">'+posts+'</div>'+
     rakutenAdHtml()+
+    autoAdSlot(t2)+
     '<div id="reply-box"><h3>'+t("reply_h3")+'</h3>'+
     '<input id="r-name" placeholder="'+esc(t("reply_name_ph"))+'">'+
     '<textarea id="r-body" placeholder="'+esc(t("reply_body_ph"))+'" maxlength="1000"></textarea>'+
