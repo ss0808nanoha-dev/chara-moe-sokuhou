@@ -706,10 +706,6 @@ var RAKUTEN_ADS=[
 `<a href="https://hb.afl.rakuten.co.jp/ichiba/54c2b556.715eed90.54c2b557.1f16c205/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fbookfan%2Fbk-4065285011%2F&link_type=pict&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0Iiwic2l6ZSI6IjI0MHgyNDAiLCJuYW0iOjEsIm5hbXAiOiJyaWdodCIsImNvbSI6MSwiY29tcCI6ImRvd24iLCJwcmljZSI6MCwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9" target="_blank" rel="nofollow sponsored noopener" style="word-wrap:break-word;"><img src="https://hbb.afl.rakuten.co.jp/hgb/54c2b556.715eed90.54c2b557.1f16c205/?me_id=1285657&item_id=12707162&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fbookfan%2Fcabinet%2F01012%2Fbk4065285011.jpg%3F_ex%3D240x240&s=240x240&t=pict" border="0" style="margin:2px" alt="ブルーロック 20巻" title="ブルーロック 20巻"></a>`
 ];
 
-/* 楽天市場API(タグ自動検索)用のID */
-var RAKUTEN_APP_ID="eaf53987-c5be-43f8-a2bc-8e2d79e7f8de";
-var RAKUTEN_AFFILIATE_ID="54e9837f.5668ebc8.54e98380.1d273218";
-
 var A=(function(){
 var CATS=["すべて","キャラ萌え","解釈・考察","作品語り","雑談"];
 var MAGS=["週刊少年ジャンプ","週刊少年マガジン","週刊少年サンデー","少年チャンピオン","ジャンプ＋","その他漫画","アニメ","ゲーム"];
@@ -1279,19 +1275,16 @@ function autoAdSlot(thread){
   }
   return '<div class="ad-block" id="'+slotId+'"><div class="ad-label">'+t("ad_related")+'</div><div style="text-align:center;color:#bbb;font-size:11px;padding:6px">…</div></div>';
 }
+/* 楽天APIをJSONPで呼ぶ(ブラウザのCORS制限を回避) */
 async function fetchAutoAd(thread,q,slotId){
   try{
-    var url="https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601?format=json&formatVersion=2&imageFlag=1&hits=4&applicationId="+encodeURIComponent(RAKUTEN_APP_ID)+"&affiliateId="+encodeURIComponent(RAKUTEN_AFFILIATE_ID)+"&keyword="+encodeURIComponent(q);
-    var resp=await fetch(url);
+    var url=SUPABASE_URL+"/functions/v1/rakuten-search?keyword="+encodeURIComponent(q);
+    var resp=await fetch(url,{headers:{"Authorization":"Bearer "+SUPABASE_KEY,"apikey":SUPABASE_KEY}});
     var data=await resp.json();
-    var items=(data&&data.Items)||[];
+    var items=(data&&data.items)||[];
     var imgs=items.slice(0,4).map(function(it){
-      var img=(it.mediumImageUrls&&it.mediumImageUrls[0])||"";
-      if(!img) return "";
-      img=img.replace(/_ex=128x128/,"_ex=240x240");
-      var link=it.affiliateUrl||it.itemUrl||"#";
-      var nm=it.itemName||"";
-      return '<a href="'+esc(link)+'" target="_blank" rel="nofollow sponsored noopener"><img src="'+esc(img)+'" alt="'+esc(nm).slice(0,40)+'" loading="lazy"></a>';
+      if(!it.img) return "";
+      return '<a href="'+esc(it.link)+'" target="_blank" rel="nofollow sponsored noopener"><img src="'+esc(it.img)+'" alt="" loading="lazy"></a>';
     }).filter(Boolean).join("");
     thread.autoAdLoading=false;
     if(!imgs){
