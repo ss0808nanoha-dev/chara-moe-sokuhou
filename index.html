@@ -57,6 +57,7 @@ input:focus,textarea:focus,select:focus{border-color:#e05a00}
 .ctag-add:hover{background:#e05a00;color:#fff;border-color:#e05a00}
 #sel-tags{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:5px}
 .tag-lbl{font-size:10px;font-weight:700;padding:1px 6px;color:#fff;border-radius:2px}
+.tag-lbl.tag-click{cursor:pointer}
 .r18w{font-size:11px;color:#c00;margin-bottom:5px;display:none}
 .field-err{font-size:11px;color:#c00;margin:-4px 0 6px;display:none}
 .field-err.show{display:block}
@@ -1000,7 +1001,7 @@ async function loadAll(){
       var tposts=byThread[t2.id]||[];
       return {
         id:t2.id, title:t2.title, cat:t2.cat, tags:tags,
-        workTag:t2.work_tag||"", charaTag:t2.chara_tag||"",
+        workTag:t2.work_tag||"", charaTag:t2.chara_tag||"", magTag:t2.mag_tag||"",
         kanso:!!t2.kanso, hasOpPassword:!!t2.op_password,
         titleLang:(tposts[0]&&tposts[0].postLang)||null,
         thumbUrl:t2.thumb_url||null,
@@ -1220,9 +1221,11 @@ async function submit(){
 
 /* カテゴリ・検索 */
 function renderCats(){
-  document.getElementById("catnav-in").innerHTML=CATS.map(function(c){
+  var NAV=["すべて"].concat(MAGS);
+  document.getElementById("catnav-in").innerHTML=NAV.map(function(c){
     var on=st.cat===c&&!st.thread;
-    return '<button class="cnav'+(on?" on":"")+'" onclick="A.cat(this.dataset.c)" data-c="'+esc(c)+'">'+esc(catLabel(c))+'</button>';
+    var label=(c==="すべて")?catLabel("すべて"):magLabel(c);
+    return '<button class="cnav'+(on?" on":"")+'" onclick="A.cat(this.dataset.c)" data-c="'+esc(c)+'">'+esc(label)+'</button>';
   }).join("");
 }
 function renderBc(){
@@ -1249,18 +1252,25 @@ function searchByTag(tag){
   setTimeout(function(){var inp=document.getElementById("sq");if(inp) inp.value=tag;window.scrollTo(0,0);},50);
 }
 
-function calcRanks(){
-  var thRank=th.slice().sort(function(a,b){return b.posts.length-a.posts.length;}).slice(0,5);
+/* 今表示中のタブのスレ一覧(「すべて」なら全部、掲載誌タブならその掲載誌だけ) */
+function viewThreads(){
+  return st.cat==="すべて"?th:th.filter(function(t2){return t2.magTag===st.cat;});
+}
+/* ランキング。作品/キャラは「レス(書き込み)の合計数」で集計する。
+   listを渡さなければ今表示中のタブ(viewThreads)で集計する。 */
+function calcRanks(list){
+  list=list||viewThreads();
+  var thRank=list.slice().sort(function(a,b){return b.posts.length-a.posts.length;}).slice(0,5);
   var workMap={};
-  th.forEach(function(t2){
+  list.forEach(function(t2){
     var w=t2.workTag||((t2.tags||[]).filter(function(tg){return MAGS.indexOf(tg)<0;})[0]);
-    if(w)workMap[w]=(workMap[w]||0)+1;
+    if(w)workMap[w]=(workMap[w]||0)+t2.posts.length;
   });
   var workRank=Object.keys(workMap).map(function(k){return{name:k,val:workMap[k]};}).sort(function(a,b){return b.val-a.val;}).slice(0,5);
   var charaMap={};
-  th.forEach(function(t2){
+  list.forEach(function(t2){
     var c=t2.charaTag||((t2.tags||[]).filter(function(tg){return MAGS.indexOf(tg)<0;})[1]);
-    if(c)charaMap[c]=(charaMap[c]||0)+1;
+    if(c)charaMap[c]=(charaMap[c]||0)+t2.posts.length;
   });
   var charaRank=Object.keys(charaMap).map(function(k){return{name:k,val:charaMap[k]};}).sort(function(a,b){return b.val-a.val;}).slice(0,5);
   return{thRank:thRank,workRank:workRank,charaRank:charaRank};
@@ -1269,8 +1279,13 @@ function makeBadges(tags,cat){
   var html="";
   if(cat) html+='<span class="th-cat">'+esc(catLabel(cat))+'</span>';
   (tags||[]).forEach(function(tg){
-    var label=(MAGS.indexOf(tg)>=0)?magLabel(tg):tg;
-    html+='<span class="tag-lbl" style="background:'+tcol(tg)+'">'+esc(label)+'</span>';
+    var isMag=MAGS.indexOf(tg)>=0;
+    var label=isMag?magLabel(tg):tg;
+    if(isMag){
+      html+='<span class="tag-lbl tag-click" style="background:'+tcol(tg)+'" onclick="event.stopPropagation();A.cat(this.dataset.c)" data-c="'+esc(tg)+'">'+esc(label)+'</span>';
+    }else{
+      html+='<span class="tag-lbl tag-click" style="background:'+tcol(tg)+'" onclick="event.stopPropagation();A.searchByTag(this.dataset.t)" data-t="'+esc(tg)+'">'+esc(label)+'</span>';
+    }
   });
   return html;
 }
@@ -1315,7 +1330,11 @@ function autoAdSlot(thread){
   var queries=[];
   if(thread.charaTag) queries.push(thread.charaTag);
   if(thread.workTag) queries.push(thread.workTag);
-  if(thread.title) queries.push(thread.title);
+  /* タグが無い／そのタグで0件のときは、サイト全体の1位キャラ(無ければ1位作品)を宣伝 */
+  var g=calcRanks(th);
+  if(g.charaRank&&g.charaRank[0]) queries.push(g.charaRank[0].name);
+  if(g.workRank&&g.workRank[0]) queries.push(g.workRank[0].name);
+  queries=queries.filter(function(q,idx){return q&&queries.indexOf(q)===idx;});
   if(!queries.length) return "";
   if(thread.autoAdHtml!==undefined) return thread.autoAdHtml; /* 取得済み(空文字なら表示なし) */
   var slotId="autoad_"+thread.id;
@@ -1345,7 +1364,7 @@ var topAd={key:null,items:undefined,loading:false};
 var watermarkItems=[]; /* 背景透かしに使う現在の商品配列 */
 
 /* 今トップ画面(=「すべて」表示・検索なし・スレ未表示)かどうか */
-function isTopPage(){ return !st.thread && st.cat==="すべて" && !st.q; }
+function isTopPage(){ return !st.thread && !st.q; }
 
 /* 背景透かしを、ページの高さいっぱいに敷き詰める(クリック不可の飾り) */
 function fillWatermark(){
@@ -1442,7 +1461,7 @@ function heroBanner(){
 }
 
 function renderList(){
-  var base=st.cat==="すべて"?th.slice():th.filter(function(t2){return t2.cat===st.cat;});
+  var base=viewThreads().slice();
   var list=st.q?base.filter(function(t2){
     var q=st.q.toLowerCase();
     return t2.title.toLowerCase().indexOf(q)>=0||(t2.tags&&t2.tags.some(function(tg){return tg.toLowerCase().indexOf(q)>=0;}));
@@ -1465,10 +1484,10 @@ function renderList(){
     return '<button class="sort-btn'+(st.sort===s[0]?" on":"")+'" onclick="A.sortBy(this.dataset.s)" data-s="'+s[0]+'">'+s[1]+'</button>';
   }).join("")+'</div>';
   var top='';
-  if(st.cat==="すべて"&&!st.q&&th.length){ top+=heroBanner(); }
+  if(!st.q&&viewThreads().length){ top+=heroBanner(); }
   top+='<div id="search-bar"><input id="sq" type="text" placeholder="'+esc(t("search_ph"))+'" onkeydown="A.searchKey(event)"><button onclick="A.doSearch()">🔍</button>'+(st.q?'<span class="search-clear" onclick="A.clearSearch()">✕</span>':"")+' </div>';
   top+=sortBtns;
-  if(st.cat==="すべて"&&th.length>0){
+  if(!st.q&&viewThreads().length>0){
     var r=calcRanks();
     var thH=r.thRank.length?r.thRank.map(function(t2,i){
       var canTl=(t2.titleLang||"ja")!==(uiLang||"ja");
@@ -1481,12 +1500,12 @@ function renderList(){
     var wkH=r.workRank.length?r.workRank.map(function(x,i){
       var wt=repThumbForWork(x.name);
       var wThumb=wt?'<img class="rank-thumb" src="'+esc(wt)+'" alt="" loading="lazy">':"";
-      return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span><span class="rank-name"><a onclick="A.searchByTag(this.dataset.t)" data-t="'+esc(x.name)+'">'+esc(x.name)+'</a></span>'+wThumb+'<span class="rank-val">'+x.val+t("thread_unit")+'</span></div>';
+      return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span><span class="rank-name"><a onclick="A.searchByTag(this.dataset.t)" data-t="'+esc(x.name)+'">'+esc(x.name)+'</a></span>'+wThumb+'<span class="rank-val">'+x.val+t("res_unit")+'</span></div>';
     }).join(""):'<div class="rank-item" style="color:#bbb;font-size:11px">'+t("no_data")+'</div>';
     var chH=r.charaRank.length?r.charaRank.map(function(x,i){
       var ct=repThumbForChara(x.name);
       var cThumb=ct?'<img class="rank-thumb" src="'+esc(ct)+'" alt="" loading="lazy">':"";
-      return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span><span class="rank-name"><a onclick="A.searchByTag(this.dataset.t)" data-t="'+esc(x.name)+'">'+esc(x.name)+'</a></span>'+cThumb+'<span class="rank-val">'+x.val+t("thread_unit")+'</span></div>';
+      return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span><span class="rank-name"><a onclick="A.searchByTag(this.dataset.t)" data-t="'+esc(x.name)+'">'+esc(x.name)+'</a></span>'+cThumb+'<span class="rank-val">'+x.val+t("res_unit")+'</span></div>';
     }).join(""):'<div class="rank-item" style="color:#bbb;font-size:11px">'+t("no_data")+'</div>';
     top+='<div class="rank-wrap"><div class="rank-box"><div class="rank-hdr">'+t("rank_thread")+'</div>'+thH+'</div></div>';
     top+='<div class="rank-wrap">'+
@@ -1494,7 +1513,7 @@ function renderList(){
       '<div class="rank-box"><div class="rank-hdr">'+t("rank_chara")+'</div>'+chH+'</div>'+
       '</div>';
   }
-  if(st.cat==="すべて"&&th.length){ top+=topAdSlot(); }
+  if(!st.q&&viewThreads().length){ top+=topAdSlot(); }
   if(!list.length)return top+'<div class="empty">'+t("empty_list")+'</div>';
   return top+'<div id="thread-list">'+list.map(function(t2){
     var last=t2.posts[t2.posts.length-1];
@@ -1606,8 +1625,8 @@ window.addEventListener("hashchange",function(){
   applyHash();
 });
 
-function top(){st.thread=null;st.q=""; var fw=document.getElementById("fwrap"); if(fw)fw.style.display="none"; updateHash(); render(); window.scrollTo(0,0);}
-function cat(c){st.cat=c;st.thread=null; updateHash(); render(); window.scrollTo(0,0);}
+function top(){st.thread=null;st.q="";st.cat="すべて"; var fw=document.getElementById("fwrap"); if(fw)fw.style.display="none"; updateHash(); render(); window.scrollTo(0,0);}
+function cat(c){st.cat=c;st.thread=null;st.q=""; updateHash(); render(); window.scrollTo(0,0);}
 function openT(id){
   for(var i=0;i<th.length;i++){if(String(th[i].id)===String(id)){st.thread=th[i]; updateHash(); render(); window.scrollTo(0,0); return;}}
 }
