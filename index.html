@@ -180,6 +180,18 @@ input.err,textarea.err,select.err{border-color:#c00 !important}
 .auto-ad-row{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:8px 0}
 .auto-ad-row a{display:block;line-height:0}
 .auto-ad-row img{width:100%;max-width:none;height:90px;object-fit:contain;background:#fff;border-radius:4px;margin:0!important}
+/* トップの「1位キャラ ジャック中」バナー */
+.hero-jack{position:relative;overflow:hidden;border-radius:8px;margin-bottom:10px;padding:16px;background:linear-gradient(135deg,#ff8a3d,#e05a00 55%,#c04a00);color:#fff;box-shadow:0 4px 14px rgba(224,90,0,.3)}
+.hero-jack.has-thumb{padding-right:108px}
+.hero-jack .hj-crown{position:absolute;right:-8px;top:-22px;font-size:120px;line-height:1;opacity:.13;transform:rotate(12deg);pointer-events:none}
+.hero-jack .hj-badge{display:inline-block;font-size:11px;font-weight:700;background:rgba(255,255,255,.22);padding:3px 10px;border-radius:999px;margin-bottom:8px}
+.hero-jack .hj-name{font-size:24px;font-weight:900;line-height:1.2;text-shadow:0 2px 6px rgba(0,0,0,.22)}
+.hero-jack .hj-name a{color:#fff;text-decoration:none}
+.hero-jack .hj-msg{font-size:13px;margin-top:4px;opacity:.95}
+.hero-jack .hj-cta{display:inline-block;margin-top:12px;background:#fff;color:#e05a00;font-weight:800;font-size:12px;padding:7px 16px;border-radius:999px;text-decoration:none;cursor:pointer}
+.hero-jack .hj-cta:hover{background:#fff0e6}
+.hero-jack .hj-thumb{position:absolute;right:14px;top:0;bottom:0;display:flex;align-items:center}
+.hero-jack .hj-thumb img{width:80px;height:80px;object-fit:cover;border-radius:50%;border:3px solid rgba(255,255,255,.75);box-shadow:0 3px 10px rgba(0,0,0,.25)}
 
 /* 言語選択 / 注意書きモーダル */
 .lang-modal{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}
@@ -262,6 +274,9 @@ body.admin .lang-opt:hover{background:#ff7733;color:#fff}
 body.admin .notice-text{color:#d0d0d0}
 body.admin .ad-block{background:#2a2a2a;border-color:#444}
 body.admin .ad-label{color:#888;border-bottom-color:#444}
+body.admin .hero-jack{background:linear-gradient(135deg,#cc4422,#3a1500);box-shadow:none}
+body.admin .hero-jack .hj-cta{background:#ff7733;color:#fff}
+body.admin .hero-jack .hj-cta:hover{background:#ff8a44}
 </style>
 </head>
 <body>
@@ -594,7 +609,7 @@ var I18N={
     notice:"⚠️ このサイトは翻訳機能を使用しています。\n元の言語以外では、表示に多少のずれが生じる場合があります。\nあらかじめご了承ください。",
     notice_ok:"OK・サイトへ進む",
     translate:"🌐 翻訳", show_original:"🔼 原文に戻す", tl_translating:"翻訳中...", tl_tag:"翻訳", tl_fail:"翻訳に失敗しました。少し時間をおいてお試しください。", ad_label:"PR・広告",
-    thumb_label:"🖼 サムネイル画像（任意）", thumb_uploading:"画像をアップロード中...", thumb_toobig:"画像は5MB以下にしてください。", thumb_fail:"画像のアップロードに失敗しました: ", ad_related:"PR・関連商品"
+    thumb_label:"🖼 サムネイル画像（任意）", thumb_uploading:"画像をアップロード中...", thumb_toobig:"画像は5MB以下にしてください。", thumb_fail:"画像のアップロードに失敗しました: ", ad_related:"PR・関連商品", hero_badge:"👑 いま一番アツい", hero_jack:"今ダラルズをジャック中！🎉", hero_cta:"このキャラのスレを見る →"
   },
   en:{
     new_thread:"+ New Thread", close_form:"▲ Close", form_h2:"■ Create a New Thread",
@@ -639,7 +654,7 @@ var I18N={
     notice:"⚠️ This site uses machine translation.\nThere may be slight inaccuracies outside the original language.\nThank you for understanding.",
     notice_ok:"OK, enter the site",
     translate:"🌐 Translate", show_original:"🔼 Show original", tl_translating:"Translating...", tl_tag:"Translation", tl_fail:"Translation failed. Please try again in a moment.", ad_label:"PR / Ad",
-    thumb_label:"🖼 Thumbnail image (optional)", thumb_uploading:"Uploading image...", thumb_toobig:"Please use an image under 5MB.", thumb_fail:"Image upload failed: ", ad_related:"PR / Related items"
+    thumb_label:"🖼 Thumbnail image (optional)", thumb_uploading:"Uploading image...", thumb_toobig:"Please use an image under 5MB.", thumb_fail:"Image upload failed: ", ad_related:"PR / Related items", hero_badge:"👑 Hottest right now", hero_jack:"is taking over now! 🎉", hero_cta:"See threads →"
   },
   ko:{
     new_thread:"+ 새 글 작성", close_form:"▲ 닫기", form_h2:"■ 새 스레드 작성",
@@ -684,7 +699,7 @@ var I18N={
     notice:"⚠️ 이 사이트는 번역 기능을 사용합니다.\n원래 언어가 아닌 경우 표시에 다소 차이가 있을 수 있습니다.\n양해 부탁드립니다.",
     notice_ok:"확인, 사이트로 이동",
     translate:"🌐 번역", show_original:"🔼 원문 보기", tl_translating:"번역 중...", tl_tag:"번역", tl_fail:"번역에 실패했습니다. 잠시 후 다시 시도해 주세요.", ad_label:"PR · 광고",
-    thumb_label:"🖼 썸네일 이미지 (선택)", thumb_uploading:"이미지 업로드 중...", thumb_toobig:"이미지는 5MB 이하로 해주세요.", thumb_fail:"이미지 업로드에 실패했습니다: ", ad_related:"PR · 관련 상품"
+    thumb_label:"🖼 썸네일 이미지 (선택)", thumb_uploading:"이미지 업로드 중...", thumb_toobig:"이미지는 5MB 이하로 해주세요.", thumb_fail:"이미지 업로드에 실패했습니다: ", ad_related:"PR · 관련 상품", hero_badge:"👑 지금 가장 핫한", hero_jack:"지금 점령 중! 🎉", hero_cta:"글 보러 가기 →"
   }
 };
 
@@ -1350,6 +1365,24 @@ function repThumbForChara(name){
   return null;
 }
 
+function heroBanner(){
+  var r=calcRanks();
+  var hero=(r.charaRank&&r.charaRank[0])?r.charaRank[0]:((r.workRank&&r.workRank[0])?r.workRank[0]:null);
+  if(!hero) return "";
+  var name=hero.name;
+  var thumb=repThumbForChara(name)||repThumbForWork(name)||null;
+  var cls="hero-jack"+(thumb?" has-thumb":"");
+  var thumbHtml=thumb?'<div class="hj-thumb"><img src="'+esc(thumb)+'" alt="" loading="lazy"></div>':"";
+  return '<div class="'+cls+'">'+
+    '<div class="hj-crown">👑</div>'+
+    thumbHtml+
+    '<div class="hj-badge">'+t("hero_badge")+'</div>'+
+    '<div class="hj-name"><a onclick="A.searchByTag(this.dataset.t)" data-t="'+esc(name)+'">'+esc(name)+'</a></div>'+
+    '<div class="hj-msg">'+t("hero_jack")+'</div>'+
+    '<a class="hj-cta" onclick="A.searchByTag(this.dataset.t)" data-t="'+esc(name)+'">'+t("hero_cta")+'</a>'+
+    '</div>';
+}
+
 function renderList(){
   var base=st.cat==="すべて"?th.slice():th.filter(function(t2){return t2.cat===st.cat;});
   var list=st.q?base.filter(function(t2){
@@ -1373,7 +1406,9 @@ function renderList(){
   var sortBtns='<div id="sort-bar">'+sorts.map(function(s){
     return '<button class="sort-btn'+(st.sort===s[0]?" on":"")+'" onclick="A.sortBy(this.dataset.s)" data-s="'+s[0]+'">'+s[1]+'</button>';
   }).join("")+'</div>';
-  var top='<div id="search-bar"><input id="sq" type="text" placeholder="'+esc(t("search_ph"))+'" onkeydown="A.searchKey(event)"><button onclick="A.doSearch()">🔍</button>'+(st.q?'<span class="search-clear" onclick="A.clearSearch()">✕</span>':"")+' </div>';
+  var top='';
+  if(st.cat==="すべて"&&!st.q&&th.length){ top+=heroBanner(); }
+  top+='<div id="search-bar"><input id="sq" type="text" placeholder="'+esc(t("search_ph"))+'" onkeydown="A.searchKey(event)"><button onclick="A.doSearch()">🔍</button>'+(st.q?'<span class="search-clear" onclick="A.clearSearch()">✕</span>':"")+' </div>';
   top+=sortBtns;
   if(st.cat==="すべて"&&th.length>0){
     var r=calcRanks();
