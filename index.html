@@ -192,6 +192,10 @@ input.err,textarea.err,select.err{border-color:#c00 !important}
 .hero-jack .hj-cta:hover{background:#fff0e6}
 .hero-jack .hj-thumb{position:absolute;right:14px;top:0;bottom:0;display:flex;align-items:center}
 .hero-jack .hj-thumb img{width:80px;height:80px;object-fit:cover;border-radius:50%;border:3px solid rgba(255,255,255,.75);box-shadow:0 3px 10px rgba(0,0,0,.25)}
+/* 1位キャラの商品画像を背景に薄く敷く透かし(クリック不可) */
+#bg-watermark{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;display:flex;flex-wrap:wrap;align-content:flex-start;gap:10px;padding:10px;opacity:.08}
+#bg-watermark img{width:90px;height:90px;object-fit:contain;flex:0 0 auto;pointer-events:none}
+#hd,#bc,#wrap{position:relative;z-index:1}
 
 /* 言語選択 / 注意書きモーダル */
 .lang-modal{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}
@@ -277,9 +281,11 @@ body.admin .ad-label{color:#888;border-bottom-color:#444}
 body.admin .hero-jack{background:linear-gradient(135deg,#cc4422,#3a1500);box-shadow:none}
 body.admin .hero-jack .hj-cta{background:#ff7733;color:#fff}
 body.admin .hero-jack .hj-cta:hover{background:#ff8a44}
+body.admin #bg-watermark{opacity:.05}
 </style>
 </head>
 <body>
+<div id="bg-watermark" aria-hidden="true"></div>
 
 <!-- 言語選択モーダル(初回アクセス時) -->
 <div id="lang-modal" class="lang-modal">
@@ -1230,6 +1236,7 @@ function render(){
   renderCats();renderBc();updateTitle();
   var main=document.getElementById("main");
   if(loading){main.innerHTML='<div class="empty">'+t("loading")+'</div>';return;}
+  ensureTopItems();
   main.innerHTML=st.thread?renderThread():renderList();
 }
 function doSearch(){var inp=document.getElementById("sq");if(inp){st.q=inp.value.trim();render();}}
@@ -1267,16 +1274,23 @@ function makeBadges(tags,cat){
 }
 function sortBy(s){st.sort=s;render();}
 
+/* 楽天商品の画像リンク(クリックで商品ページへ)を作る ※PR枠の中だけで使う */
+function adImgsHtml(items){
+  return (items||[]).map(function(it){
+    if(!it.img) return "";
+    return '<a href="'+esc(it.link)+'" target="_blank" rel="nofollow sponsored noopener"><img src="'+esc(it.img)+'" alt="" loading="lazy"></a>';
+  }).filter(Boolean).join("");
+}
 /* 関連商品の広告ブロックHTML(最大8個・グリッド表示) */
-function adBlockHtml(imgs){
-  return '<div class="ad-block"><div class="ad-label">'+t("ad_related")+'</div><div class="rakuten-ad auto-ad-row">'+imgs+'</div></div>';
+function adBlockHtml(items){
+  return '<div class="ad-block"><div class="ad-label">'+t("ad_related")+'</div><div class="rakuten-ad auto-ad-row">'+adImgsHtml(items)+'</div></div>';
 }
 /* 読み込み中のプレースホルダー(枠だけ先に出しておく) */
 function adSlotPlaceholder(slotId){
   return '<div class="ad-block" id="'+slotId+'"><div class="ad-label">'+t("ad_related")+'</div><div style="text-align:center;color:#bbb;font-size:11px;padding:6px">…</div></div>';
 }
 /* キーワード候補(queries)を順番に楽天検索し、最初にヒットした商品(最大8個)の
-   画像HTMLを返す。1つ目で0件なら次の候補へフォールバックする。 */
+   {img,link} 配列を返す。1つ目で0件なら次の候補へフォールバックする。 */
 async function fetchRakutenItems(queries){
   for(var qi=0;qi<queries.length;qi++){
     var q=queries[qi];
@@ -1285,17 +1299,13 @@ async function fetchRakutenItems(queries){
       var url=SUPABASE_URL+"/functions/v1/rakuten-search?keyword="+encodeURIComponent(q);
       var resp=await fetch(url,{headers:{"Authorization":"Bearer "+SUPABASE_KEY,"apikey":SUPABASE_KEY}});
       var data=await resp.json();
-      var items=(data&&data.items)||[];
-      var imgs=items.slice(0,8).map(function(it){
-        if(!it.img) return "";
-        return '<a href="'+esc(it.link)+'" target="_blank" rel="nofollow sponsored noopener"><img src="'+esc(it.img)+'" alt="" loading="lazy"></a>';
-      }).filter(Boolean).join("");
-      if(imgs) return imgs; /* ヒットしたらここで確定(次の候補は試さない) */
+      var items=((data&&data.items)||[]).slice(0,8).filter(function(it){return it&&it.img;});
+      if(items.length) return items; /* ヒットしたらここで確定(次の候補は試さない) */
     }catch(e){
       console.error("rakuten fetch error:",e);
     }
   }
-  return "";
+  return [];
 }
 /* スレ用の関連商品枠。検索キーワードは「キャラ名 → 作品名 → スレタイ」の順。
    キャラ名で0件なら作品名、それでも0件ならスレタイへ自動で切り替わる。 */
@@ -1310,11 +1320,11 @@ function autoAdSlot(thread){
   if(!thread.autoAdLoading){
     thread.autoAdLoading=true;
     setTimeout(function(){
-      fetchRakutenItems(queries).then(function(imgs){
+      fetchRakutenItems(queries).then(function(items){
         thread.autoAdLoading=false;
-        thread.autoAdHtml=imgs?adBlockHtml(imgs):"";
+        thread.autoAdHtml=items.length?adBlockHtml(items):"";
         var el=document.getElementById(slotId);
-        if(el){ if(imgs) el.outerHTML=thread.autoAdHtml; else el.style.display="none"; }
+        if(el){ if(items.length) el.outerHTML=thread.autoAdHtml; else el.style.display="none"; }
       }).catch(function(e){
         thread.autoAdLoading=false; thread.autoAdHtml="";
         var el=document.getElementById(slotId); if(el) el.style.display="none";
@@ -1324,35 +1334,58 @@ function autoAdSlot(thread){
   }
   return adSlotPlaceholder(slotId);
 }
-/* トップ画面用の関連商品枠。検索キーワードは「話題キャラ TOP5 1位 → 話題作品 TOP5 1位」の順。
-   1位の名前が変わったときだけ取り直す(同じ間は使い回してAPIを無駄に呼ばない)。 */
-var topAd={key:null,html:undefined,loading:false};
-function topAdSlot(){
+/* ============================================================
+   トップの主役(ランキング1位) = 背景の薄い透かし & トップの関連商品
+   ・話題キャラ TOP5 1位 → 無ければ話題作品 TOP5 1位 を主役にする
+   ・主役が変わったときだけ楽天を取り直す(同じ間は使い回す)
+   ============================================================ */
+var topAd={key:null,items:undefined,loading:false};
+/* 背景の薄い透かし。1位キャラの商品画像をタイル状に敷く。クリック不可(飾り)。 */
+function applyWatermark(items){
+  var box=document.getElementById("bg-watermark");
+  if(!box) return;
+  var imgs=(items||[]).filter(function(it){return it&&it.img;});
+  var key=imgs.map(function(it){return it.img;}).join("|");
+  if(box.getAttribute("data-key")===key) return; /* 既に同じ内容なら何もしない */
+  box.setAttribute("data-key",key);
+  if(!imgs.length){ box.innerHTML=""; return; }
+  var cells=[],TOTAL=60;
+  for(var i=0;i<TOTAL;i++){
+    var it=imgs[i%imgs.length];
+    cells.push('<img src="'+esc(it.img)+'" alt="" aria-hidden="true">');
+  }
+  box.innerHTML=cells.join("");
+}
+/* 現在の主役(1位)の商品を用意して、背景透かしとトップ広告を更新する。
+   render() から毎回呼ばれるが、主役が変わったときだけ実際に取得する。 */
+function ensureTopItems(){
   var r=calcRanks();
   var queries=[];
   if(r.charaRank&&r.charaRank[0]) queries.push(r.charaRank[0].name);
   if(r.workRank&&r.workRank[0]) queries.push(r.workRank[0].name);
-  if(!queries.length) return "";
+  if(!queries.length){ topAd.key=null; topAd.items=[]; applyWatermark([]); return; }
   var key=queries.join("|");
-  if(topAd.key!==key){ topAd.key=key; topAd.html=undefined; topAd.loading=false; }
-  if(topAd.html!==undefined) return topAd.html;
-  var slotId="topautoad";
-  if(!topAd.loading){
-    topAd.loading=true;
-    setTimeout(function(){
-      fetchRakutenItems(queries).then(function(imgs){
-        topAd.loading=false;
-        topAd.html=imgs?adBlockHtml(imgs):"";
-        var el=document.getElementById(slotId);
-        if(el){ if(imgs) el.outerHTML=topAd.html; else el.style.display="none"; }
-      }).catch(function(e){
-        topAd.loading=false; topAd.html="";
-        var el=document.getElementById(slotId); if(el) el.style.display="none";
-        console.error("topAd error:",e);
-      });
-    },0);
-  }
-  return adSlotPlaceholder(slotId);
+  if(topAd.key===key && topAd.items!==undefined){ applyWatermark(topAd.items); return; }
+  if(topAd.key!==key){ topAd.key=key; topAd.items=undefined; topAd.loading=false; }
+  if(topAd.loading) return;
+  topAd.loading=true;
+  fetchRakutenItems(queries).then(function(items){
+    topAd.loading=false;
+    topAd.items=items||[];
+    applyWatermark(topAd.items);
+    var el=document.getElementById("topautoad");
+    if(el){ if(topAd.items.length) el.outerHTML=adBlockHtml(topAd.items); else el.style.display="none"; }
+  }).catch(function(e){
+    topAd.loading=false; topAd.items=[];
+    applyWatermark([]);
+    var el=document.getElementById("topautoad"); if(el) el.style.display="none";
+    console.error("topAd error:",e);
+  });
+}
+/* トップ画面に出す関連商品枠(itemsは ensureTopItems が用意する) */
+function topAdSlot(){
+  if(topAd.items!==undefined){ return topAd.items.length?adBlockHtml(topAd.items):""; }
+  return adSlotPlaceholder("topautoad");
 }
 
 /* 作品名/キャラ名の代表サムネ(その名前のスレで最初に見つかったサムネ) */
@@ -1378,7 +1411,6 @@ function heroBanner(){
     thumbHtml+
     '<div class="hj-badge">'+t("hero_badge")+'</div>'+
     '<div class="hj-name"><a onclick="A.searchByTag(this.dataset.t)" data-t="'+esc(name)+'">'+esc(name)+'</a></div>'+
-    '<div class="hj-msg">'+t("hero_jack")+'</div>'+
     '<a class="hj-cta" onclick="A.searchByTag(this.dataset.t)" data-t="'+esc(name)+'">'+t("hero_cta")+'</a>'+
     '</div>';
 }
