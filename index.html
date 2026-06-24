@@ -1389,8 +1389,7 @@ var watermarkItems=[]; /* 背景透かしに使う現在の商品配列 */
 /* 背景に使う商品: スレ内ならそのスレの商品(キャラ→作品)、一覧なら表示中タブの1位、検索中は無し */
 function bgItems(){
   if(st.thread) return st.thread.autoAdItems||[];
-  if(!st.q) return topAd.items||[];
-  return [];
+  return topAd.items||[];
 }
 
 /* 背景透かしを、ページの高さいっぱいに敷き詰める(クリック不可の飾り) */
@@ -1429,10 +1428,14 @@ function updateWatermark(){
 /* 現在の主役(1位)の商品を用意して、トップ広告と背景透かしを更新する。
    render() から毎回呼ばれるが、主役が変わったときだけ実際に取得する。 */
 function ensureTopItems(){
-  var r=calcRanks();
   var queries=[];
-  if(r.charaRank&&r.charaRank[0]) queries.push(r.charaRank[0].name);
-  if(r.workRank&&r.workRank[0]) queries.push(r.workRank[0].name);
+  if(st.q){
+    queries.push(st.q); /* 検索中は検索キーワードで広告を出す */
+  }else{
+    var r=calcRanks();
+    if(r.charaRank&&r.charaRank[0]) queries.push(r.charaRank[0].name);
+    if(r.workRank&&r.workRank[0]) queries.push(r.workRank[0].name);
+  }
   if(!queries.length){ topAd.key=null; topAd.items=[]; return; }
   var key=queries.join("|");
   if(topAd.key===key && topAd.items!==undefined){ return; }
@@ -1544,8 +1547,8 @@ function renderList(){
       '<div class="rank-box"><div class="rank-hdr">'+t("rank_chara")+'</div>'+chH+'</div>'+
       '</div>';
   }
-  if(!st.q&&viewThreads().length){ top+=topAdSlot("topautoad"); }
-  var botAd=(!st.q&&viewThreads().length)?topAdSlot("botautoad"):"";
+  top+=topAdSlot("topautoad"); /* 一覧・検索結果ともに上部に広告 */
+  var botAd=list.length?topAdSlot("botautoad"):"";
   if(!list.length)return top+'<div class="empty">'+t("empty_list")+'</div>'+botAd;
   return top+'<div id="thread-list">'+list.map(function(t2){
     var last=t2.posts[t2.posts.length-1];
