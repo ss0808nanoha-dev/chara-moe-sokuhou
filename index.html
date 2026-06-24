@@ -193,9 +193,6 @@ input.err,textarea.err,select.err{border-color:#c00 !important}
 .hero-jack .hj-cta:hover{background:#fff0e6}
 .hero-jack .hj-thumb{position:absolute;right:14px;top:0;bottom:0;display:flex;align-items:center}
 .hero-jack .hj-thumb img{width:80px;height:80px;object-fit:cover;border-radius:50%;border:3px solid rgba(255,255,255,.75);box-shadow:0 3px 10px rgba(0,0,0,.25)}
-/* 1位キャラの商品画像を背景に薄く敷く透かし(クリック不可) */
-#bg-watermark{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;display:flex;flex-wrap:wrap;align-content:flex-start;gap:10px;padding:10px;opacity:.36}
-#bg-watermark img{width:90px;height:90px;object-fit:contain;flex:0 0 auto;pointer-events:none}
 #hd,#bc,#wrap{position:relative;z-index:1}
 
 /* 言語選択 / 注意書きモーダル */
@@ -282,11 +279,9 @@ body.admin .ad-label{color:#888;border-bottom-color:#444}
 body.admin .hero-jack{background:linear-gradient(135deg,#cc4422,#3a1500);box-shadow:none}
 body.admin .hero-jack .hj-cta{background:#ff7733;color:#fff}
 body.admin .hero-jack .hj-cta:hover{background:#ff8a44}
-body.admin #bg-watermark{opacity:.10}
 </style>
 </head>
 <body>
-<div id="bg-watermark" aria-hidden="true"></div>
 
 <!-- 言語選択モーダル(初回アクセス時) -->
 <div id="lang-modal" class="lang-modal">
@@ -1324,36 +1319,49 @@ async function fetchRakutenItems(queries){
   }
   return [];
 }
-/* スレ用の関連商品枠。検索キーワードは「キャラ名 → 作品名 → スレタイ」の順。
-   キャラ名で0件なら作品名、それでも0件ならスレタイへ自動で切り替わる。 */
-function autoAdSlot(thread){
+/* スレ用の検索キーワード「キャラ→作品→(全体1位キャラ→1位作品)」。
+   キャラタグ優先、無ければ作品、タグ無し/0件はサイト全体の1位を宣伝。 */
+function buildThreadQueries(thread){
   var queries=[];
   if(thread.charaTag) queries.push(thread.charaTag);
   if(thread.workTag) queries.push(thread.workTag);
-  /* タグが無い／そのタグで0件のときは、サイト全体の1位キャラ(無ければ1位作品)を宣伝 */
   var g=calcRanks(th);
   if(g.charaRank&&g.charaRank[0]) queries.push(g.charaRank[0].name);
   if(g.workRank&&g.workRank[0]) queries.push(g.workRank[0].name);
-  queries=queries.filter(function(q,idx){return q&&queries.indexOf(q)===idx;});
+  return queries.filter(function(q,idx){return q&&queries.indexOf(q)===idx;});
+}
+/* スレの商品を1回だけ取得して、スレ内の全広告枠＋背景透かしを更新する */
+function startThreadAdFetch(thread){
+  if(thread.autoAdLoading||thread.autoAdItems!==undefined) return;
+  var queries=buildThreadQueries(thread);
+  if(!queries.length){ thread.autoAdItems=[]; updateWatermark(); return; }
+  thread.autoAdLoading=true;
+  fetchRakutenItems(queries).then(function(items){
+    thread.autoAdLoading=false; thread.autoAdItems=items;
+    ["autoad_mid_"+thread.id,"autoad_bot_"+thread.id].forEach(function(sid){
+      var el=document.getElementById(sid);
+      if(el){ if(items.length) el.outerHTML=adBlockHtml(items); else el.style.display="none"; }
+    });
+    updateWatermark();
+  }).catch(function(e){
+    thread.autoAdLoading=false; thread.autoAdItems=[];
+    ["autoad_mid_"+thread.id,"autoad_bot_"+thread.id].forEach(function(sid){
+      var el=document.getElementById(sid); if(el) el.style.display="none";
+    });
+    updateWatermark();
+    console.error("autoAd error:",e);
+  });
+}
+/* スレ広告枠。sidごとに同じ商品を表示(取得は1回だけ) */
+function autoAdSlot(thread,sid){
+  sid=sid||("autoad_mid_"+thread.id);
+  var queries=buildThreadQueries(thread);
   if(!queries.length) return "";
-  if(thread.autoAdHtml!==undefined) return thread.autoAdHtml; /* 取得済み(空文字なら表示なし) */
-  var slotId="autoad_"+thread.id;
-  if(!thread.autoAdLoading){
-    thread.autoAdLoading=true;
-    setTimeout(function(){
-      fetchRakutenItems(queries).then(function(items){
-        thread.autoAdLoading=false;
-        thread.autoAdHtml=items.length?adBlockHtml(items):"";
-        var el=document.getElementById(slotId);
-        if(el){ if(items.length) el.outerHTML=thread.autoAdHtml; else el.style.display="none"; }
-      }).catch(function(e){
-        thread.autoAdLoading=false; thread.autoAdHtml="";
-        var el=document.getElementById(slotId); if(el) el.style.display="none";
-        console.error("autoAd error:",e);
-      });
-    },0);
+  if(thread.autoAdItems!==undefined){
+    return thread.autoAdItems.length?adBlockHtml(thread.autoAdItems):"";
   }
-  return adSlotPlaceholder(slotId);
+  startThreadAdFetch(thread);
+  return adSlotPlaceholder(sid);
 }
 /* ============================================================
    トップの主役(ランキング1位) = 背景の薄い透かし & トップの関連商品
@@ -1363,8 +1371,12 @@ function autoAdSlot(thread){
 var topAd={key:null,items:undefined,loading:false};
 var watermarkItems=[]; /* 背景透かしに使う現在の商品配列 */
 
-/* 今トップ画面(=「すべて」表示・検索なし・スレ未表示)かどうか */
-function isTopPage(){ return !st.thread && !st.q; }
+/* 背景に使う商品: スレ内ならそのスレの商品(キャラ→作品)、一覧なら表示中タブの1位、検索中は無し */
+function bgItems(){
+  if(st.thread) return st.thread.autoAdItems||[];
+  if(!st.q) return topAd.items||[];
+  return [];
+}
 
 /* 背景透かしを、ページの高さいっぱいに敷き詰める(クリック不可の飾り) */
 function fillWatermark(){
@@ -1386,16 +1398,17 @@ function fillWatermark(){
   for(var i=0;i<total;i++){ var it=items[i%items.length]; cells.push('<img src="'+esc(it.img)+'" alt="" aria-hidden="true">'); }
   box.innerHTML=cells.join("");
 }
-/* トップ画面のときだけ背景透かしを表示。スレ内・カテゴリ・検索中は消す。 */
+/* 背景透かしを表示。スレ内はそのスレの商品、一覧はタブ1位の商品。検索中は消す。 */
 function updateWatermark(){
   var box=document.getElementById("bg-watermark");
   if(!box) return;
-  if(!isTopPage() || !topAd.items || !topAd.items.length){
+  var items=bgItems();
+  if(!items || !items.length){
     box.style.display="none"; box.innerHTML=""; box.setAttribute("data-key","");
     return;
   }
   box.style.display="";
-  watermarkItems=topAd.items;
+  watermarkItems=items;
   fillWatermark();
 }
 /* 現在の主役(1位)の商品を用意して、トップ広告と背景透かしを更新する。
@@ -1414,20 +1427,23 @@ function ensureTopItems(){
   fetchRakutenItems(queries).then(function(items){
     topAd.loading=false;
     topAd.items=items||[];
-    var el=document.getElementById("topautoad");
-    if(el){ if(topAd.items.length) el.outerHTML=adBlockHtml(topAd.items); else el.style.display="none"; }
+    ["topautoad","botautoad"].forEach(function(sid){
+      var el=document.getElementById(sid);
+      if(el){ if(topAd.items.length) el.outerHTML=adBlockHtml(topAd.items); else el.style.display="none"; }
+    });
     updateWatermark();
   }).catch(function(e){
     topAd.loading=false; topAd.items=[];
-    var el=document.getElementById("topautoad"); if(el) el.style.display="none";
+    ["topautoad","botautoad"].forEach(function(sid){var el=document.getElementById(sid); if(el) el.style.display="none";});
     updateWatermark();
     console.error("topAd error:",e);
   });
 }
 /* トップ画面に出す関連商品枠(itemsは ensureTopItems が用意する) */
-function topAdSlot(){
+function topAdSlot(sid){
+  sid=sid||"topautoad";
   if(topAd.items!==undefined){ return topAd.items.length?adBlockHtml(topAd.items):""; }
-  return adSlotPlaceholder("topautoad");
+  return adSlotPlaceholder(sid);
 }
 /* 画面サイズが変わったら透かしを敷き直す */
 var wmResizeTimer=null;
@@ -1513,8 +1529,9 @@ function renderList(){
       '<div class="rank-box"><div class="rank-hdr">'+t("rank_chara")+'</div>'+chH+'</div>'+
       '</div>';
   }
-  if(!st.q&&viewThreads().length){ top+=topAdSlot(); }
-  if(!list.length)return top+'<div class="empty">'+t("empty_list")+'</div>';
+  if(!st.q&&viewThreads().length){ top+=topAdSlot("topautoad"); }
+  var botAd=(!st.q&&viewThreads().length)?topAdSlot("botautoad"):"";
+  if(!list.length)return top+'<div class="empty">'+t("empty_list")+'</div>'+botAd;
   return top+'<div id="thread-list">'+list.map(function(t2){
     var last=t2.posts[t2.posts.length-1];
     var isK=t2.kanso||t2.posts.length>=KANSO;
@@ -1527,7 +1544,7 @@ function renderList(){
       '</div>'+(t2.thumbUrl?'<img class="th-thumb" src="'+esc(t2.thumbUrl)+'" alt="" loading="lazy">':"")+'<span class="th-res">'+t2.posts.length+t("res_unit")+'</span></div>'+
       (t2.showTitleTl&&t2.titleTranslated?'<div class="pbody-tl" style="margin-left:0"><span class="tl-tag">'+t("tl_tag")+'</span>'+esc(t2.titleTranslated)+'</div>':"")+
       '<div class="th-meta">'+fmt(last.ts)+'</div></div>';
-  }).join("")+'</div>';
+  }).join("")+'</div>'+botAd;
 }
 
 function getMedalPost(t2){
@@ -1595,11 +1612,11 @@ function renderThread(){
     (showRecover?'<br><a class="op-recover" onclick="A.recoverOp(this.dataset.tid)" data-tid="'+esc(t2.id)+'">'+t("recover_op")+'</a>':"")+
     '</div>'+
     '<div id="posts-wrap">'+posts+'</div>'+
-    autoAdSlot(t2)+
+    autoAdSlot(t2,"autoad_mid_"+t2.id)+
     '<div id="reply-box"><h3>'+t("reply_h3")+'</h3>'+
     '<input id="r-name" placeholder="'+esc(t("reply_name_ph"))+'">'+
     '<textarea id="r-body" placeholder="'+esc(t("reply_body_ph"))+'" maxlength="1000"></textarea>'+
-    '<div class="form-foot"><span></span><button class="sub-btn" onclick="A.reply()">'+t("reply_btn")+'</button></div></div>';
+    '<div class="form-foot"><span></span><button class="sub-btn" onclick="A.reply()">'+t("reply_btn")+'</button></div></div>'+autoAdSlot(t2,"autoad_bot_"+t2.id);
 }
 
 /* アクション */
