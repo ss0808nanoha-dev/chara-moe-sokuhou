@@ -889,26 +889,24 @@ async function recoverOp(tid){
 /* ============================================================
    管理者モード
    ============================================================ */
-var ADMIN_KEY="nanohataiga0808";
 var adminMode=lsGet("kmh_admin")==="1";
-var adminBuf="";
-window.addEventListener("keydown",function(e){
-  var tag=(e.target&&e.target.tagName||"").toLowerCase();
-  if(tag==="input"||tag==="textarea")return;
-  if(e.ctrlKey||e.altKey||e.metaKey)return;
-  if(e.key&&e.key.length===1){
-    adminBuf+=e.key.toLowerCase();
-    if(adminBuf.length>ADMIN_KEY.length) adminBuf=adminBuf.slice(-ADMIN_KEY.length);
-    if(adminBuf===ADMIN_KEY){
-      adminMode=!adminMode;
-      lsSet("kmh_admin",adminMode?"1":"0");
-      adminBuf="";
-      updateAdminBadge();
-      if(typeof render==="function") render();
-      alert(adminMode?"🔐 管理者モードを有効にしました":"管理者モードを解除しました");
-    }
+/* 合言葉の判定はSupabaseのEdge Function(サーバー側)に問い合わせる。
+   合言葉そのものはこのコードには持たない(=ソースを見られても安全)。 */
+async function verifyAdminKey(pwd){
+  try{
+    var resp=await fetch(SUPABASE_URL+"/functions/v1/hyper-worker",{
+      method:"POST",
+      headers:{"Authorization":"Bearer "+SUPABASE_KEY,"apikey":SUPABASE_KEY,"Content-Type":"application/json"},
+      body:JSON.stringify({key:(pwd||"").trim()})
+    });
+    var data=await resp.json();
+    return !!(data&&data.ok);
+  }catch(e){
+    alert("認証サーバーに接続できませんでした。通信環境を確認して、もう一度お試しください。");
+    return false;
   }
-});
+}
+
 function updateAdminBadge(){
   if(adminMode){document.body.classList.add("admin");}else{document.body.classList.remove("admin");}
   var el=document.getElementById("admin-badge");
@@ -930,9 +928,9 @@ function updateAdminBadge(){
 }
 setTimeout(updateAdminBadge,100);
 
-/* スマホ用: ロゴを2秒以内に5回タップ → 合言葉入力で管理者モード切替 */
+/* スマホ/PC用: ロゴを2秒以内に5回タップ(クリック) → 合言葉入力で管理者モード切替 */
 var logoTapCount=0, logoTapTimer=null;
-function logoTap(){
+async function logoTap(){
   top(); /* 通常の「TOPへ戻る」動作は維持 */
   logoTapCount++;
   if(logoTapTimer) clearTimeout(logoTapTimer);
@@ -942,7 +940,8 @@ function logoTap(){
     if(logoTapTimer) clearTimeout(logoTapTimer);
     var pwd=prompt("管理者の合言葉を入力してください：");
     if(pwd===null) return;
-    if(pwd.trim()===ADMIN_KEY){
+    var ok=await verifyAdminKey(pwd);
+    if(ok){
       adminMode=!adminMode;
       lsSet("kmh_admin",adminMode?"1":"0");
       updateAdminBadge();
