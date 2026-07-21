@@ -204,6 +204,15 @@ body.admin .post.jump-hl{animation:jumphlA 1.6s ease-out}
 .doc-body li{margin:3px 0}
 .doc-body p{margin:6px 0}
 .doc-body .meta{color:#888;font-size:11px;margin-top:20px;text-align:right}
+/* お問い合わせフォーム */
+#contact-form label{display:block;font-size:12px;font-weight:700;color:#c04a00;margin:12px 0 4px}
+#contact-form input,#contact-form textarea,#contact-form select{width:100%;padding:7px 9px;border:1px solid #ccc;border-radius:3px}
+#contact-form textarea{height:130px;resize:vertical}
+#contact-form .cf-note{font-size:11px;color:#888;margin-top:4px;line-height:1.6}
+#contact-form .cf-send{background:#e05a00;color:#fff;font-size:13px;font-weight:700;padding:9px 26px;border-radius:3px;margin-top:16px}
+#contact-form .cf-send:hover{background:#c04a00}
+#contact-form .cf-hp{position:absolute;left:-9999px;opacity:0}
+body.admin #contact-form label{color:#ff9966}
 .mbox{background:#fff;border-radius:3px;padding:24px;max-width:280px;width:100%;text-align:center;border-top:3px solid #c00}
 .mbtns{display:flex;gap:8px;margin-top:16px}
 .mng{flex:1;padding:8px;border:1px solid #ccc;background:#f5f5f5;font-size:12px;color:#555;border-radius:2px}
@@ -436,7 +445,7 @@ body.admin .hero-jack .hj-cta:hover{background:#ff8a44}
 
   <footer id="site-footer">
     <div>
-      <a id="g-foot-terms" onclick="A.showDoc('terms')">利用規約</a>|<a id="g-foot-privacy" onclick="A.showDoc('privacy')">プライバシーポリシー</a>|<a id="g-foot-about" onclick="A.showDoc('about')">このサイトについて</a>
+      <a id="g-foot-terms" onclick="A.showDoc('terms')">利用規約</a>|<a id="g-foot-privacy" onclick="A.showDoc('privacy')">プライバシーポリシー</a>|<a id="g-foot-about" onclick="A.showDoc('about')">このサイトについて</a>|<a id="g-foot-contact" onclick="A.showDoc('contact')">お問い合わせ</a>
     </div>
     <div style="margin-top:8px">© キャラ萌え速報</div>
   </footer>
@@ -598,6 +607,46 @@ body.admin .hero-jack .hj-cta:hover{background:#ff8a44}
   </div>
 </div>
 
+<div id="doc-contact" class="doc-modal" onclick="if(event.target===this)A.hideDoc('contact')">
+  <div class="doc-box">
+    <div class="doc-hdr"><span>お問い合わせ</span><button class="doc-close" onclick="A.hideDoc('contact')">×</button></div>
+    <div class="doc-body">
+      <p>ご意見・ご要望・削除依頼などは、こちらのフォームからお送りください。<br>
+      送信いただくと、自動で受付のご連絡メールが届きます。</p>
+      <form id="contact-form" action="https://formsubmit.co/chara.moe.sokuhou@gmail.com" method="POST">
+        <!-- FormSubmitの設定(画面には表示されません) -->
+        <input type="hidden" name="_subject" value="【ダラルズ】お問い合わせ">
+        <input type="hidden" name="_template" value="table">
+        <input type="hidden" name="_autoresponse" value="ご意見ありがとうございます。&#10;確認させていただきます。&#10;&#10;※このメールは自動送信です。返信は不要です。&#10;&#10;ダラルズ｜キャラ萌え速報">
+        <input type="hidden" name="_next" value="https://chara-moe-sokuhou.vercel.app/">
+        <input type="text" name="_honey" class="cf-hp" tabindex="-1" autocomplete="off">
+
+        <label for="cf-name">お名前（任意）</label>
+        <input type="text" id="cf-name" name="name" maxlength="40" placeholder="匿名でも構いません">
+
+        <label for="cf-email">メールアドレス（必須）</label>
+        <input type="email" id="cf-email" name="email" required placeholder="返信・自動受付メールの送り先">
+        <div class="cf-note">※自動受付メールをお送りするため、入力をお願いしています。</div>
+
+        <label for="cf-kind">お問い合わせの種類</label>
+        <select id="cf-kind" name="種類">
+          <option>ご意見・ご要望</option>
+          <option>不具合の報告</option>
+          <option>削除依頼</option>
+          <option>権利者からのご連絡</option>
+          <option>その他</option>
+        </select>
+
+        <label for="cf-msg">内容（必須）</label>
+        <textarea id="cf-msg" name="内容" required maxlength="2000" placeholder="できるだけ詳しくお書きください"></textarea>
+
+        <div style="text-align:right"><button type="submit" class="cf-send">送信する</button></div>
+        <div class="cf-note" style="margin-top:10px">送信後、確認画面（reCAPTCHA）が表示されることがあります。表示された場合はチェックを入れて完了してください。</div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <script>
 var SUPABASE_URL = "https://xflcbgsonmvvzbefbreq.supabase.co";
 var SUPABASE_KEY = "sb_publishable_in8cVtZwe3SbE0l6Y3Jf2Q_awVX6mJY";
@@ -640,7 +689,7 @@ var I18N={
     anon_name:"萌えてる匿名さん",
     deleted_post:"このレスは削除されています", hidden_post:"⚠️ このレスは複数の報告により非表示になっています",
     loading:"読み込み中...", load_fail:"⚠️ データの読み込みに失敗しました。<br>通信環境を確認して、ページを再読み込みしてください。",
-    foot_terms:"利用規約", foot_privacy:"プライバシーポリシー", foot_about:"このサイトについて",
+    foot_terms:"利用規約", foot_privacy:"プライバシーポリシー", foot_about:"このサイトについて", foot_contact:"お問い合わせ",
     confirm_kanso:"このスレッドを完走にしますか？", confirm_del_thread:"このスレッドを削除しますか？元に戻せません。",
     confirm_del_post:"このレスを削除しますか？", confirm_report:"このレスを通報しますか？\n（規約違反のレスに対してのみ使用してください）",
     report_done:"報告を受け付けました。ご協力ありがとうございます。", already_reported:"このレスは既に報告済みです。",
@@ -691,7 +740,7 @@ var I18N={
     anon_name:"Anonymous Fan",
     deleted_post:"This reply was deleted", hidden_post:"⚠️ Hidden due to multiple reports",
     loading:"Loading...", load_fail:"⚠️ Failed to load data.<br>Check your connection and reload the page.",
-    foot_terms:"Terms", foot_privacy:"Privacy Policy", foot_about:"About",
+    foot_terms:"Terms", foot_privacy:"Privacy Policy", foot_about:"About", foot_contact:"Contact",
     confirm_kanso:"Mark this thread as completed?", confirm_del_thread:"Delete this thread? This cannot be undone.",
     confirm_del_post:"Delete this reply?", confirm_report:"Report this reply?\n(Only for posts that violate the rules)",
     report_done:"Report received. Thank you for your help.", already_reported:"You have already reported this reply.",
@@ -742,7 +791,7 @@ var I18N={
     anon_name:"익명의 덕후님",
     deleted_post:"삭제된 댓글입니다", hidden_post:"⚠️ 다수의 신고로 숨김 처리되었습니다",
     loading:"불러오는 중...", load_fail:"⚠️ 데이터를 불러오지 못했습니다.<br>연결을 확인하고 페이지를 새로고침해 주세요.",
-    foot_terms:"이용약관", foot_privacy:"개인정보 처리방침", foot_about:"사이트 소개",
+    foot_terms:"이용약관", foot_privacy:"개인정보 처리방침", foot_about:"사이트 소개", foot_contact:"문의하기",
     confirm_kanso:"이 스레드를 완주 처리할까요?", confirm_del_thread:"이 스레드를 삭제할까요? 되돌릴 수 없습니다.",
     confirm_del_post:"이 댓글을 삭제할까요?", confirm_report:"이 댓글을 신고할까요?\n(규칙 위반 게시물에만 사용하세요)",
     report_done:"신고가 접수되었습니다. 협조해 주셔서 감사합니다.", already_reported:"이미 신고한 댓글입니다.",
@@ -891,6 +940,7 @@ function applyStaticI18n(){
   setText("g-foot-terms","foot_terms");
   setText("g-foot-privacy","foot_privacy");
   setText("g-foot-about","foot_about");
+  setText("g-foot-contact","foot_contact");
   /* 言語切替ボタンのアクティブ表示 */
   var sws=document.querySelectorAll(".lang-sw-btn");
   for(var i=0;i<sws.length;i++){
