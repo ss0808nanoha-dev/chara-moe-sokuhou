@@ -1652,7 +1652,7 @@ function renderThread(){
     var likeCnt=pst.likeCount||0;
     var isMine=pst.likedByMe;
     var isOwner=pst.uid===myIp;
-    var canDeletePost=isOwner||adminMode||isOPByPassword;
+    var canDeletePost=isOwner||adminMode||isOP; /* スレ主(端末で自動認識/合言葉認証どちらでも)は削除可 */
     var langCls=isOPp?"":nameLangClass(pst.postLang); /* OPは赤を優先 */
     var flag=pst.postLang&&LANGLABEL[pst.postLang]?'<span class="langflag">【'+LANGLABEL[pst.postLang]+'】</span>':"";
     var canTranslate=(pst.postLang||"ja")!==(uiLang||"ja");
