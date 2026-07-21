@@ -1716,6 +1716,7 @@ function showNewBtn(){
 async function checkNew(){
   if(document.hidden) return;          /* 別タブを見てる間は通信しない */
   if(loading) return;
+  if(!st.thread){ pendingNew=0; showNewBtn(); return; } /* 一覧では新着通知を出さない */
   var lm=document.getElementById("lang-modal"), nm=document.getElementById("notice-modal");
   if((lm&&lm.classList.contains("on"))||(nm&&nm.classList.contains("on"))) return; /* 表示中のみスキップ */
   try{
@@ -1834,10 +1835,10 @@ window.addEventListener("hashchange",function(){
   applyHash();
 });
 
-function top(){st.thread=null;st.q="";st.cat="すべて"; var fw=document.getElementById("fwrap"); if(fw)fw.style.display="none"; updateHash(); render(); window.scrollTo(0,0);}
-function cat(c){st.cat=c;st.thread=null;st.q=""; updateHash(); render(); window.scrollTo(0,0);}
+function top(){st.thread=null;st.q="";st.cat="すべて"; var fw=document.getElementById("fwrap"); if(fw)fw.style.display="none"; updateHash(); render(); resetPollBase(); window.scrollTo(0,0);}
+function cat(c){st.cat=c;st.thread=null;st.q=""; updateHash(); render(); resetPollBase(); window.scrollTo(0,0);}
 function openT(id){
-  for(var i=0;i<th.length;i++){if(String(th[i].id)===String(id)){st.thread=th[i]; updateHash(); render(); window.scrollTo(0,0); return;}}
+  for(var i=0;i<th.length;i++){if(String(th[i].id)===String(id)){st.thread=th[i]; updateHash(); render(); resetPollBase(); window.scrollTo(0,0); return;}}
 }
 
 async function doLike(pid){
