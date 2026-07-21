@@ -1700,7 +1700,7 @@ async function loadNew(){
 }
 function startPolling(){
   if(pollTimer) clearInterval(pollTimer);
-  pollTimer=setInterval(checkNew,20000);
+  pollTimer=setInterval(checkNew,5000);
   document.addEventListener("visibilitychange",function(){ if(!document.hidden) checkNew(); });
 }
 
