@@ -163,6 +163,15 @@ input.err,textarea.err,select.err{border-color:#c00 !important}
 .pno{cursor:pointer}
 .pno:hover{text-decoration:underline}
 .anchor-link{color:#e05a00;cursor:pointer;text-decoration:underline}
+/* >>N にカーソルを乗せたときのプレビュー(PCのみ) */
+#anchor-pop{position:absolute;z-index:900;max-width:420px;background:#fff;border:1px solid #e0a070;
+  border-radius:6px;box-shadow:0 6px 22px rgba(0,0,0,.25);padding:8px 11px;display:none;pointer-events:none}
+#anchor-pop .ap-meta{font-size:11px;color:#888;margin-bottom:3px;line-height:1.5}
+#anchor-pop .ap-no{color:#e05a00;font-weight:700;margin-right:5px}
+#anchor-pop .ap-name{color:#228b22;font-weight:700;margin-right:5px}
+#anchor-pop .ap-body{font-size:13px;line-height:1.75;white-space:pre-wrap;color:#222;max-height:260px;overflow:hidden}
+body.admin #anchor-pop{background:#2a2a2a;border-color:#7a4a28}
+body.admin #anchor-pop .ap-body{color:#d0d0d0}
 .post.jump-hl{animation:jumphl 1.6s ease-out}
 @keyframes jumphl{0%{background:#ffe6d2}100%{background:transparent}}
 body.admin .post.jump-hl{animation:jumphlA 1.6s ease-out}
@@ -312,6 +321,7 @@ body.admin .hero-jack .hj-cta:hover{background:#ff8a44}
 </head>
 <body>
 <button id="new-posts-btn" onclick="A.loadNew()"></button>
+<div id="anchor-pop"></div>
 
 <!-- 言語選択モーダル(初回アクセス時) -->
 <div id="lang-modal" class="lang-modal">
@@ -1738,7 +1748,7 @@ function startPolling(){
 /* 本文の >>数字 をリンクに変換(エスケープ後に処理するので安全) */
 function bodyHtml(txt){
   return esc(txt||"").replace(/&gt;&gt;(\d{1,4})/g,function(m,n){
-    return '<span class="anchor-link" onclick="A.jumpTo('+n+')">&gt;&gt;'+n+'</span>';
+    return '<span class="anchor-link" onclick="A.jumpTo('+n+')" onmouseenter="A.popAnchor('+n+',this)" onmouseleave="A.popHide()">&gt;&gt;'+n+'</span>';
   });
 }
 /* レス番号タップ → 返信欄に >>N を入れてフォーカス */
@@ -1752,6 +1762,44 @@ function anchor(n){
   if(box) box.scrollIntoView({behavior:"smooth",block:"center"});
   setTimeout(function(){ ta.focus(); ta.selectionStart=ta.selectionEnd=ta.value.length; },300);
 }
+/* >>N にカーソルを乗せたら、そのレスの中身をふきだしで表示(PCのみ・タップ端末では出さない) */
+var canHover=(function(){ try{ return window.matchMedia&&window.matchMedia("(hover: hover)").matches; }catch(e){ return false; } })();
+function popHide(){
+  var p=document.getElementById("anchor-pop");
+  if(p){ p.style.display="none"; p.innerHTML=""; }
+}
+function popAnchor(n,el){
+  if(!canHover) return;
+  if(!st.thread) return;
+  var pst=(st.thread.posts||[])[n-1];
+  var p=document.getElementById("anchor-pop");
+  if(!p||!pst) return;
+  if(pst.deleted||pst.autoHidden){
+    p.innerHTML='<div class="ap-body" style="color:#bbb;font-size:12px">'+t(pst.deleted?"deleted_post":"hidden_post")+'</div>';
+  }else{
+    var name=pst.name||t("anon_name");
+    p.innerHTML='<div class="ap-meta"><span class="ap-no">'+n+'</span><span class="ap-name">'+esc(name)+'</span>'+fmt(pst.ts)+'</div>'+
+      '<div class="ap-body">'+esc(pst.body||"")+'</div>';
+  }
+  /* いったん表示してサイズを測り、画面からはみ出さない位置に置く */
+  p.style.display="block";
+  p.style.left="0px"; p.style.top="0px";
+  var r=el.getBoundingClientRect();
+  var pw=p.offsetWidth, ph=p.offsetHeight;
+  var vw=document.documentElement.clientWidth;
+  var left=window.scrollX+r.left;
+  if(left+pw>window.scrollX+vw-8) left=window.scrollX+vw-pw-8;
+  if(left<window.scrollX+8) left=window.scrollX+8;
+  var top=window.scrollY+r.bottom+6;
+  /* 下に入りきらないときは上に出す */
+  if(r.bottom+ph+10>document.documentElement.clientHeight) top=window.scrollY+r.top-ph-6;
+  if(top<window.scrollY+4) top=window.scrollY+4;
+  p.style.left=left+"px";
+  p.style.top=top+"px";
+}
+/* スクロールしたら消す(位置がずれるため) */
+window.addEventListener("scroll",function(){ var p=document.getElementById("anchor-pop"); if(p&&p.style.display==="block") popHide(); },{passive:true});
+
 /* >>N タップ → そのレスへスクロール＋一瞬ハイライト */
 function jumpTo(n){
   var el=document.getElementById("post-"+n);
@@ -2000,7 +2048,7 @@ return{top:top,cat:cat,openT:openT,loadNew:loadNew,toggleForm:toggleForm,submit:
   selectMag:selectMag,clearMag:clearMag,clearWork:clearWork,clearChara:clearChara,
   setWork:setWork,setChara:setChara,renderTagUI:renderTagUI,showSuggest:showSuggest,pickSuggest:pickSuggest,
   sortBy:sortBy,showDoc:showDoc,hideDoc:hideDoc,recoverOp:recoverOp,setOpPassword:setOpPassword,
-  chooseLang:chooseLang,acceptNotice:acceptNotice,setLang:setLang,translatePost:translatePost,translateTitle:translateTitle,logoTap:logoTap,previewThumb:previewThumb,anchor:anchor,jumpTo:jumpTo};
+  chooseLang:chooseLang,acceptNotice:acceptNotice,setLang:setLang,translatePost:translatePost,translateTitle:translateTitle,logoTap:logoTap,previewThumb:previewThumb,anchor:anchor,jumpTo:jumpTo,popAnchor:popAnchor,popHide:popHide};
 })();
 </script>
 </body>
