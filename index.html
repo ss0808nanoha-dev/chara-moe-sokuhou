@@ -1676,7 +1676,8 @@ function showNewBtn(){
 async function checkNew(){
   if(document.hidden) return;          /* 別タブを見てる間は通信しない */
   if(loading) return;
-  if(document.getElementById("lang-modal")) return;
+  var lm=document.getElementById("lang-modal"), nm=document.getElementById("notice-modal");
+  if((lm&&lm.classList.contains("on"))||(nm&&nm.classList.contains("on"))) return; /* 表示中のみスキップ */
   try{
     var q=sb.from("posts").select("id",{count:"exact",head:true});
     if(st.thread) q=q.eq("thread_id",st.thread.id);
