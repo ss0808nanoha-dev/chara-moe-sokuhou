@@ -1876,9 +1876,9 @@ function applyHash(){
   var m=location.hash.match(/^#t=(\d+)$/);
   if(m){
     var id=Number(m[1]);
-    for(var i=0;i<th.length;i++){if(th[i].id===id){st.thread=th[i];render();window.scrollTo(0,0);return;}}
-    st.thread=null;render();window.scrollTo(0,0);
-  }else{st.thread=null;render();window.scrollTo(0,0);}
+    for(var i=0;i<th.length;i++){if(th[i].id===id){st.thread=th[i];render();resetPollBase();window.scrollTo(0,0);return;}}
+    st.thread=null;render();resetPollBase();window.scrollTo(0,0);
+  }else{st.thread=null;render();resetPollBase();window.scrollTo(0,0);}
 }
 window.addEventListener("hashchange",function(){
   if(skipNextHashChange){skipNextHashChange=false;return;}
