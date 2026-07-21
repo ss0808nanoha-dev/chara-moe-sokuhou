@@ -622,6 +622,11 @@ var I18N={
     like:"♡ いいね", liked:"♥ いいね済", report:"報告", reported:"報告済", del:"削除",
     kanso_btn:"✅ 完走にする", del_thread_btn:"🗑 スレを削除", kanso_done_label:"✅ 完走スレ",
     recover_op:"🔑 このスレを立てた方へ（合言葉を入力）",
+    setpw_btn:"🔑 スレ主合言葉を設定",
+    setpw_btn_change:"🔑 スレ主合言葉を変更",
+    setpw_prompt:"別の端末からこのスレを管理するための合言葉を入力してください（4文字以上）：",
+    setpw_ok:"✅ スレ主合言葉を設定しました。\n別の端末では、このスレを開いて「このスレを立てた方へ」から入力してください。",
+    setpw_fail:"設定に失敗しました: ",
     anon_name:"萌えてる匿名さん",
     deleted_post:"このレスは削除されています", hidden_post:"⚠️ このレスは複数の報告により非表示になっています",
     loading:"読み込み中...", load_fail:"⚠️ データの読み込みに失敗しました。<br>通信環境を確認して、ページを再読み込みしてください。",
@@ -668,6 +673,11 @@ var I18N={
     like:"♡ Like", liked:"♥ Liked", report:"Report", reported:"Reported", del:"Delete",
     kanso_btn:"✅ Mark as done", del_thread_btn:"🗑 Delete thread", kanso_done_label:"✅ Completed",
     recover_op:"🔑 Are you the thread owner? (enter passphrase)",
+    setpw_btn:"🔑 Set owner passphrase",
+    setpw_btn_change:"🔑 Change owner passphrase",
+    setpw_prompt:"Enter a passphrase to manage this thread from other devices (4+ chars):",
+    setpw_ok:"✅ Passphrase set.\nOn other devices, open this thread and use \"Are you the thread owner?\".",
+    setpw_fail:"Failed to set: ",
     anon_name:"Anonymous Fan",
     deleted_post:"This reply was deleted", hidden_post:"⚠️ Hidden due to multiple reports",
     loading:"Loading...", load_fail:"⚠️ Failed to load data.<br>Check your connection and reload the page.",
@@ -714,6 +724,11 @@ var I18N={
     like:"♡ 좋아요", liked:"♥ 좋아요 완료", report:"신고", reported:"신고됨", del:"삭제",
     kanso_btn:"✅ 완주 처리", del_thread_btn:"🗑 스레드 삭제", kanso_done_label:"✅ 완주 스레드",
     recover_op:"🔑 이 스레드 작성자라면 (암호 입력)",
+    setpw_btn:"🔑 작성자 암호 설정",
+    setpw_btn_change:"🔑 작성자 암호 변경",
+    setpw_prompt:"다른 기기에서 이 스레드를 관리할 암호를 입력하세요 (4자 이상):",
+    setpw_ok:"✅ 암호를 설정했습니다.\n다른 기기에서는 이 스레드를 열고 \"이 스레드 작성자라면\"에서 입력하세요.",
+    setpw_fail:"설정 실패: ",
     anon_name:"익명의 덕후님",
     deleted_post:"삭제된 댓글입니다", hidden_post:"⚠️ 다수의 신고로 숨김 처리되었습니다",
     loading:"불러오는 중...", load_fail:"⚠️ 데이터를 불러오지 못했습니다.<br>연결을 확인하고 페이지를 새로고침해 주세요.",
@@ -886,6 +901,20 @@ function addVerifiedOp(threadId){
 }
 function isVerifiedOp(threadId){return getVerifiedOps().indexOf(String(threadId))>=0;}
 
+/* スレ主(この端末で本人と分かっている人)が、あとから合言葉を設定・変更する */
+async function setOpPassword(tid){
+  var pwd=prompt(t("setpw_prompt"));
+  if(pwd===null) return;
+  pwd=pwd.trim();
+  if(pwd.length<4){alert(t("recover_short"));return;}
+  try{
+    var res=await sb.from("threads").update({op_password:pwd}).eq("id",Number(tid));
+    if(res.error) throw res.error;
+    addVerifiedOp(tid);
+    alert(t("setpw_ok"));
+    await loadAll();
+  }catch(e){alert(t("setpw_fail")+(e.message||e));}
+}
 async function recoverOp(tid){
   var pwd=prompt(t("recover_prompt"));
   if(pwd===null) return;
@@ -1647,6 +1676,7 @@ function renderThread(){
     (canModerateThread?'&nbsp;<button class="kanso-op-btn" style="border-color:#c00;color:#c00" onclick="A.deleteThread(this.dataset.tid)" data-tid="'+esc(t2.id)+'">'+t("del_thread_btn")+'</button>':"")+
     (isK?'<br><span class="kanso-done-label">'+t("kanso_done_label")+'</span>':"")+
     (showRecover?'<br><a class="op-recover" onclick="A.recoverOp(this.dataset.tid)" data-tid="'+esc(t2.id)+'">'+t("recover_op")+'</a>':"")+
+    (isOP?'<br><button class="kanso-op-btn" onclick="A.setOpPassword(this.dataset.tid)" data-tid="'+esc(t2.id)+'">'+t(t2.hasOpPassword?"setpw_btn_change":"setpw_btn")+'</button>':"")+
     '</div>'+
     '<div id="posts-wrap">'+posts+'</div>'+
     autoAdSlot(t2,"autoad_mid_"+t2.id)+
@@ -1969,7 +1999,7 @@ return{top:top,cat:cat,openT:openT,loadNew:loadNew,toggleForm:toggleForm,submit:
   searchKey:searchKey,doSearch:doSearch,clearSearch:clearSearch,searchByTag:searchByTag,report:report,
   selectMag:selectMag,clearMag:clearMag,clearWork:clearWork,clearChara:clearChara,
   setWork:setWork,setChara:setChara,renderTagUI:renderTagUI,showSuggest:showSuggest,pickSuggest:pickSuggest,
-  sortBy:sortBy,showDoc:showDoc,hideDoc:hideDoc,recoverOp:recoverOp,
+  sortBy:sortBy,showDoc:showDoc,hideDoc:hideDoc,recoverOp:recoverOp,setOpPassword:setOpPassword,
   chooseLang:chooseLang,acceptNotice:acceptNotice,setLang:setLang,translatePost:translatePost,translateTitle:translateTitle,logoTap:logoTap,previewThumb:previewThumb,anchor:anchor,jumpTo:jumpTo};
 })();
 </script>
