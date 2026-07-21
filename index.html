@@ -154,6 +154,19 @@ input.err,textarea.err,select.err{border-color:#c00 !important}
 .like-btn{font-size:11px;border:1px solid #ddd;padding:2px 10px;color:#aaa;border-radius:2px;background:#fff}
 .like-btn.liked{border-color:#e05a00;color:#e05a00;font-weight:700}
 .like-cnt{font-size:11px;color:#aaa}
+/* 新着お知らせボタン(画面下に浮かぶ) */
+#new-posts-btn{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:60;
+  background:#e05a00;color:#fff;border:none;border-radius:999px;padding:11px 22px;
+  font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.28);display:none}
+#new-posts-btn:active{opacity:.85}
+/* レス番号タップ→返信欄に >>N を挿入。>>N タップ→そのレスへジャンプ */
+.pno{cursor:pointer}
+.pno:hover{text-decoration:underline}
+.anchor-link{color:#e05a00;cursor:pointer;text-decoration:underline}
+.post.jump-hl{animation:jumphl 1.6s ease-out}
+@keyframes jumphl{0%{background:#ffe6d2}100%{background:transparent}}
+body.admin .post.jump-hl{animation:jumphlA 1.6s ease-out}
+@keyframes jumphlA{0%{background:#4a3a2a}100%{background:transparent}}
 #reply-box{background:#fff;border:1px solid #e8d0c0;border-top:3px solid #e05a00;padding:12px}
 #reply-box h3{font-size:12px;font-weight:700;color:#e05a00;margin-bottom:8px}
 #reply-box input,#reply-box textarea{width:100%;display:block;margin-bottom:7px}
@@ -298,6 +311,7 @@ body.admin .hero-jack .hj-cta:hover{background:#ff8a44}
 </style>
 </head>
 <body>
+<button id="new-posts-btn" onclick="A.loadNew()"></button>
 
 <!-- 言語選択モーダル(初回アクセス時) -->
 <div id="lang-modal" class="lang-modal">
@@ -604,6 +618,7 @@ var I18N={
     back_list:"← スレ一覧に戻る", kanso_badge:"完走",
     res_count:"件のレス", last_update:"最終更新: ",
     reply_h3:"■ 返信する", reply_name_ph:"名前（省略可）", reply_body_ph:"本文（必須・1000文字以内）", reply_btn:"書き込む",
+    new_posts:"新着{n}件を読み込む",
     like:"♡ いいね", liked:"♥ いいね済", report:"報告", reported:"報告済", del:"削除",
     kanso_btn:"✅ 完走にする", del_thread_btn:"🗑 スレを削除", kanso_done_label:"✅ 完走スレ",
     recover_op:"🔑 このスレを立てた方へ（合言葉を入力）",
@@ -649,6 +664,7 @@ var I18N={
     back_list:"← Back to list", kanso_badge:"Done",
     res_count:" replies", last_update:"Last update: ",
     reply_h3:"■ Reply", reply_name_ph:"Name (optional)", reply_body_ph:"Body (required, max 1000)", reply_btn:"Post",
+    new_posts:"Load {n} new",
     like:"♡ Like", liked:"♥ Liked", report:"Report", reported:"Reported", del:"Delete",
     kanso_btn:"✅ Mark as done", del_thread_btn:"🗑 Delete thread", kanso_done_label:"✅ Completed",
     recover_op:"🔑 Are you the thread owner? (enter passphrase)",
@@ -694,6 +710,7 @@ var I18N={
     back_list:"← 목록으로", kanso_badge:"완주",
     res_count:"개 댓글", last_update:"마지막 업데이트: ",
     reply_h3:"■ 답글 작성", reply_name_ph:"이름 (생략 가능)", reply_body_ph:"본문 (필수, 1000자 이내)", reply_btn:"작성",
+    new_posts:"새 글 {n}개 보기",
     like:"♡ 좋아요", liked:"♥ 좋아요 완료", report:"신고", reported:"신고됨", del:"삭제",
     kanso_btn:"✅ 완주 처리", del_thread_btn:"🗑 스레드 삭제", kanso_done_label:"✅ 완주 스레드",
     recover_op:"🔑 이 스레드 작성자라면 (암호 입력)",
@@ -797,6 +814,7 @@ function acceptNotice(){
   document.body.style.overflow="";
   applyStaticI18n();
   loadAll();
+  startPolling();
 }
 /* ヘッダーの言語切替ボタン(2回目以降の変更用) */
 function setLang(l){
@@ -1028,6 +1046,7 @@ async function loadAll(){
       if(location.hash){applyHash();return;}
     }
     render();
+    resetPollBase();
   }catch(e){
     loading=false;
     th=[];
@@ -1585,8 +1604,8 @@ function renderThread(){
   var canTlTitle=(t2.titleLang||"ja")!==(uiLang||"ja");
   var tlTitleBtn=canTlTitle?'<button class="tl-btn" onclick="A.translateTitle(this.dataset.tid)" data-tid="'+esc(t2.id)+'">'+(t2.titleTranslating?t("tl_translating"):(t2.showTitleTl&&t2.titleTranslated?t("show_original"):t("translate")))+'</button>':"";
   var posts=t2.posts.map(function(pst,i){
-    if(pst.deleted)return '<div class="post"><div class="pmeta"><span class="pno">'+(i+1)+'</span></div><div class="pbody" style="color:#bbb;font-size:12px">'+t("deleted_post")+'</div></div>';
-    if(pst.autoHidden)return '<div class="post"><div class="pmeta"><span class="pno">'+(i+1)+'</span></div><div class="pbody" style="color:#bbb;font-size:12px">'+t("hidden_post")+'</div></div>';
+    if(pst.deleted)return '<div class="post" id="post-'+(i+1)+'"><div class="pmeta"><span class="pno">'+(i+1)+'</span></div><div class="pbody" style="color:#bbb;font-size:12px">'+t("deleted_post")+'</div></div>';
+    if(pst.autoHidden)return '<div class="post" id="post-'+(i+1)+'"><div class="pmeta"><span class="pno">'+(i+1)+'</span></div><div class="pbody" style="color:#bbb;font-size:12px">'+t("hidden_post")+'</div></div>';
     var name=pst.name||t("anon_name");
     var isOPp=i===0;
     var isMedal=medalPost&&medalPost.id===pst.id;
@@ -1599,16 +1618,16 @@ function renderThread(){
     var flag=pst.postLang&&LANGLABEL[pst.postLang]?'<span class="langflag">【'+LANGLABEL[pst.postLang]+'】</span>':"";
     var canTranslate=(pst.postLang||"ja")!==(uiLang||"ja");
     var tlBtnTxt=pst.translating?t("tl_translating"):(pst.showTranslated&&pst.translated?t("show_original"):t("translate"));
-    return '<div class="post'+(showMedal?" medal-post":"")+'">'+
+    return '<div class="post'+(showMedal?" medal-post":"")+'" id="post-'+(i+1)+'">'+
       '<div class="pmeta">'+
       (showMedal?'<span style="font-size:14px;margin-right:3px">🥇</span>':"")+
-      '<span class="pno">'+(i+1)+'</span>'+
+      '<span class="pno" onclick="A.anchor('+(i+1)+')" title="このレスに返信">'+(i+1)+'</span>'+
       '<span class="pname'+(isOPp?" op":"")+langCls+'">'+(isOPp?'<span class="opbg">OP</span>':"")+esc(name)+flag+'</span>'+
       '<span class="pdate">'+fmt(pst.ts)+'</span>'+
       '&nbsp;<span style="font-size:11px;color:'+(pst.reportedByMe?"#888":"#ddd")+';cursor:pointer" onclick="A.report(this.dataset.pid)" data-pid="'+esc(pst.id)+'">'+(pst.reportedByMe?t("reported"):t("report"))+'</span>'+
       (canDeletePost?'&nbsp;<span style="font-size:11px;color:#ddd;cursor:pointer" onclick="A.deletePost(this.dataset.tid,this.dataset.pid)" data-tid="'+esc(t2.id)+'" data-pid="'+esc(pst.id)+'">'+t("del")+'</span>':"")+
       '<br><span class="pid">ID:'+pst.uid+'</span></div>'+
-      '<div class="pbody"'+(likeCnt>=20?' style="font-weight:700"':'')+'>'+esc(pst.body)+'</div>'+
+      '<div class="pbody"'+(likeCnt>=20?' style="font-weight:700"':'')+'>'+bodyHtml(pst.body)+'</div>'+
       (isOPp&&t2.thumbUrl?'<div class="post-img"><a href="'+esc(t2.thumbUrl)+'" target="_blank" rel="noopener"><img src="'+esc(t2.thumbUrl)+'" alt="" loading="lazy"></a></div>':"")+
       (pst.showTranslated&&pst.translated?'<div class="pbody-tl"><span class="tl-tag">'+t("tl_tag")+'</span>'+esc(pst.translated)+'</div>':"")+
       '<div class="like-row"><button class="like-btn'+(isMine?" liked":"")+'" onclick="A.doLike(this.dataset.pid)" data-pid="'+esc(pst.id)+'">'+(isMine?t("liked"):t("like"))+'</button>'+
@@ -1635,6 +1654,82 @@ function renderThread(){
     '<input id="r-name" placeholder="'+esc(t("reply_name_ph"))+'">'+
     '<textarea id="r-body" placeholder="'+esc(t("reply_body_ph"))+'" maxlength="1000"></textarea>'+
     '<div class="form-foot"><span></span><button class="sub-btn" onclick="A.reply()">'+t("reply_btn")+'</button></div></div>'+autoAdSlot(t2,"autoad_bot_"+t2.id);
+}
+
+/* ===== 自動で新着をチェック(20秒ごと)。表示は「新着N件」ボタンを出すだけ ===== */
+var pollTimer=null, pollBase=0, pendingNew=0;
+function currentPostTotal(){
+  if(st.thread) return (st.thread.posts||[]).length;
+  var n=0; th.forEach(function(x){ n+=(x.posts||[]).length; }); return n;
+}
+function resetPollBase(){ pollBase=currentPostTotal(); pendingNew=0; showNewBtn(); }
+function showNewBtn(){
+  var b=document.getElementById("new-posts-btn");
+  if(!b) return;
+  if(pendingNew>0){
+    b.textContent=t("new_posts").replace("{n}",pendingNew);
+    b.style.display="block";
+  }else{
+    b.style.display="none";
+  }
+}
+async function checkNew(){
+  if(document.hidden) return;          /* 別タブを見てる間は通信しない */
+  if(loading) return;
+  if(document.getElementById("lang-modal")) return;
+  try{
+    var q=sb.from("posts").select("id",{count:"exact",head:true});
+    if(st.thread) q=q.eq("thread_id",st.thread.id);
+    var res=await q;
+    if(res.error) return;
+    var now=res.count||0;
+    var diff=now-pollBase;
+    if(diff>0){ pendingNew=diff; showNewBtn(); }
+  }catch(e){ /* 通信できない時は黙って次の周期を待つ */ }
+}
+/* 「新着N件」ボタン → 書きかけを保持したまま読み込み直して、新着の先頭へ */
+async function loadNew(){
+  var keepName=(document.getElementById("r-name")||{}).value||"";
+  var keepBody=(document.getElementById("r-body")||{}).value||"";
+  var firstNew=st.thread?((st.thread.posts||[]).length+1):0;
+  pendingNew=0; showNewBtn();
+  await loadAll();
+  var n=document.getElementById("r-name"); if(n&&keepName) n.value=keepName;
+  var b=document.getElementById("r-body"); if(b&&keepBody) b.value=keepBody;
+  if(firstNew>0){ setTimeout(function(){ jumpTo(firstNew); },120); }
+}
+function startPolling(){
+  if(pollTimer) clearInterval(pollTimer);
+  pollTimer=setInterval(checkNew,20000);
+  document.addEventListener("visibilitychange",function(){ if(!document.hidden) checkNew(); });
+}
+
+/* 本文の >>数字 をリンクに変換(エスケープ後に処理するので安全) */
+function bodyHtml(txt){
+  return esc(txt||"").replace(/&gt;&gt;(\d{1,4})/g,function(m,n){
+    return '<span class="anchor-link" onclick="A.jumpTo('+n+')">&gt;&gt;'+n+'</span>';
+  });
+}
+/* レス番号タップ → 返信欄に >>N を入れてフォーカス */
+function anchor(n){
+  var ta=document.getElementById("r-body");
+  if(!ta) return;
+  var cur=ta.value;
+  var add=">>"+n+"\n";
+  ta.value=cur&&!/\n$/.test(cur)?cur+"\n"+add:cur+add;
+  var box=document.getElementById("reply-box");
+  if(box) box.scrollIntoView({behavior:"smooth",block:"center"});
+  setTimeout(function(){ ta.focus(); ta.selectionStart=ta.selectionEnd=ta.value.length; },300);
+}
+/* >>N タップ → そのレスへスクロール＋一瞬ハイライト */
+function jumpTo(n){
+  var el=document.getElementById("post-"+n);
+  if(!el){ return; }
+  el.scrollIntoView({behavior:"smooth",block:"center"});
+  el.classList.remove("jump-hl");
+  void el.offsetWidth;
+  el.classList.add("jump-hl");
+  setTimeout(function(){ el.classList.remove("jump-hl"); },1800);
 }
 
 /* アクション */
@@ -1863,17 +1958,18 @@ function boot(){
     document.documentElement.lang=uiLang;
     applyStaticI18n();
     loadAll();
+    startPolling();
   }
 }
 boot();
 
-return{top:top,cat:cat,openT:openT,toggleForm:toggleForm,submit:submit,reply:reply,
+return{top:top,cat:cat,openT:openT,loadNew:loadNew,toggleForm:toggleForm,submit:submit,reply:reply,
   doLike:doLike,toggleMedal:toggleMedal,doKanso:doKanso,deleteThread:deleteThread,deletePost:deletePost,
   searchKey:searchKey,doSearch:doSearch,clearSearch:clearSearch,searchByTag:searchByTag,report:report,
   selectMag:selectMag,clearMag:clearMag,clearWork:clearWork,clearChara:clearChara,
   setWork:setWork,setChara:setChara,renderTagUI:renderTagUI,showSuggest:showSuggest,pickSuggest:pickSuggest,
   sortBy:sortBy,showDoc:showDoc,hideDoc:hideDoc,recoverOp:recoverOp,
-  chooseLang:chooseLang,acceptNotice:acceptNotice,setLang:setLang,translatePost:translatePost,translateTitle:translateTitle,logoTap:logoTap,previewThumb:previewThumb};
+  chooseLang:chooseLang,acceptNotice:acceptNotice,setLang:setLang,translatePost:translatePost,translateTitle:translateTitle,logoTap:logoTap,previewThumb:previewThumb,anchor:anchor,jumpTo:jumpTo};
 })();
 </script>
 </body>
