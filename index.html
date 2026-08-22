@@ -698,6 +698,7 @@ var I18N={
     confirm_del_post:"このレスを削除しますか？", confirm_report:"このレスを通報しますか？\n（規約違反のレスに対してのみ使用してください）",
     report_done:"報告を受け付けました。ご協力ありがとうございます。", already_reported:"このレスは既に報告済みです。",
     op_only:"「スレ主」はスレを立てた方専用です。",
+    ng_word:"⚠️ 攻撃的な表現・暴言が含まれているようです。ここは叩き・誹謗中傷のない場所です。表現を見直してみてください。",
     oppass_short:"スレ主合言葉は4文字以上で設定してください。空欄でもOKです。",
     body_empty:"本文を入力してください。",
     recover_prompt:"このスレを立てたときの合言葉を入力してください：", recover_short:"合言葉は4文字以上です。",
@@ -755,6 +756,7 @@ var I18N={
     confirm_del_post:"Delete this reply?", confirm_report:"Report this reply?\n(Only for posts that violate the rules)",
     report_done:"Report received. Thank you for your help.", already_reported:"You have already reported this reply.",
     op_only:"The name \"OP\" is reserved for the thread owner.",
+    ng_word:"⚠️ This may contain aggressive or abusive language. This is a place free of attacks and insults. Please reconsider your wording.",
     oppass_short:"The passphrase must be 4+ characters. Leaving it blank is OK.",
     body_empty:"Please enter a message.",
     recover_prompt:"Enter the passphrase you set when creating this thread:", recover_short:"Passphrase must be 4+ characters.",
@@ -812,6 +814,7 @@ var I18N={
     confirm_del_post:"이 댓글을 삭제할까요?", confirm_report:"이 댓글을 신고할까요?\n(규칙 위반 게시물에만 사용하세요)",
     report_done:"신고가 접수되었습니다. 협조해 주셔서 감사합니다.", already_reported:"이미 신고한 댓글입니다.",
     op_only:"'글쓴이' 이름은 스레드 작성자 전용입니다.",
+    ng_word:"⚠️ 공격적이거나 폭언이 포함된 것 같습니다. 이곳은 비방·욕설 없는 공간입니다. 표현을 다시 검토해 주세요.",
     oppass_short:"암호는 4자 이상이어야 합니다. 비워둬도 됩니다.",
     body_empty:"본문을 입력해 주세요.",
     recover_prompt:"이 스레드를 만들 때 설정한 암호를 입력하세요:", recover_short:"암호는 4자 이상입니다.",
@@ -1320,6 +1323,7 @@ async function submit(){
   }
   if(!ok)return;
   var name=(document.getElementById("f-name")||{}).value||"";
+  if(containsNG(title)||containsNG(body)||containsNG(name)){ alert(t("ng_word")); return; }
   var postLang=lsGet("kmh_post_lang")||uiLang||"ja";
   var subBtn=document.querySelector("#fwrap .sub-btn");
   if(subBtn){subBtn.disabled=true;subBtn.textContent=t("submitting");}
@@ -1470,19 +1474,43 @@ function adSlotPlaceholder(slotId){
 }
 /* キーワード候補(queries)を順番に楽天検索し、最初にヒットした商品(最大8個)の
    {img,link} 配列を返す。1つ目で0件なら次の候補へフォールバックする。 */
+/* 楽天は「1秒1回」制限が厳しいので、①同じキーワードは結果を使い回す(キャッシュ)
+   ②問い合わせは1件ずつ・約1.2秒あけて直列に行う(同時アクセスによる429を防ぐ) */
+var _raktCache={};                 /* keyword -> items(取得済み) */
+var _raktInflight={};              /* keyword -> 実行中のPromise(重複防止) */
+var _raktChain=Promise.resolve();  /* 直列化用のチェーン */
+function _raktDelay(ms){return new Promise(function(r){setTimeout(r,ms);});}
+function _raktFetchOne(q){
+  if(_raktCache[q]!==undefined) return Promise.resolve(_raktCache[q]);   /* キャッシュ命中 */
+  if(_raktInflight[q]) return _raktInflight[q];                          /* 同じ語の実行中に相乗り */
+  var p=_raktChain.then(function(){
+    return (async function(){
+      try{
+        var url=SUPABASE_URL+"/functions/v1/rakuten-search?keyword="+encodeURIComponent(q);
+        var resp=await fetch(url,{headers:{"Authorization":"Bearer "+SUPABASE_KEY,"apikey":SUPABASE_KEY}});
+        var data=await resp.json();
+        var items=((data&&data.items)||[]).slice(0,8).filter(function(it){return it&&it.img;});
+        if(items.length){ _raktCache[q]=items; }   /* 成功時だけキャッシュ(空はキャッシュせず後で再挑戦可) */
+        delete _raktInflight[q];
+        return items;
+      }catch(e){
+        delete _raktInflight[q];
+        console.error("rakuten fetch error:",e);
+        return [];
+      }
+    })();
+  });
+  /* 次の問い合わせは約1.2秒あけて実行(成功・失敗どちらでも間隔を空ける) */
+  _raktChain=p.then(function(){return _raktDelay(1200);},function(){return _raktDelay(1200);});
+  _raktInflight[q]=p;
+  return p;
+}
 async function fetchRakutenItems(queries){
   for(var qi=0;qi<queries.length;qi++){
     var q=queries[qi];
     if(!q) continue;
-    try{
-      var url=SUPABASE_URL+"/functions/v1/rakuten-search?keyword="+encodeURIComponent(q);
-      var resp=await fetch(url,{headers:{"Authorization":"Bearer "+SUPABASE_KEY,"apikey":SUPABASE_KEY}});
-      var data=await resp.json();
-      var items=((data&&data.items)||[]).slice(0,8).filter(function(it){return it&&it.img;});
-      if(items.length) return items; /* ヒットしたらここで確定(次の候補は試さない) */
-    }catch(e){
-      console.error("rakuten fetch error:",e);
-    }
+    var items=await _raktFetchOne(q);
+    if(items&&items.length) return items; /* ヒットしたら確定 */
   }
   return [];
 }
@@ -2106,10 +2134,28 @@ async function translateTitle(tid){
   }
 }
 
+var NG_WORDS=["死ね","市ね","4ね","氏ね","しね","タヒ","殺す","ころす","殺そ","消えろ","きえろ","消えて",
+  "ゴミ","ごみ","クズ","くず","カス","かす","ブス","ぶす","デブ","きもい","キモい","キモ","うざい","ウザ",
+  "馬鹿","バカ","ばか","アホ","あほ","無能","池沼","キチガイ","きちがい","基地外","障害者","ガイジ","がいじ",
+  "ブサイク","ぶさいく","不細工","ババア","ジジイ","カタワ","汚物","失せろ","うせろ","生きる価値",
+  "自殺しろ","死んで","くたばれ","地獄に落ちろ","fuck","shit","bitch","killyou","dieyou"];
+function containsNG(text){
+  if(!text) return false;
+  var norm=String(text).toLowerCase()
+    .replace(/[\s\u3000]/g,"")
+    .replace(/[!-\/:-@\[-`{-~。、，．・…ー~〜！？：；「」『』（）\-_*+=]/g,"");
+  for(var i=0;i<NG_WORDS.length;i++){
+    var w=NG_WORDS[i].toLowerCase().replace(/\s/g,"");
+    if(w&&norm.indexOf(w)>=0) return true;
+  }
+  return false;
+}
+
 async function reply(){
   var body=(document.getElementById("r-body")||{}).value||"";
   if(!body.trim())return;
   var name=(document.getElementById("r-name")||{}).value||"";
+  if(containsNG(body)||containsNG(name)){ alert(t("ng_word")); return; }
   if(name.trim()==="スレ主"){
     var isOPByUid=st.thread&&st.thread.posts.length>0&&st.thread.posts[0].uid===myIp;
     var isOPByPassword=st.thread&&isVerifiedOp(st.thread.id);
