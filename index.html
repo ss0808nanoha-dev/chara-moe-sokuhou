@@ -254,6 +254,14 @@ body.admin #contact-form label{color:#ff9966}
 .hero-jack .hj-thumb img{width:80px;height:80px;object-fit:cover;border-radius:50%;border:3px solid rgba(255,255,255,.75);box-shadow:0 3px 10px rgba(0,0,0,.25)}
 #hd,#bc,#wrap{position:relative;z-index:1}
 
+/* ページ全体の背景に敷き詰める商品タイル(クリックで商品ページへ) */
+#bg-watermark{position:absolute;top:0;left:0;right:0;z-index:0;display:none;
+  flex-wrap:wrap;gap:10px;padding:10px;box-sizing:border-box;justify-content:center;
+  align-content:flex-start}
+#bg-watermark a{display:block;line-height:0;opacity:.13;transition:opacity .25s}
+#bg-watermark a:hover{opacity:.85}
+#bg-watermark img{width:90px;height:90px;object-fit:contain;border-radius:4px}
+
 /* 左右のサイド広告枠(PCなど画面が広いときだけ表示・スクロール追従)
    画面の端ではなく、中央の本体(最大780px)のすぐ隣に配置する */
 .ad-rail{position:fixed;top:0;bottom:0;width:180px;z-index:0;overflow:hidden;display:none;
@@ -362,6 +370,9 @@ body.admin .hero-jack .hj-cta:hover{background:#ff8a44}
 <body>
 <button id="new-posts-btn" onclick="A.loadNew()"></button>
 <div id="anchor-pop"></div>
+
+<!-- ページ全体の背景に敷き詰める商品タイル -->
+<div id="bg-watermark"></div>
 
 <!-- 左右のサイド広告枠(画面が広いときだけ表示される) -->
 <div id="ad-rail-left" class="ad-rail ad-rail-left"></div>
@@ -1600,7 +1611,7 @@ function bgItems(){
   return topAd.items||[];
 }
 
-/* 背景透かしを、ページの高さいっぱいに敷き詰める(クリック不可の飾り) */
+/* 背景透かしを、ページの高さいっぱいに敷き詰める(クリックで商品ページへ) */
 function fillWatermark(){
   var box=document.getElementById("bg-watermark");
   if(!box) return;
@@ -1608,6 +1619,7 @@ function fillWatermark(){
   if(!items||!items.length){ box.innerHTML=""; box.setAttribute("data-key",""); return; }
   var w=window.innerWidth||document.documentElement.clientWidth||360;
   var h=Math.max(document.documentElement.scrollHeight||0,(document.body&&document.body.scrollHeight)||0,window.innerHeight||600);
+  box.style.height=h+"px"; /* ページの高さに合わせる */
   var tile=100; /* 画像90px + すき間10px */
   var cols=Math.max(1,Math.ceil(w/tile));
   var rows=Math.ceil(h/tile)+2;
@@ -1617,7 +1629,11 @@ function fillWatermark(){
   if(box.getAttribute("data-key")===key) return; /* 内容が同じなら作り直さない */
   box.setAttribute("data-key",key);
   var cells=[];
-  for(var i=0;i<total;i++){ var it=items[i%items.length]; cells.push('<img src="'+esc(it.img)+'" alt="" aria-hidden="true">'); }
+  for(var i=0;i<total;i++){
+    var it=items[i%items.length];
+    cells.push('<a href="'+esc(it.link)+'" target="_blank" rel="nofollow sponsored noopener">'+
+      '<img src="'+esc(it.img)+'" alt="" loading="lazy"></a>');
+  }
   box.innerHTML=cells.join("");
 }
 /* 左右のサイド広告枠を、商品画像でタイル状に敷き詰める(クリックで商品ページへ) */
@@ -1666,7 +1682,7 @@ function updateWatermark(){
     box.style.display="none"; box.innerHTML=""; box.setAttribute("data-key","");
     return;
   }
-  box.style.display="";
+  box.style.display="flex";
   watermarkItems=items;
   fillWatermark();
 }
