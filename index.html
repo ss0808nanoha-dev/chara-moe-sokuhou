@@ -254,11 +254,13 @@ body.admin #contact-form label{color:#ff9966}
 .hero-jack .hj-thumb img{width:80px;height:80px;object-fit:cover;border-radius:50%;border:3px solid rgba(255,255,255,.75);box-shadow:0 3px 10px rgba(0,0,0,.25)}
 #hd,#bc,#wrap{position:relative;z-index:1}
 
-/* 左右のサイド広告枠(PCなど画面が広いときだけ表示・スクロール追従) */
+/* 左右のサイド広告枠(PCなど画面が広いときだけ表示・スクロール追従)
+   画面の端ではなく、中央の本体(最大780px)のすぐ隣に配置する */
 .ad-rail{position:fixed;top:0;bottom:0;width:180px;z-index:0;overflow:hidden;display:none;
   padding:6px 4px;box-sizing:border-box}
-.ad-rail-left{left:0}
-.ad-rail-right{right:0}
+/* 画面中央から本体の半分(390px)＋すき間8px ずらした位置に置く */
+.ad-rail-left{right:calc(50% + 398px)}
+.ad-rail-right{left:calc(50% + 398px)}
 .ad-rail .rail-label{font-size:10px;color:#c9a288;text-align:center;letter-spacing:2px;margin-bottom:4px}
 .ad-rail .rail-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:4px}
 .ad-rail .rail-grid a{display:block;line-height:0}
