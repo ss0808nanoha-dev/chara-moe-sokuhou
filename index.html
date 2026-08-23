@@ -1394,10 +1394,14 @@ function showSuggest(inpId,listId){
   list.style.display="block";
 }
 function pickSuggest(el){
-  var inp=document.getElementById(el.getAttribute("data-inp"));
+  var inpId=el.getAttribute("data-inp");
+  var inp=document.getElementById(inpId);
   if(inp)inp.value=el.getAttribute("data-v");
   var list=document.getElementById(el.getAttribute("data-list"));
   if(list)list.style.display="none";
+  /* 候補を選んだ時点で、そのままタグとして確定する(「追加」を押さなくてよい) */
+  if(inpId==="work-inp") setWork();
+  else if(inpId==="chara-inp") setChara();
 }
 
 /* ============================================================
