@@ -254,6 +254,22 @@ body.admin #contact-form label{color:#ff9966}
 .hero-jack .hj-thumb img{width:80px;height:80px;object-fit:cover;border-radius:50%;border:3px solid rgba(255,255,255,.75);box-shadow:0 3px 10px rgba(0,0,0,.25)}
 #hd,#bc,#wrap{position:relative;z-index:1}
 
+/* 左右のサイド広告枠(PCなど画面が広いときだけ表示・スクロール追従) */
+.ad-rail{position:fixed;top:0;bottom:0;width:180px;z-index:0;overflow:hidden;display:none;
+  padding:6px 4px;box-sizing:border-box}
+.ad-rail-left{left:0}
+.ad-rail-right{right:0}
+.ad-rail .rail-label{font-size:10px;color:#c9a288;text-align:center;letter-spacing:2px;margin-bottom:4px}
+.ad-rail .rail-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:4px}
+.ad-rail .rail-grid a{display:block;line-height:0}
+.ad-rail .rail-grid img{width:100%;height:84px;object-fit:contain;background:#fff;
+  border-radius:4px;border:1px solid #f0d8c8}
+.ad-rail .rail-grid a:hover img{border-color:#e05a00}
+/* 本体(780px)＋左右の枠(180px×2)が収まる幅のときだけ出す */
+@media (min-width:1200px){ .ad-rail.on{display:block} }
+body.admin .ad-rail .rail-label{color:#8a6a52}
+body.admin .ad-rail .rail-grid img{background:#2a2a2a;border-color:#4a4a4a}
+
 /* 言語選択 / 注意書きモーダル */
 .lang-modal{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}
 .lang-modal.on{display:flex}
@@ -343,6 +359,10 @@ body.admin .hero-jack .hj-cta:hover{background:#ff8a44}
 <body>
 <button id="new-posts-btn" onclick="A.loadNew()"></button>
 <div id="anchor-pop"></div>
+
+<!-- 左右のサイド広告枠(画面が広いときだけ表示される) -->
+<div id="ad-rail-left" class="ad-rail ad-rail-left"></div>
+<div id="ad-rail-right" class="ad-rail ad-rail-right"></div>
 
 <!-- 言語選択モーダル(初回アクセス時) -->
 <div id="lang-modal" class="lang-modal">
@@ -1597,8 +1617,45 @@ function fillWatermark(){
   for(var i=0;i<total;i++){ var it=items[i%items.length]; cells.push('<img src="'+esc(it.img)+'" alt="" aria-hidden="true">'); }
   box.innerHTML=cells.join("");
 }
+/* 左右のサイド広告枠を、商品画像でタイル状に敷き詰める(クリックで商品ページへ) */
+function fillRails(){
+  var items=bgItems();
+  var rails=[document.getElementById("ad-rail-left"),document.getElementById("ad-rail-right")];
+  for(var ri=0;ri<rails.length;ri++){
+    var box=rails[ri];
+    if(!box) continue;
+    /* 商品が無いときは枠ごと隠す */
+    if(!items||!items.length){
+      box.className="ad-rail "+(ri===0?"ad-rail-left":"ad-rail-right");
+      box.innerHTML=""; box.setAttribute("data-key","");
+      continue;
+    }
+    /* 画面の高さいっぱいに並ぶ枚数を計算(2列×必要な行数) */
+    var h=window.innerHeight||600;
+    var rows=Math.ceil(h/88)+1;
+    var total=rows*2;
+    if(total>40) total=40; /* 上限(保険) */
+    /* 左右で並び順をずらして、同じ絵が横に並ばないようにする */
+    var offset=(ri===0)?0:1;
+    var key=items.map(function(it){return it.img;}).join("|")+"#"+total+"#"+offset;
+    if(box.getAttribute("data-key")===key){
+      box.className="ad-rail on "+(ri===0?"ad-rail-left":"ad-rail-right");
+      continue; /* 内容が同じなら作り直さない */
+    }
+    box.setAttribute("data-key",key);
+    var cells=[];
+    for(var i=0;i<total;i++){
+      var it=items[(i+offset)%items.length];
+      cells.push('<a href="'+esc(it.link)+'" target="_blank" rel="nofollow sponsored noopener">'+
+        '<img src="'+esc(it.img)+'" alt="" loading="lazy"></a>');
+    }
+    box.innerHTML='<div class="rail-label">'+t("ad_label")+'</div><div class="rail-grid">'+cells.join("")+'</div>';
+    box.className="ad-rail on "+(ri===0?"ad-rail-left":"ad-rail-right");
+  }
+}
 /* 背景透かしを表示。スレ内はそのスレの商品、一覧はタブ1位の商品。検索中は消す。 */
 function updateWatermark(){
+  fillRails(); /* 左右のサイド広告も一緒に更新する */
   var box=document.getElementById("bg-watermark");
   if(!box) return;
   var items=bgItems();
