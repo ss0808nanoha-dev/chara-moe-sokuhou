@@ -7,10 +7,10 @@
 <meta name="description" content="叩きなし・キャラ萌え専用の匿名掲示板。マンガ・アニメ・ゲームのキャラ萌え・解釈・考察を、安心して語り合える場所です。">
 <!-- OGP (SNSでカード表示されるやつ) -->
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://chara-moe-sokuhou.vercel.app/">
+<meta property="og:url" content="https://chara-moe-sokuhou.com/">
 <meta property="og:title" content="ダラルズ｜キャラ萌え速報">
 <meta property="og:description" content="叩きなし・キャラ萌え専用の匿名掲示板。マンガ・アニメ・ゲームのキャラ萌え・解釈・考察を、安心して語り合える場所です。">
-<meta property="og:image" content="https://chara-moe-sokuhou.vercel.app/ogp.png">
+<meta property="og:image" content="https://chara-moe-sokuhou.com/ogp.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="ダラルズ｜キャラ萌え速報">
@@ -19,7 +19,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="ダラルズ｜キャラ萌え速報">
 <meta name="twitter:description" content="叩きなし・キャラ萌え専用の匿名掲示板。マンガ・アニメ・ゲームのキャラ萌えを語ろう。">
-<meta name="twitter:image" content="https://chara-moe-sokuhou.vercel.app/ogp.png">
+<meta name="twitter:image" content="https://chara-moe-sokuhou.com/ogp.png">
 <!-- Google Analytics (GA4) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-9RN8F47NH3"></script>
 <script>
@@ -541,7 +541,7 @@ body.admin .hero-jack .hj-cta:hover{background:#ff8a44}
         <li><strong>投稿内容</strong>：ユーザーが当掲示板に書き込んだテキスト、選択したタグ等</li>
         <li><strong>端末識別情報（uid）</strong>：投稿者・いいね・報告等の識別に使用するランダムな文字列。ブラウザのlocalStorageに保存され、当掲示板を超えて個人を特定するものではありません</li>
         <li><strong>アクセスログ</strong>：閲覧履歴、操作履歴、利用環境（ブラウザ種別等）</li>
-        <li><strong>IPアドレス</strong>：通信時に技術的に取得される情報。悪質な利用の対応にのみ使用します</li>
+        <li><strong>IPアドレス</strong>：投稿時に技術的に取得され、悪質な利用への対応や、法令に基づく開示請求に対応する目的でのみ保管します</li>
       </ul>
       <p>当掲示板はユーザー登録を必要としません。氏名・住所・電話番号・メールアドレス等の個人情報を直接取得することはありません。</p>
       <h3>取得した情報の利用目的</h3>
@@ -616,7 +616,7 @@ body.admin .hero-jack .hj-cta:hover{background:#ff8a44}
         <input type="hidden" name="_subject" value="【ダラルズ｜キャラ萌え速報】お問い合わせ">
         <input type="hidden" name="_template" value="table">
         <input type="hidden" name="_autoresponse" value="このたびはお問い合わせいただき、ありがとうございます。下記の内容で受け付けいたしました。内容を確認のうえ、改めてご連絡いたします。※本メールは自動送信のため、ご返信いただいてもお答えできません。── ダラルズ｜キャラ萌え速報">
-        <input type="hidden" name="_next" value="https://chara-moe-sokuhou.vercel.app/">
+        <input type="hidden" name="_next" value="https://chara-moe-sokuhou.com/">
         <input type="text" name="_honey" class="cf-hp" tabindex="-1" autocomplete="off">
 
         <label for="cf-name">お名前（任意）</label>
@@ -1363,10 +1363,10 @@ async function submit(){
     }).select();
     if(tIns.error) throw tIns.error;
     var newThread=tIns.data[0];
-    var pIns=await sb.from("posts").insert({
+    var pIns=await postToServer({
       thread_id:newThread.id, name:name.trim(), body:body.trim(), uid:myIp, post_lang:postLang
     });
-    if(pIns.error) throw pIns.error;
+    if(pIns&&pIns.error) throw new Error(pIns.error);
     fMag="";fWork="";fChara="";
     ["f-title","f-name","f-body","f-oppass"].forEach(function(id){var el=document.getElementById(id);if(el){el.value="";el.className="";}});
     var ft=document.getElementById("f-thumb");if(ft)ft.value="";
@@ -2156,6 +2156,25 @@ function containsNG(text){
   return false;
 }
 
+/* 投稿(スレ/返信どちらも)を、IPアドレス記録つきの中継役(Edge Function)経由で送信する。
+   直接 posts テーブルへ書き込まず、必ずこの関数を通す。 */
+async function postToServer(payload){
+  try{
+    var resp=await fetch(SUPABASE_URL+"/functions/v1/record-post",{
+      method:"POST",
+      headers:{"Authorization":"Bearer "+SUPABASE_KEY,"apikey":SUPABASE_KEY,"Content-Type":"application/json"},
+      body:JSON.stringify(payload)
+    });
+    var data=await resp.json();
+    if(!resp.ok||data.error){
+      return {error:(data&&data.error)?(typeof data.error==="string"?data.error:JSON.stringify(data.error)):"送信に失敗しました"};
+    }
+    return {data:data};
+  }catch(e){
+    return {error:e.message||String(e)};
+  }
+}
+
 async function reply(){
   var body=(document.getElementById("r-body")||{}).value||"";
   if(!body.trim())return;
@@ -2170,10 +2189,10 @@ async function reply(){
   var replyBtn=document.querySelector("#reply-box .sub-btn");
   if(replyBtn){replyBtn.disabled=true;replyBtn.textContent=t("submitting");}
   try{
-    var res=await sb.from("posts").insert({
+    var res=await postToServer({
       thread_id:Number(st.thread.id), name:name.trim(), body:body.trim(), uid:myIp, post_lang:postLang
     });
-    if(res.error) throw res.error;
+    if(res.error) throw new Error(res.error);
     await loadAll();
     setTimeout(function(){window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"});},80);
   }catch(e){
