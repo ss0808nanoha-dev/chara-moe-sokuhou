@@ -123,6 +123,11 @@ body.admin .th-item.caution{background:#2a2036;border-color:#6a4a8a}
 body.admin .caution-gate{background:#2a2a2a;border-color:#6a4a8a}
 body.admin .caution-gate .cg-reason{background:#332040;color:#e0d0f0}
 body.admin .caution-op-btn{background:#2a2a2a;color:#c9a0e8;border-color:#6a4a8a}
+/* 管理者専用のタグ編集ボタン */
+.admin-tag-btn{font-size:11px;border:1px solid #c00;color:#c00;padding:2px 10px;border-radius:2px;margin-top:6px;display:inline-block}
+.admin-tag-btn:hover{background:#c00;color:#fff}
+body.admin .admin-tag-btn{background:#2a2a2a;color:#ff8877;border-color:#a03a2a}
+body.admin .admin-tag-btn:hover{background:#cc4422;color:#fff}
 .th-badges{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:4px;align-items:center}
 .th-cat{font-size:10px;font-weight:700;background:#e05a00;color:#fff;padding:1px 6px;border-radius:2px}
 .th-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
@@ -1106,6 +1111,57 @@ async function recoverOp(tid){
 }
 
 /* ============================================================
+   管理者専用: スレのタグ(掲載誌・作品名・キャラ名)を編集する
+   ============================================================ */
+async function editTags(tid){
+  if(!adminMode){ alert("この操作は管理者モードでのみ行えます。"); return; }
+  var thr=null;
+  for(var i=0;i<th.length;i++){if(String(th[i].id)===String(tid)){thr=th[i];break;}}
+  if(!thr){ alert("スレッドが見つかりませんでした。"); return; }
+
+  /* 掲載誌: 番号で選ぶ(空欄ならタグなし) */
+  var magList=MAGS.map(function(m,idx){return (idx+1)+". "+m;}).join("\n");
+  var magIn=prompt(
+    "【掲載誌タグ】\n下から番号を選んで入力してください。\n空欄にすると掲載誌タグなしになります。\n\n"+magList,
+    thr.magTag?String(MAGS.indexOf(thr.magTag)+1):""
+  );
+  if(magIn===null) return;
+  magIn=magIn.trim();
+  var newMag=null;
+  if(magIn){
+    var n=Number(magIn);
+    if(!(n>=1&&n<=MAGS.length)){ alert("1〜"+MAGS.length+"の番号を入力してください。"); return; }
+    newMag=MAGS[n-1];
+  }
+
+  /* 作品名 */
+  var workIn=prompt("【作品名タグ】\n空欄にするとタグなしになります。", thr.workTag||"");
+  if(workIn===null) return;
+  var newWork=workIn.trim().slice(0,20)||null;
+
+  /* キャラ名 */
+  var charaIn=prompt("【キャラ名タグ】\n空欄にするとタグなしになります。", thr.charaTag||"");
+  if(charaIn===null) return;
+  var newChara=charaIn.trim().slice(0,20)||null;
+
+  /* 確認 */
+  var summary="以下の内容で保存します。よろしいですか？\n\n"+
+    "掲載誌: "+(newMag||"(なし)")+"\n"+
+    "作品名: "+(newWork||"(なし)")+"\n"+
+    "キャラ名: "+(newChara||"(なし)");
+  if(!confirm(summary)) return;
+
+  try{
+    var res=await sb.from("threads").update({
+      mag_tag:newMag, work_tag:newWork, chara_tag:newChara
+    }).eq("id",Number(tid));
+    if(res.error) throw res.error;
+    alert("✅ タグを更新しました。");
+    await loadAll();
+  }catch(e){ alert("更新に失敗しました: "+(e.message||e)); }
+}
+
+/* ============================================================
    管理者モード
    ============================================================ */
 var adminMode=lsGet("kmh_admin")==="1";
@@ -1987,7 +2043,9 @@ function renderThread(){
     (isK?'<br><span class="kanso-done-label">'+t("kanso_done_label")+'</span>':"")+
     (showRecover?'<br><a class="op-recover" onclick="A.recoverOp(this.dataset.tid)" data-tid="'+esc(t2.id)+'">'+t("recover_op")+'</a>':"")+
     (isOP?'<br><button class="kanso-op-btn" onclick="A.setOpPassword(this.dataset.tid)" data-tid="'+esc(t2.id)+'">'+t(t2.hasOpPassword?"setpw_btn_change":"setpw_btn")+'</button>':"")+
-    (isOP?'<br><button class="caution-op-btn" onclick="A.setCaution(this.dataset.tid)" data-tid="'+esc(t2.id)+'">'+t(t2.cautionReason?"caution_edit":"caution_set")+'</button>':"")+
+    ((isOP||adminMode)?'<br><button class="caution-op-btn" onclick="A.setCaution(this.dataset.tid)" data-tid="'+esc(t2.id)+'">'+t(t2.cautionReason?"caution_edit":"caution_set")+'</button>':"")+
+    /* 管理者だけ: 掲載誌・作品名・キャラ名のタグを編集できる */
+    (adminMode?'<br><button class="admin-tag-btn" onclick="A.editTags(this.dataset.tid)" data-tid="'+esc(t2.id)+'">🏷 タグを編集（管理者）</button>':"")+
     '</div>'+
     '<div id="posts-wrap">'+posts+'</div>'+
     autoAdSlot(t2,"autoad_mid_"+t2.id)+
@@ -2391,7 +2449,7 @@ return{top:top,cat:cat,openT:openT,loadNew:loadNew,toggleForm:toggleForm,submit:
   searchKey:searchKey,doSearch:doSearch,clearSearch:clearSearch,searchByTag:searchByTag,report:report,
   selectMag:selectMag,clearMag:clearMag,clearWork:clearWork,clearChara:clearChara,
   setWork:setWork,setChara:setChara,renderTagUI:renderTagUI,showSuggest:showSuggest,pickSuggest:pickSuggest,
-  sortBy:sortBy,showDoc:showDoc,hideDoc:hideDoc,toggleRules:toggleRules,recoverOp:recoverOp,setOpPassword:setOpPassword,setCaution:setCaution,acceptCaution:acceptCaution,
+  sortBy:sortBy,showDoc:showDoc,hideDoc:hideDoc,toggleRules:toggleRules,recoverOp:recoverOp,setOpPassword:setOpPassword,setCaution:setCaution,acceptCaution:acceptCaution,editTags:editTags,
   chooseLang:chooseLang,acceptNotice:acceptNotice,setLang:setLang,translatePost:translatePost,translateTitle:translateTitle,logoTap:logoTap,previewThumb:previewThumb,anchor:anchor,jumpTo:jumpTo,popAnchor:popAnchor,popHide:popHide};
 })();
 </script>
