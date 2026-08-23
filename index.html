@@ -254,10 +254,26 @@ body.admin #contact-form label{color:#ff9966}
 .hero-jack .hj-thumb img{width:80px;height:80px;object-fit:cover;border-radius:50%;border:3px solid rgba(255,255,255,.75);box-shadow:0 3px 10px rgba(0,0,0,.25)}
 #hd,#bc,#wrap{position:relative;z-index:1}
 
+/* スレ立てフォーム下の「ルールを見る」折りたたみ */
+#rules-box{margin-top:10px;border-top:1px dashed #f0d0c0;padding-top:8px}
+#rules-toggle{font-size:12px;color:#e05a00;font-weight:700;text-decoration:underline;padding:2px 0}
+#rules-toggle:hover{color:#c04a00}
+#rules-body{display:none;margin-top:8px;background:#fff8f3;border:1px solid #f0d8c8;
+  border-radius:4px;padding:12px 14px;font-size:12px;line-height:1.9;color:#444;white-space:pre-wrap}
+#rules-body.on{display:block}
+body.admin #rules-box{border-top-color:#4a4a4a}
+body.admin #rules-toggle{color:#ff9966}
+body.admin #rules-body{background:#332016;border-color:#7a4a28;color:#d0d0d0}
+
+/* 完走スレの「書き込みできません」表示 */
+.kanso-closed{background:#fff;border:1px solid #e8d0c0;border-top:3px solid #e05a00;
+  padding:22px 14px;text-align:center;font-size:13px;font-weight:700;color:#e05a00;line-height:1.8}
+body.admin .kanso-closed{background:#2a2a2a;border-color:#444;border-top-color:#cc4422;color:#ff9966}
+
 /* ページ全体の背景に敷き詰める商品タイル(クリックで商品ページへ) */
 #bg-watermark{position:absolute;top:0;left:0;right:0;z-index:0;display:none;
   flex-wrap:wrap;gap:10px;padding:10px;box-sizing:border-box;justify-content:center;
-  align-content:flex-start}
+  align-content:flex-start;overflow:hidden}
 #bg-watermark a{display:block;line-height:0;opacity:.13;transition:opacity .25s}
 #bg-watermark a:hover{opacity:.85}
 #bg-watermark img{width:90px;height:90px;object-fit:contain;border-radius:4px}
@@ -470,6 +486,10 @@ body.admin .hero-jack .hj-cta:hover{background:#ff8a44}
     <div class="form-foot">
       <span class="ccount" id="fcc">0/1000</span>
       <button class="sub-btn" id="g-submitbtn" onclick="A.submit()">スレを立てる</button>
+    </div>
+    <div id="rules-box">
+      <button id="rules-toggle" onclick="A.toggleRules()">📋 スレを立てる前に（ルールを見る）</button>
+      <div id="rules-body"></div>
     </div>
   </div>
 
@@ -712,6 +732,8 @@ var I18N={
     new_posts:"新着{n}件を読み込む",
     like:"♡ いいね", liked:"♥ いいね済", report:"報告", reported:"報告済", del:"削除",
     kanso_btn:"✅ 完走にする", del_thread_btn:"🗑 スレを削除", kanso_done_label:"✅ 完走スレ",
+    kanso_closed:"🏁 このスレッドは完走しました。新しい書き込みはできません。",
+    rules_open:"📋 スレを立てる前に（ルールを見る）", rules_close:"📋 ルールを閉じる",
     recover_op:"🔑 このスレを立てた方へ（合言葉を入力）",
     caution_set:"⚠️ 閲覧注意タグを設定", caution_edit:"⚠️ 閲覧注意タグを編集・解除",
     caution_prompt:"閲覧注意の理由を入力してください（例：このスレは腐の要素があります。(カップリング◯◯)）：",
@@ -770,6 +792,8 @@ var I18N={
     new_posts:"Load {n} new",
     like:"♡ Like", liked:"♥ Liked", report:"Report", reported:"Reported", del:"Delete",
     kanso_btn:"✅ Mark as done", del_thread_btn:"🗑 Delete thread", kanso_done_label:"✅ Completed",
+    kanso_closed:"🏁 This thread is complete. No new replies can be posted.",
+    rules_open:"📋 Before you post (view rules)", rules_close:"📋 Hide rules",
     recover_op:"🔑 Are you the thread owner? (enter passphrase)",
     caution_set:"⚠️ Add caution tag", caution_edit:"⚠️ Edit/Remove caution tag",
     caution_prompt:"Enter the caution reason (e.g. This thread contains BL content. (Pairing ◯◯)):",
@@ -828,6 +852,8 @@ var I18N={
     new_posts:"새 글 {n}개 보기",
     like:"♡ 좋아요", liked:"♥ 좋아요 완료", report:"신고", reported:"신고됨", del:"삭제",
     kanso_btn:"✅ 완주 처리", del_thread_btn:"🗑 스레드 삭제", kanso_done_label:"✅ 완주 스레드",
+    kanso_closed:"🏁 이 스레드는 완주되었습니다. 새 댓글을 작성할 수 없습니다.",
+    rules_open:"📋 작성 전에 (규칙 보기)", rules_close:"📋 규칙 닫기",
     recover_op:"🔑 이 스레드 작성자라면 (암호 입력)",
     caution_set:"⚠️ 열람주의 태그 설정", caution_edit:"⚠️ 열람주의 태그 편집·해제",
     caution_prompt:"열람주의 사유를 입력하세요 (예: 이 스레드는 BL 요소가 있습니다. (커플링 ◯◯)):",
@@ -990,6 +1016,11 @@ function applyStaticI18n(){
   setHTML("g-oppasshelp","oppass_help");
   setText("g-thumblabel","thumb_label");
   setText("g-submitbtn","submit_btn");
+  /* ルールボタン(開いているかどうかで文言を変える)＋中身も言語に合わせる */
+  var rb=document.getElementById("rules-body");
+  var rt=document.getElementById("rules-toggle");
+  if(rt) rt.textContent=(rb&&rb.classList.contains("on"))?t("rules_close"):t("rules_open");
+  applyRulesText();
   setText("g-foot-terms","foot_terms");
   setText("g-foot-privacy","foot_privacy");
   setText("g-foot-about","foot_about");
@@ -1313,6 +1344,52 @@ function pickSuggest(el){
   if(list)list.style.display="none";
 }
 
+/* ============================================================
+   スレ立てフォームの「ルール」表示
+   文章はSupabaseの site_texts テーブルから読み込む。
+   → 文章を変えたいときはSupabaseの画面で書き換えるだけでOK(デプロイ不要)
+   ============================================================ */
+var rulesText=null;        /* 読み込んだ文章(3言語ぶん) */
+var rulesLoading=false;
+async function loadRules(){
+  if(rulesText!==null||rulesLoading) return;
+  rulesLoading=true;
+  try{
+    var res=await sb.from("site_texts").select("ja,en,ko").eq("key","thread_rules").single();
+    if(res.error) throw res.error;
+    rulesText=res.data||{};
+  }catch(e){
+    rulesText={};   /* 読めなかったときは空にしておく(サイトは普通に使える) */
+    console.error("loadRules error:",e);
+  }
+  rulesLoading=false;
+  applyRulesText();
+}
+/* 今のUI言語に合わせて文章を流し込む */
+function applyRulesText(){
+  var body=document.getElementById("rules-body");
+  if(!body) return;
+  var l=uiLang||"ja";
+  var txt=(rulesText&&(rulesText[l]||rulesText.ja))||"";
+  body.textContent=txt;
+}
+/* 「ルールを見る」ボタン */
+function toggleRules(){
+  var body=document.getElementById("rules-body");
+  var btn=document.getElementById("rules-toggle");
+  if(!body||!btn) return;
+  var open=body.classList.contains("on");
+  if(open){
+    body.classList.remove("on");
+    btn.textContent=t("rules_open");
+  }else{
+    body.classList.add("on");
+    btn.textContent=t("rules_close");
+    if(rulesText===null) loadRules();   /* 初めて開いたときに読み込む */
+    else applyRulesText();
+  }
+}
+
 /* フォーム */
 function toggleForm(){
   var fw=document.getElementById("fwrap"),nb=document.getElementById("new-btn");
@@ -1618,11 +1695,20 @@ function fillWatermark(){
   var items=watermarkItems;
   if(!items||!items.length){ box.innerHTML=""; box.setAttribute("data-key",""); return; }
   var w=window.innerWidth||document.documentElement.clientWidth||360;
-  var h=Math.max(document.documentElement.scrollHeight||0,(document.body&&document.body.scrollHeight)||0,window.innerHeight||600);
+  /* フッターの下端までを背景の高さにする(それより下には敷かない) */
+  var foot=document.getElementById("site-footer");
+  var h;
+  if(foot){
+    var fr=foot.getBoundingClientRect();
+    h=Math.round(fr.bottom+window.scrollY);
+  }else{
+    h=Math.max(document.documentElement.scrollHeight||0,(document.body&&document.body.scrollHeight)||0,window.innerHeight||600);
+  }
+  if(h<200) h=window.innerHeight||600;
   box.style.height=h+"px"; /* ページの高さに合わせる */
   var tile=100; /* 画像90px + すき間10px */
   var cols=Math.max(1,Math.ceil(w/tile));
-  var rows=Math.ceil(h/tile)+2;
+  var rows=Math.ceil(h/tile);
   var total=cols*rows;
   if(total>600) total=600; /* 上限(保険) */
   var key=items.map(function(it){return it.img;}).join("|")+"#"+total;
@@ -1905,10 +1991,14 @@ function renderThread(){
     '</div>'+
     '<div id="posts-wrap">'+posts+'</div>'+
     autoAdSlot(t2,"autoad_mid_"+t2.id)+
-    '<div id="reply-box"><h3>'+t("reply_h3")+'</h3>'+
-    '<input id="r-name" placeholder="'+esc(t("reply_name_ph"))+'">'+
-    '<textarea id="r-body" placeholder="'+esc(t("reply_body_ph"))+'" maxlength="1000"></textarea>'+
-    '<div class="form-foot"><span></span><button class="sub-btn" onclick="A.reply()">'+t("reply_btn")+'</button></div></div>'+autoAdSlot(t2,"autoad_bot_"+t2.id);
+    /* 完走したスレでは、返信欄を出さずに完走メッセージを表示する(全員一律) */
+    (isK
+      ? '<div class="kanso-closed">'+t("kanso_closed")+'</div>'
+      : '<div id="reply-box"><h3>'+t("reply_h3")+'</h3>'+
+        '<input id="r-name" placeholder="'+esc(t("reply_name_ph"))+'">'+
+        '<textarea id="r-body" placeholder="'+esc(t("reply_body_ph"))+'" maxlength="1000"></textarea>'+
+        '<div class="form-foot"><span></span><button class="sub-btn" onclick="A.reply()">'+t("reply_btn")+'</button></div></div>'
+    )+autoAdSlot(t2,"autoad_bot_"+t2.id);
 }
 
 /* ===== 自動で新着をチェック(20秒ごと)。表示は「新着N件」ボタンを出すだけ ===== */
@@ -2270,7 +2360,8 @@ async function reply(){
     });
     if(res.error) throw new Error(res.error);
     await loadAll();
-    setTimeout(function(){window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"});},80);
+    /* 投稿後は画面の一番上に戻す(レス自体はスレの一番下に追加される) */
+    setTimeout(function(){window.scrollTo({top:0,behavior:"smooth"});},80);
   }catch(e){
     alert(t("fail_reply")+(e.message||e));
     console.error("reply error:",e);
@@ -2300,7 +2391,7 @@ return{top:top,cat:cat,openT:openT,loadNew:loadNew,toggleForm:toggleForm,submit:
   searchKey:searchKey,doSearch:doSearch,clearSearch:clearSearch,searchByTag:searchByTag,report:report,
   selectMag:selectMag,clearMag:clearMag,clearWork:clearWork,clearChara:clearChara,
   setWork:setWork,setChara:setChara,renderTagUI:renderTagUI,showSuggest:showSuggest,pickSuggest:pickSuggest,
-  sortBy:sortBy,showDoc:showDoc,hideDoc:hideDoc,recoverOp:recoverOp,setOpPassword:setOpPassword,setCaution:setCaution,acceptCaution:acceptCaution,
+  sortBy:sortBy,showDoc:showDoc,hideDoc:hideDoc,toggleRules:toggleRules,recoverOp:recoverOp,setOpPassword:setOpPassword,setCaution:setCaution,acceptCaution:acceptCaution,
   chooseLang:chooseLang,acceptNotice:acceptNotice,setLang:setLang,translatePost:translatePost,translateTitle:translateTitle,logoTap:logoTap,previewThumb:previewThumb,anchor:anchor,jumpTo:jumpTo,popAnchor:popAnchor,popHide:popHide};
 })();
 </script>
