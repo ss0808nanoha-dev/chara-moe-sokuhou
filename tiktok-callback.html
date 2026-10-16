@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TikTok連携 認証完了</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#fff4f0;color:#222;font:14px/1.7 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.box{background:#fff;border-radius:8px;padding:28px;max-width:560px;width:100%;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+h1{font-size:17px;color:#c04a00;margin-bottom:14px}
+.code-box{background:#f5f5f5;border:1px solid #ddd;border-radius:6px;padding:14px;word-break:break-all;font-family:monospace;font-size:13px;margin:12px 0}
+.hint{color:#666;font-size:12px;margin-top:10px}
+.err{color:#c0392b}
+button{margin-top:10px;background:#e05a00;color:#fff;border:none;border-radius:6px;padding:8px 14px;font-size:13px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>TikTok連携 認証完了</h1>
+  <div id="result"></div>
+</div>
+<script>
+var params = new URLSearchParams(window.location.search);
+var code = params.get('code');
+var error = params.get('error');
+var el = document.getElementById('result');
+if (code) {
+  el.innerHTML =
+    '<p>認証コードを取得しました。下のコードをコピーして、設定を進めてください。</p>' +
+    '<div class="code-box" id="codebox">' + code + '</div>' +
+    '<button onclick="navigator.clipboard.writeText(document.getElementById(\'codebox\').textContent);this.textContent=\'コピーしました\'">コードをコピー</button>' +
+    '<p class="hint">このページは認証コードを画面に表示するだけで、どこにも送信・保存しません。</p>';
+} else if (error) {
+  el.innerHTML = '<p class="err">認証に失敗しました: ' + error + '</p>';
+} else {
+  el.innerHTML = '<p class="hint">このページは、TikTok連携の認証後に自動的に開かれるものです。直接アクセスしても表示するものがありません。</p>';
+}
+</script>
+</body>
+</html>
