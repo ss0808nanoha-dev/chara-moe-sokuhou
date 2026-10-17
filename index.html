@@ -912,6 +912,12 @@ var MAG_I18N={
 var A=(function(){
 var CATS=["すべて","キャラ萌え","解釈・考察","作品語り","雑談"];
 var MAGS=["週刊少年ジャンプ","週刊少年マガジン","週刊少年サンデー","少年チャンピオン","ジャンプ＋","その他漫画","アニメ","ゲーム"];
+/* キャラ名タグの表記ゆれ対策: 通販サイトの商品名でよく使われる正式表記への変換
+   （タグに「・」が無く検索がヒットしない場合に備える。見つかり次第ここに追加していく） */
+var CHARA_ALIASES={
+  "ミヒャエルカイザー":"ミヒャエル・カイザー",
+  "アレクシスネス":"アレクシス・ネス"
+};
 var TC={"週刊少年ジャンプ":"#cc0000","週刊少年マガジン":"#1a56a0","週刊少年サンデー":"#2e7d32","少年チャンピオン":"#e65100","ジャンプ＋":"#880044","その他漫画":"#555","アニメ":"#6a1a6a","ゲーム":"#1565c0"};
 var KANSO=200;
 var st={thread:null,cat:"すべて",q:"",sort:"new"};
@@ -1151,11 +1157,29 @@ async function editTags(tid){
     "キャラ名: "+(newChara||"(なし)");
   if(!confirm(summary)) return;
 
+  var oldWork=thr.workTag,oldChara=thr.charaTag;
   try{
     var res=await sb.from("threads").update({
       mag_tag:newMag, work_tag:newWork, chara_tag:newChara
     }).eq("id",Number(tid));
     if(res.error) throw res.error;
+
+    /* 表記ゆれ修正の場合、同じ(旧)タグを持つ他スレにも同じ修正を一括反映できるか確認する */
+    if(newWork&&oldWork&&newWork!==oldWork){
+      var wCnt=th.filter(function(t2){return t2.id!==thr.id&&t2.workTag===oldWork;}).length;
+      if(wCnt>0&&confirm("作品名タグ「"+oldWork+"」を持つ他の"+wCnt+"件のスレも「"+newWork+"」に一括修正しますか？")){
+        var r2=await sb.from("threads").update({work_tag:newWork}).eq("work_tag",oldWork);
+        if(r2.error) throw r2.error;
+      }
+    }
+    if(newChara&&oldChara&&newChara!==oldChara){
+      var cCnt=th.filter(function(t2){return t2.id!==thr.id&&t2.charaTag===oldChara;}).length;
+      if(cCnt>0&&confirm("キャラ名タグ「"+oldChara+"」を持つ他の"+cCnt+"件のスレも「"+newChara+"」に一括修正しますか？")){
+        var r3=await sb.from("threads").update({chara_tag:newChara}).eq("chara_tag",oldChara);
+        if(r3.error) throw r3.error;
+      }
+    }
+
     alert("✅ タグを更新しました。");
     await loadAll();
   }catch(e){ alert("更新に失敗しました: "+(e.message||e)); }
@@ -1200,6 +1224,63 @@ function updateAdminBadge(){
   }
   el.textContent="🔐 管理者モード";
   el.style.display=adminMode?"block":"none";
+
+  var repBtn=document.getElementById("admin-reports-btn");
+  if(!repBtn){
+    repBtn=document.createElement("div");
+    repBtn.id="admin-reports-btn";
+    repBtn.style.cssText="position:fixed;bottom:44px;right:10px;background:#333;color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:3px;z-index:998;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3)";
+    repBtn.textContent="🚩 通報一覧";
+    repBtn.onclick=function(){showReportsList();};
+    document.body.appendChild(repBtn);
+  }
+  repBtn.style.display=adminMode?"block":"none";
+}
+
+async function showReportsList(){
+  if(!adminMode) return;
+  try{
+    var repRes=await sb.from("reports").select("post_id");
+    if(repRes.error) throw repRes.error;
+    var counts={};
+    (repRes.data||[]).forEach(function(r){counts[r.post_id]=(counts[r.post_id]||0)+1;});
+    var postIds=Object.keys(counts);
+    var rows=[];
+    if(postIds.length>0){
+      var postsRes=await sb.from("posts").select("id,thread_id,body,deleted").in("id",postIds.map(Number));
+      if(postsRes.error) throw postsRes.error;
+      var posts=postsRes.data||[];
+      var threadIds=posts.map(function(p){return p.thread_id;}).filter(function(v,i,a){return a.indexOf(v)===i;});
+      var threadsRes=threadIds.length?await sb.from("threads").select("id,title").in("id",threadIds):{data:[]};
+      var threadTitleById={};
+      (threadsRes.data||[]).forEach(function(th){threadTitleById[th.id]=th.title;});
+      rows=posts.map(function(p){
+        return {postId:p.id,threadId:p.thread_id,threadTitle:threadTitleById[p.thread_id]||"(不明)",body:p.deleted?"（削除済み）":(p.body||""),count:counts[p.id]||0};
+      }).sort(function(a,b){return b.count-a.count;});
+    }
+    renderReportsModal(rows);
+  }catch(e){alert("通報一覧の取得に失敗しました: "+(e.message||e));}
+}
+
+function renderReportsModal(rows){
+  var el=document.getElementById("doc-reports");
+  if(!el){
+    el=document.createElement("div");
+    el.id="doc-reports";
+    el.className="doc-modal";
+    el.onclick=function(ev){if(ev.target===el) hideDoc("reports");};
+    document.body.appendChild(el);
+  }
+  var bodyHtmlStr=rows.length?rows.map(function(r){
+    return '<div style="border-bottom:1px solid #eee;padding:8px 0">'+
+      '<div style="font-size:11px;color:#c00;font-weight:700">通報 '+r.count+'件</div>'+
+      '<div style="font-size:12px;margin:2px 0">'+esc(r.body).slice(0,80)+'</div>'+
+      '<a style="font-size:11px" href="#t='+esc(r.threadId)+'" onclick="A.hideDoc(\'reports\');A.openT(\''+esc(r.threadId)+'\');return false;">'+esc(r.threadTitle)+' を見る</a>'+
+      '</div>';
+  }).join(""):'<p style="color:#888">通報されたレスはありません</p>';
+  el.innerHTML='<div class="doc-box"><div class="doc-hdr"><span>🚩 通報一覧（'+rows.length+'件）</span><button class="doc-close" onclick="A.hideDoc(\'reports\')">×</button></div><div class="doc-body">'+bodyHtmlStr+'</div></div>';
+  el.classList.add("on");
+  document.body.style.overflow="hidden";
 }
 setTimeout(updateAdminBadge,100);
 
@@ -1694,7 +1775,13 @@ async function fetchRakutenItems(queries){
    キャラタグ優先、無ければ作品、タグ無し/0件はサイト全体の1位を宣伝。 */
 function buildThreadQueries(thread){
   var queries=[];
-  if(thread.charaTag) queries.push(thread.charaTag);
+  if(thread.charaTag){
+    queries.push(thread.charaTag);
+    /* 「・」無し表記で登録済みキャラ名は、既知の正式表記も試す */
+    if(CHARA_ALIASES[thread.charaTag]) queries.push(CHARA_ALIASES[thread.charaTag]);
+    /* 「・」有り表記なら、無し版も念のため試す(逆方向の表記ゆれ対策) */
+    else if(thread.charaTag.indexOf("・")>=0) queries.push(thread.charaTag.split("・").join(""));
+  }
   if(thread.workTag) queries.push(thread.workTag);
   var g=calcRanks(th);
   if(g.charaRank&&g.charaRank[0]) queries.push(g.charaRank[0].name);
@@ -2025,6 +2112,7 @@ function renderThread(){
       '<span class="pdate">'+fmt(pst.ts)+'</span>'+
       '&nbsp;<span style="font-size:11px;color:'+(pst.reportedByMe?"#888":"#ddd")+';cursor:pointer" onclick="A.report(this.dataset.pid)" data-pid="'+esc(pst.id)+'">'+(pst.reportedByMe?t("reported"):t("report"))+'</span>'+
       (canDeletePost?'&nbsp;<span style="font-size:11px;color:#ddd;cursor:pointer" onclick="A.deletePost(this.dataset.tid,this.dataset.pid)" data-tid="'+esc(t2.id)+'" data-pid="'+esc(pst.id)+'">'+t("del")+'</span>':"")+
+      (adminMode?'&nbsp;<span style="font-size:11px;color:#ddd;cursor:pointer" onclick="A.editPost(this.dataset.pid)" data-pid="'+esc(pst.id)+'">✏️ 編集</span>':"")+
       '<br><span class="pid">ID:'+pst.uid+'</span></div>'+
       '<div class="pbody"'+(likeCnt>=20?' style="font-weight:700"':'')+'>'+bodyHtml(pst.body)+'</div>'+
       (isOPp&&t2.thumbUrl?'<div class="post-img"><a href="'+esc(t2.thumbUrl)+'" target="_blank" rel="noopener"><img src="'+esc(t2.thumbUrl)+'" alt="" loading="lazy"></a></div>':"")+
@@ -2268,6 +2356,21 @@ async function deletePost(tid,pid){
     await loadAll();
   }catch(e){alert(t("fail_del")+(e.message||e));}
 }
+async function editPost(pid){
+  if(!adminMode){ alert("この操作は管理者モードでのみ行えます。"); return; }
+  var post=null;
+  if(st.thread){
+    for(var i=0;i<st.thread.posts.length;i++){if(String(st.thread.posts[i].id)===String(pid)){post=st.thread.posts[i];break;}}
+  }
+  if(!post) return;
+  var newBody=prompt("レスの内容を編集（管理者）：",post.body||"");
+  if(newBody===null||newBody===post.body) return;
+  try{
+    var res=await sb.from("posts").update({body:newBody}).eq("id",Number(pid));
+    if(res.error) throw res.error;
+    await loadAll();
+  }catch(e){alert("編集に失敗しました: "+(e.message||e));}
+}
 function showDoc(name){
   var el=document.getElementById("doc-"+name);
   if(el) el.classList.add("on");
@@ -2449,7 +2552,7 @@ function boot(){
 boot();
 
 return{top:top,cat:cat,openT:openT,loadNew:loadNew,toggleForm:toggleForm,submit:submit,reply:reply,
-  doLike:doLike,toggleMedal:toggleMedal,doKanso:doKanso,deleteThread:deleteThread,deletePost:deletePost,
+  doLike:doLike,toggleMedal:toggleMedal,doKanso:doKanso,deleteThread:deleteThread,deletePost:deletePost,editPost:editPost,
   searchKey:searchKey,doSearch:doSearch,clearSearch:clearSearch,searchByTag:searchByTag,report:report,
   selectMag:selectMag,clearMag:clearMag,clearWork:clearWork,clearChara:clearChara,
   setWork:setWork,setChara:setChara,renderTagUI:renderTagUI,showSuggest:showSuggest,pickSuggest:pickSuggest,
