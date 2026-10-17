@@ -40,7 +40,9 @@ input:focus,textarea:focus,select:focus{border-color:#e05a00}
 #hd-top{max-width:780px;margin:0 auto;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
 #logo-btn{display:flex;flex-direction:column;gap:1px;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 #logo,#logo-tagline{-webkit-user-select:none;user-select:none}
-#logo{font-size:20px;font-weight:900;color:#fff;letter-spacing:1px;font-family:'Hiragino Mincho ProN','Yu Mincho',serif;line-height:1}
+#logo{display:flex;flex-direction:column;color:#fff;letter-spacing:1px;font-family:'Hiragino Mincho ProN','Yu Mincho',serif;line-height:1.15}
+#logo-l1{font-size:20px;font-weight:900}
+#logo-l2{font-size:17px;font-weight:800}
 #logo-tagline{font-size:10px;color:rgba(255,255,255,.8);letter-spacing:.5px}
 #hd-r{display:flex;align-items:center;gap:8px;flex-shrink:0}
 #lang-switch{display:flex;gap:2px}
@@ -421,8 +423,8 @@ body.admin .hero-jack .hj-cta:hover{background:#ff8a44}
 <div id="hd">
   <div id="hd-top">
     <button id="logo-btn" onclick="A.logoTap()">
-      <div id="logo">ダラルズ</div>
-      <div id="logo-tagline">キャラ萌え速報</div>
+      <div id="logo"><span id="logo-l1">キャラ萌え</span><span id="logo-l2">速報</span></div>
+      <div id="logo-tagline">ダラルズ</div>
     </button>
     <div id="hd-r">
       <div id="lang-switch">
