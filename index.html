@@ -1387,6 +1387,13 @@ async function loadAll(){
       st.thread=found;
     }else{
       if(location.hash){applyHash();return;}
+      // 「#」を含むURLを自動リンク化しないSNS対策として、?t=IDでも同じスレを開けるようにする
+      var qt=new URLSearchParams(location.search).get('t');
+      if(qt){
+        var qid=Number(qt);
+        for(var i=0;i<th.length;i++){if(th[i].id===qid){st.thread=th[i];break;}}
+        if(st.thread) history.replaceState("",document.title,location.pathname+"#t="+qid);
+      }
     }
     render();
     resetPollBase();
