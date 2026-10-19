@@ -1189,6 +1189,7 @@ async function editTags(tid){
    管理者モード
    ============================================================ */
 var adminMode=lsGet("kmh_admin")==="1";
+var selectedPosts={}; /* 管理者モードの一括削除用チェック状態(スレ表示中のみ使う) */
 /* 合言葉の判定はSupabaseのEdge Function(サーバー側)に問い合わせる。
    合言葉そのものはこのコードには持たない(=ソースを見られても安全)。 */
 async function verifyAdminKey(pwd){
@@ -2113,6 +2114,7 @@ function renderThread(){
     var tlBtnTxt=pst.translating?t("tl_translating"):(pst.showTranslated&&pst.translated?t("show_original"):t("translate"));
     return '<div class="post'+(showMedal?" medal-post":"")+'" id="post-'+(i+1)+'">'+
       '<div class="pmeta">'+
+      (adminMode?'<input type="checkbox" class="bulk-del-chk" data-pid="'+esc(pst.id)+'" '+(selectedPosts[pst.id]?"checked":"")+' onchange="A.toggleSelectPost(this.dataset.pid,this.checked)" style="margin-right:4px">':"")+
       (showMedal?'<span style="font-size:14px;margin-right:3px">🥇</span>':"")+
       '<span class="pno" onclick="A.anchor('+(i+1)+')" title="このレスに返信">'+(i+1)+'</span>'+
       '<span class="pname'+(isOPp?" op":"")+langCls+'">'+(isOPp?'<span class="opbg">OP</span>':"")+esc(name)+flag+'</span>'+
@@ -2145,6 +2147,8 @@ function renderThread(){
     ((isOP||adminMode)?'<br><button class="caution-op-btn" onclick="A.setCaution(this.dataset.tid)" data-tid="'+esc(t2.id)+'">'+t(t2.cautionReason?"caution_edit":"caution_set")+'</button>':"")+
     /* 管理者だけ: 掲載誌・作品名・キャラ名のタグを編集できる */
     (adminMode?'<br><button class="admin-tag-btn" onclick="A.editTags(this.dataset.tid)" data-tid="'+esc(t2.id)+'">🏷 タグを編集（管理者）</button>':"")+
+    /* 管理者だけ: チェックを入れたレスをまとめて削除 */
+    (adminMode?'<br><button id="bulk-del-btn" class="kanso-op-btn" style="border-color:#c00;color:#c00;display:'+(Object.keys(selectedPosts).length>0?"inline-block":"none")+'" onclick="A.bulkDeletePosts()">選択した'+Object.keys(selectedPosts).length+'件を削除</button>':"")+
     '</div>'+
     '<div id="posts-wrap">'+posts+'</div>'+
     autoAdSlot(t2,"autoad_mid_"+t2.id)+
@@ -2297,9 +2301,10 @@ window.addEventListener("hashchange",function(){
   applyHash();
 });
 
-function top(){st.thread=null;st.q="";st.cat="すべて"; var fw=document.getElementById("fwrap"); if(fw)fw.style.display="none"; updateHash(); render(); resetPollBase(); window.scrollTo(0,0);}
+function top(){st.thread=null;st.q="";st.cat="すべて"; selectedPosts={}; var fw=document.getElementById("fwrap"); if(fw)fw.style.display="none"; updateHash(); render(); resetPollBase(); window.scrollTo(0,0);}
 function cat(c){st.cat=c;st.thread=null;st.q=""; updateHash(); render(); resetPollBase(); window.scrollTo(0,0);}
 function openT(id){
+  selectedPosts={};
   for(var i=0;i<th.length;i++){if(String(th[i].id)===String(id)){st.thread=th[i]; updateHash(); render(); resetPollBase(); window.scrollTo(0,0); return;}}
 }
 
@@ -2360,6 +2365,27 @@ async function deletePost(tid,pid){
   try{
     var res=await sb.from("posts").update({deleted:true,body:"",name:""}).eq("id",Number(pid));
     if(res.error) throw res.error;
+    await loadAll();
+  }catch(e){alert(t("fail_del")+(e.message||e));}
+}
+function toggleSelectPost(pid,checked){
+  if(checked) selectedPosts[pid]=true; else delete selectedPosts[pid];
+  var btn=document.getElementById("bulk-del-btn");
+  if(btn){
+    var n=Object.keys(selectedPosts).length;
+    btn.textContent="選択した"+n+"件を削除";
+    btn.style.display=n>0?"inline-block":"none";
+  }
+}
+async function bulkDeletePosts(){
+  if(!adminMode){ alert("この操作は管理者モードでのみ行えます。"); return; }
+  var ids=Object.keys(selectedPosts).map(Number);
+  if(!ids.length) return;
+  if(!confirm("選択した"+ids.length+"件のレスを削除しますか？"))return;
+  try{
+    var res=await sb.from("posts").update({deleted:true,body:"",name:""}).in("id",ids);
+    if(res.error) throw res.error;
+    selectedPosts={};
     await loadAll();
   }catch(e){alert(t("fail_del")+(e.message||e));}
 }
@@ -2560,6 +2586,7 @@ boot();
 
 return{top:top,cat:cat,openT:openT,loadNew:loadNew,toggleForm:toggleForm,submit:submit,reply:reply,
   doLike:doLike,toggleMedal:toggleMedal,doKanso:doKanso,deleteThread:deleteThread,deletePost:deletePost,editPost:editPost,
+  toggleSelectPost:toggleSelectPost,bulkDeletePosts:bulkDeletePosts,
   searchKey:searchKey,doSearch:doSearch,clearSearch:clearSearch,searchByTag:searchByTag,report:report,
   selectMag:selectMag,clearMag:clearMag,clearWork:clearWork,clearChara:clearChara,
   setWork:setWork,setChara:setChara,renderTagUI:renderTagUI,showSuggest:showSuggest,pickSuggest:pickSuggest,
