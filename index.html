@@ -1691,7 +1691,7 @@ function viewThreads(){
    listを渡さなければ今表示中のタブ(viewThreads)で集計する。 */
 function calcRanks(list){
   list=list||viewThreads();
-  var thRank=list.slice().sort(function(a,b){return b.posts.length-a.posts.length;}).slice(0,5);
+  var thRank=list.filter(function(t2){return !t2.cautionReason;}).sort(function(a,b){return b.posts.length-a.posts.length;}).slice(0,5);
   var workMap={};
   list.forEach(function(t2){
     var w=t2.workTag||((t2.tags||[]).filter(function(tg){return MAGS.indexOf(tg)<0;})[0]);
