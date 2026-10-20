@@ -1588,7 +1588,7 @@ async function submit(){
   }
   if(!ok)return;
   var name=(document.getElementById("f-name")||{}).value||"";
-  if(containsNG(title)||containsNG(body)||containsNG(name)){ alert(t("ng_word")); return; }
+  if(ngAlert([{label:"タイトル",val:title},{label:"本文",val:body},{label:"名前",val:name}])) return;
   var postLang=lsGet("kmh_post_lang")||uiLang||"ja";
   var subBtn=document.querySelector("#fwrap .sub-btn");
   if(subBtn){subBtn.disabled=true;subBtn.textContent=t("submitting");}
@@ -2515,7 +2515,14 @@ function containsNG(text){
     .replace(/[!-\/:-@\[-`{-~。、，．・…ー~〜！？：；「」『』（）\-_*+=]/g,"");
   for(var i=0;i<NG_WORDS.length;i++){
     var w=NG_WORDS[i].toLowerCase().replace(/\s/g,"");
-    if(w&&norm.indexOf(w)>=0) return true;
+    if(w&&norm.indexOf(w)>=0) return NG_WORDS[i];
+  }
+  return false;
+}
+function ngAlert(fields){
+  for(var i=0;i<fields.length;i++){
+    var hit=containsNG(fields[i].val);
+    if(hit){ alert(t("ng_word")+"\n\n該当欄: "+fields[i].label+" / 該当語句: "+hit); return true; }
   }
   return false;
 }
@@ -2543,7 +2550,7 @@ async function reply(){
   var body=(document.getElementById("r-body")||{}).value||"";
   if(!body.trim())return;
   var name=(document.getElementById("r-name")||{}).value||"";
-  if(containsNG(body)||containsNG(name)){ alert(t("ng_word")); return; }
+  if(ngAlert([{label:"本文",val:body},{label:"名前",val:name}])) return;
   if(name.trim()==="スレ主"){
     var isOPByUid=st.thread&&st.thread.posts.length>0&&st.thread.posts[0].uid===myIp;
     var isOPByPassword=st.thread&&isVerifiedOp(st.thread.id);
