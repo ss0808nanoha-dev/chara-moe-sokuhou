@@ -38,7 +38,7 @@ module.exports = async function handler(req, res) {
   const id = Number(req.query.id);
   if (!id) {
     res.statusCode = 404;
-    res.end("Not found: " + JSON.stringify(req.query));
+    res.end("Not found");
     return;
   }
 
@@ -109,8 +109,9 @@ ${tagLine ? `<div class="tags">${esc(tagLine)}</div>` : ""}
   res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=600");
   res.end(html);
   } catch (e) {
+    console.error(e);
     res.statusCode = 500;
-    res.setHeader("Content-Type", "text/plain; charset=utf-8");
-    res.end("DEBUG ERROR: " + (e && e.stack || e));
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.end("<!doctype html><html><body>エラーが発生しました</body></html>");
   }
 };
