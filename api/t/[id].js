@@ -1,14 +1,22 @@
-// 検索エンジン向けに、スレッド内容を実際のHTMLとして返すサーバー関数。
+// 検索エンジンのクローラーにだけ、スレッド内容を実際のHTMLとして返すサーバー関数。
 // index.html側は #t=ID のハッシュ付きURLでスレを表示するが、ハッシュ以降は
 // クローラーに別ページとして認識されないため、Googleに個別スレが出ない問題があった。
-// /t/ID という(ハッシュを使わない)URLでこの関数を呼び出し、スレ内容を直接HTMLで返す。
 //
-// 閲覧注意タグが付いているスレだけは、検索に出したくないという要望のため、
-// 従来通りハッシュ付きURL(#t=ID)へリダイレクトして、この仕組みの対象から外す。
+// 「検索エンジンのロボットかどうか」でレスポンスを出し分ける(Dynamic Rendering。
+// Google公式にも認められている一般的な手法)。
+// - クローラー: このページで直接、読める形のHTML(タイトル・タグ・レス本文)を返す→検索に出る
+// - 人間のブラウザ: 即座にサーバー側でハッシュ付きURL(#t=ID)へリダイレクト
+//   →見た目は今まで通りの本物のサイトそのまま
+//
+// 閲覧注意タグが付いているスレは、クローラー・人間どちらであっても検索に出したくないため、
+// 常にハッシュ付きURLへリダイレクトしてこの仕組みの対象から外す。
 
 const SUPABASE_URL = "https://xflcbgsonmvvzbefbreq.supabase.co";
 const SUPABASE_KEY = "sb_publishable_in8cVtZwe3SbE0l6Y3Jf2Q_awVX6mJY";
 const SITE_URL = "https://chara-moe-sokuhou.com";
+
+// 主要な検索エンジン・SNSのクローラーのUser-Agent（カード表示用にSNSのbotも含める）
+const BOT_UA_RE = /bot|crawl|spider|slurp|googlebot|bingbot|yandex|baiduspider|duckduckbot|facebookexternalhit|twitterbot|threadsbot|discordbot|slackbot|telegrambot|whatsapp|linkedinbot/i;
 
 function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({
@@ -35,44 +43,57 @@ async function fetchPosts(id) {
 
 module.exports = async function handler(req, res) {
   try {
-  const id = Number(req.query.id);
-  if (!id) {
-    res.statusCode = 404;
-    res.end("Not found");
-    return;
-  }
+    const id = Number(req.query.id);
+    if (!id) {
+      res.statusCode = 404;
+      res.end("Not found");
+      return;
+    }
 
-  const thread = await fetchThread(id);
-  if (!thread) {
-    res.statusCode = 404;
-    res.setHeader("Content-Type", "text/html; charset=utf-8");
-    res.end("<!doctype html><html><body>スレッドが見つかりません</body></html>");
-    return;
-  }
+    const thread = await fetchThread(id);
+    if (!thread) {
+      res.statusCode = 404;
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      res.end("<!doctype html><html><body>スレッドが見つかりません</body></html>");
+      return;
+    }
 
-  if (thread.caution_reason) {
-    res.statusCode = 302;
-    res.setHeader("Location", `/#t=${id}`);
-    res.end();
-    return;
-  }
+    // 閲覧注意スレは、ロボット・人間を問わず常に非公開の通常URLへ
+    if (thread.caution_reason) {
+      res.statusCode = 302;
+      res.setHeader("Location", `/#t=${id}`);
+      res.end();
+      return;
+    }
 
-  const posts = await fetchPosts(id);
-  const tagLine = [thread.work_tag, thread.chara_tag].filter(Boolean).join(" ");
-  const pageTitle = `${thread.title}${tagLine ? `【${tagLine}】` : ""} - キャラ萌え速報`;
-  const description = (posts[0] && posts[0].body ? posts[0].body : thread.title || "").slice(0, 120);
+    const ua = req.headers["user-agent"] || "";
+    const isBot = BOT_UA_RE.test(ua);
 
-  const postsHtml = posts
-    .map(
-      (p) => `
+    // 人間のブラウザには、見慣れた本物のサイト画面をそのまま見せる
+    if (!isBot) {
+      res.statusCode = 302;
+      res.setHeader("Location", `/#t=${id}`);
+      res.end();
+      return;
+    }
+
+    // ここから先はクローラー向け：読める形のHTMLを直接返す
+    const posts = await fetchPosts(id);
+    const tagLine = [thread.work_tag, thread.chara_tag].filter(Boolean).join(" ");
+    const pageTitle = `${thread.title}${tagLine ? `【${tagLine}】` : ""} - キャラ萌え速報`;
+    const description = (posts[0] && posts[0].body ? posts[0].body : thread.title || "").slice(0, 120);
+
+    const postsHtml = posts
+      .map(
+        (p) => `
       <div class="post">
         <div class="pname">${esc(p.name || "萌えてる匿名さん")}</div>
         <div class="pbody">${esc(p.body || "").replace(/\n/g, "<br>")}</div>
       </div>`
-    )
-    .join("");
+      )
+      .join("");
 
-  const html = `<!doctype html>
+    const html = `<!doctype html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -91,28 +112,22 @@ h1{font-size:19px;color:#c04a00;margin-bottom:4px}
 .post{border-bottom:1px solid #ecd2c2;padding:10px 0}
 .pname{font-size:12px;color:#888;margin-bottom:2px}
 .pbody{font-size:14px;white-space:pre-wrap}
-.cta{display:block;margin:16px 0;padding:12px;background:#e05a00;color:#fff;text-align:center;border-radius:6px;text-decoration:none;font-weight:bold}
 .back{display:inline-block;margin-top:16px;color:#c04a00}
 </style>
 </head>
 <body>
 <h1>${esc(thread.title)}</h1>
 ${tagLine ? `<div class="tags">${esc(tagLine)}</div>` : ""}
-<a class="cta" href="/#t=${id}">このスレッドに返信・いいねする →</a>
 <div class="posts">${postsHtml}</div>
 <a class="back" href="/">← キャラ萌え速報 トップへ</a>
-<script>
-  // 検索エンジン向けにはここまでの文章がそのまま読まれる。
-  // 実際のブラウザ(人間)には、ここから先は普段通りのサイト(#t=ID)へ即座に切り替える
-  location.replace("/#t=${id}");
-</script>
 </body>
 </html>`;
 
-  res.statusCode = 200;
-  res.setHeader("Content-Type", "text/html; charset=utf-8");
-  res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=600");
-  res.end(html);
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=600");
+    res.setHeader("Vary", "User-Agent");
+    res.end(html);
   } catch (e) {
     console.error(e);
     res.statusCode = 500;
