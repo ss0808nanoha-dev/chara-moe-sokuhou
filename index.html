@@ -2031,7 +2031,7 @@ function renderList(){
       var btnLabel=t2.titleTranslating?"…":((t2.showTitleTl&&t2.titleTranslated)?"🔼":"🌐");
       var tlBtn=canTl?'<span class="tl-btn" style="margin-left:4px;padding:1px 6px;flex-shrink:0" onclick="event.stopPropagation();A.translateTitle(this.dataset.tid)" data-tid="'+esc(t2.id)+'" title="'+esc(t("translate"))+'">'+btnLabel+'</span>':"";
       var rThumb=t2.thumbUrl?'<img class="rank-thumb" src="'+esc(t2.thumbUrl)+'" alt="" loading="lazy">':"";
-      return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span><span class="rank-name"><a href="#t='+esc(t2.id)+'" onclick="A.openT(this.dataset.id);return false;" data-id="'+esc(t2.id)+'">'+esc(titleShown)+'</a></span>'+tlBtn+rThumb+'<span class="rank-val">'+t2.posts.length+t("res_unit")+'</span></div>';
+      return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span><span class="rank-name"><a href="/t/'+esc(t2.id)+'" onclick="A.openT(this.dataset.id);return false;" data-id="'+esc(t2.id)+'">'+esc(titleShown)+'</a></span>'+tlBtn+rThumb+'<span class="rank-val">'+t2.posts.length+t("res_unit")+'</span></div>';
     }).join(""):'<div class="rank-item" style="color:#bbb;font-size:11px">'+t("no_data")+'</div>';
     var wkH=r.workRank.length?r.workRank.map(function(x,i){
       var wt=repThumbForWork(x.name);
@@ -2058,7 +2058,7 @@ function renderList(){
     var badges=makeBadges(t2.tags,t2.cat);
     var canTlTitle=(t2.titleLang||"ja")!==(uiLang||"ja");
     var tlTitleBtn=canTlTitle?'<span class="tl-btn" onclick="event.stopPropagation();A.translateTitle(this.dataset.tid)" data-tid="'+esc(t2.id)+'">'+(t2.titleTranslating?t("tl_translating"):(t2.showTitleTl&&t2.titleTranslated?t("show_original"):t("translate")))+'</span>':"";
-    return '<a class="th-item'+(t2.cautionReason?" caution":"")+'" href="#t='+esc(t2.id)+'" onclick="A.openT(this.dataset.id);return false;" data-id="'+esc(t2.id)+'">'+
+    return '<a class="th-item'+(t2.cautionReason?" caution":"")+'" href="'+(t2.cautionReason?"#t="+esc(t2.id):"/t/"+esc(t2.id))+'" onclick="A.openT(this.dataset.id);return false;" data-id="'+esc(t2.id)+'">'+
       ((badges||t2.cautionReason)?'<div class="th-badges">'+(t2.cautionReason?'<span class="caution-badge">'+t("caution_badge")+'</span>':"")+badges+'</div>':"")+
       '<div class="th-top"><div class="th-title">'+esc(t2.title)+(isK?'<span class="kanso-badge">'+t("kanso_badge")+'</span>':"")+tlTitleBtn+
       '</div>'+(t2.thumbUrl?'<img class="th-thumb" src="'+esc(t2.thumbUrl)+'" alt="" loading="lazy">':"")+'<span class="th-res">'+t2.posts.length+t("res_unit")+'</span></div>'+
