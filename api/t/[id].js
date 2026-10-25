@@ -34,10 +34,11 @@ async function fetchPosts(id) {
 }
 
 module.exports = async function handler(req, res) {
+  try {
   const id = Number(req.query.id);
   if (!id) {
     res.statusCode = 404;
-    res.end("Not found");
+    res.end("Not found: " + JSON.stringify(req.query));
     return;
   }
 
@@ -107,4 +108,9 @@ ${tagLine ? `<div class="tags">${esc(tagLine)}</div>` : ""}
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=600");
   res.end(html);
+  } catch (e) {
+    res.statusCode = 500;
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    res.end("DEBUG ERROR: " + (e && e.stack || e));
+  }
 };
