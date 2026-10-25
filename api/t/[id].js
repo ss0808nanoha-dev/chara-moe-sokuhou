@@ -101,6 +101,11 @@ ${tagLine ? `<div class="tags">${esc(tagLine)}</div>` : ""}
 <a class="cta" href="/#t=${id}">このスレッドに返信・いいねする →</a>
 <div class="posts">${postsHtml}</div>
 <a class="back" href="/">← キャラ萌え速報 トップへ</a>
+<script>
+  // 検索エンジン向けにはここまでの文章がそのまま読まれる。
+  // 実際のブラウザ(人間)には、ここから先は普段通りのサイト(#t=ID)へ即座に切り替える
+  location.replace("/#t=${id}");
+</script>
 </body>
 </html>`;
 
