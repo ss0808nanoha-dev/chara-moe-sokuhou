@@ -27,7 +27,7 @@ async function fetchThread(id) {
 
 async function fetchPosts(id) {
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/posts?thread_id=eq.${id}&deleted=eq.false&select=name,body,ts&order=id.asc&limit=50`,
+    `${SUPABASE_URL}/rest/v1/posts?thread_id=eq.${id}&deleted=eq.false&select=name,body,created_at&order=id.asc&limit=50`,
     { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
   );
   return res.json();
