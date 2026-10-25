@@ -15,8 +15,9 @@ const SUPABASE_URL = "https://xflcbgsonmvvzbefbreq.supabase.co";
 const SUPABASE_KEY = "sb_publishable_in8cVtZwe3SbE0l6Y3Jf2Q_awVX6mJY";
 const SITE_URL = "https://chara-moe-sokuhou.com";
 
-// 主要な検索エンジン・SNSのクローラーのUser-Agent（カード表示用にSNSのbotも含める）
-const BOT_UA_RE = /bot|crawl|spider|slurp|googlebot|bingbot|yandex|baiduspider|duckduckbot|facebookexternalhit|twitterbot|threadsbot|discordbot|slackbot|telegrambot|whatsapp|linkedinbot/i;
+// 主要な検索エンジン・SNS・各種ツールのクローラーのUser-Agent（カード表示用のSNS botや、
+// Search Console「URL検査」が使うGoogle-InspectionToolのような、"bot"を含まない名前も含める）
+const BOT_UA_RE = /bot|crawl|spider|slurp|inspectiontool|googlebot|google-inspectiontool|adsbot-google|mediapartners-google|google-read-aloud|storebot-google|bingbot|yandex|baiduspider|duckduckbot|facebookexternalhit|twitterbot|threadsbot|discordbot|slackbot|telegrambot|whatsapp|linkedinbot|pinterest|redditbot|semrushbot|ahrefsbot|mj12bot|dotbot|gptbot|chatgpt-user|oai-searchbot|perplexitybot|ccbot|bytespider|applebot|petalbot|lighthouse|headlesschrome/i;
 
 function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({
