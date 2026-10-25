@@ -2580,8 +2580,15 @@ async function reply(){
    ============================================================ */
 function boot(){
   if(!uiLang){
-    /* 初回アクセス: 言語選択ポップを表示。選択後 loadAll() */
-    var lm=document.getElementById("lang-modal");if(lm)lm.classList.add("on");
+    /* 初回アクセス: 言語選択は省略し日本語に固定、注意書きだけ表示する
+       （言語切替は従来通りヘッダーのボタンからいつでも可能） */
+    uiLang="ja";
+    lsSet("kmh_ui_lang","ja");
+    lsSet("kmh_post_lang","ja");
+    document.documentElement.lang="ja";
+    var nt=document.getElementById("notice-text");if(nt)nt.textContent=t("notice");
+    var ob=document.getElementById("notice-ok-btn");if(ob)ob.textContent=t("notice_ok");
+    var nm=document.getElementById("notice-modal");if(nm)nm.classList.add("on");
   }else{
     document.documentElement.lang=uiLang;
     applyStaticI18n();
