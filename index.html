@@ -2579,22 +2579,18 @@ async function reply(){
    起動処理
    ============================================================ */
 function boot(){
+  /* 初回アクセスでもポップアップ(言語選択・注意書き)は一切出さず、
+     日本語のまま即座にサイト本体を表示する
+     （言語切替は従来通りヘッダーのボタンからいつでも可能） */
   if(!uiLang){
-    /* 初回アクセス: 言語選択は省略し日本語に固定、注意書きだけ表示する
-       （言語切替は従来通りヘッダーのボタンからいつでも可能） */
     uiLang="ja";
     lsSet("kmh_ui_lang","ja");
     lsSet("kmh_post_lang","ja");
-    document.documentElement.lang="ja";
-    var nt=document.getElementById("notice-text");if(nt)nt.textContent=t("notice");
-    var ob=document.getElementById("notice-ok-btn");if(ob)ob.textContent=t("notice_ok");
-    var nm=document.getElementById("notice-modal");if(nm)nm.classList.add("on");
-  }else{
-    document.documentElement.lang=uiLang;
-    applyStaticI18n();
-    loadAll();
-    startPolling();
   }
+  document.documentElement.lang=uiLang;
+  applyStaticI18n();
+  loadAll();
+  startPolling();
 }
 boot();
 
