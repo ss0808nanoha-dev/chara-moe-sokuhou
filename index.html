@@ -251,8 +251,9 @@ body.admin #contact-form label{color:#ff9966}
 .appear-cancel-btn{font-size:11px;padding:5px 14px;border:1px solid #ccc;background:#fff;color:#888;border-radius:2px;cursor:pointer}
 .appear-loading,.appear-empty{padding:14px 10px;font-size:11px;color:#bbb;text-align:center}
 .appear-list{display:flex;flex-direction:column}
-.appear-item{display:flex;align-items:center;gap:6px;padding:7px 10px;border-bottom:1px solid #ecd2c2;font-size:12px}
-.appear-item:last-child{border-bottom:none}
+.appear-item-wrap{border-bottom:1px solid #ecd2c2}
+.appear-item-wrap:last-child{border-bottom:none}
+.appear-item{display:flex;align-items:center;gap:6px;padding:7px 10px 4px;font-size:12px}
 .appear-rank{font-weight:900;color:#e05a00;width:16px;flex-shrink:0;font-size:12px;text-align:center}
 .appear-body{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden}
 .appear-label{font-weight:700;color:#333;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -261,6 +262,17 @@ body.admin #contact-form label{color:#ff9966}
 .appear-vote-btn{font-size:11px;border:1px solid #ddd;padding:3px 10px;color:#aaa;border-radius:2px;background:#fff;cursor:pointer;flex-shrink:0}
 .appear-vote-btn.voted{border-color:#e05a00;color:#e05a00;font-weight:700;cursor:default}
 .appear-del{font-size:11px;color:#c00;cursor:pointer;flex-shrink:0;margin-left:2px}
+.appear-delreq-btn{display:block;padding:0 10px 8px 32px;font-size:11px;color:#bbb;cursor:pointer}
+.appear-delreq-btn:hover{color:#c00}
+.appear-delreq{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:0 10px 8px 32px;font-size:11px}
+.appear-delreq-reason{color:#c00;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.appear-delreq-status{color:#999;flex-shrink:0}
+.appear-delreq-vote-btn{font-size:11px;border:1px solid #c00;color:#c00;background:#fff;padding:2px 8px;border-radius:2px;cursor:pointer;flex-shrink:0}
+.appear-delreq-vote-btn:hover{background:#c00;color:#fff}
+.appear-delreq-form{padding:0 10px 8px 32px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.appear-delreq-form input{font-size:11px;padding:5px 8px;border:1px solid #e0c0a0;border-radius:2px;flex:1;min-width:140px;box-sizing:border-box;font-family:inherit}
+.appear-delreq-form .appear-submit-btn{padding:5px 10px}
+.appear-delreq-form .appear-cancel-btn{padding:5px 10px}
 .ad-block{margin:10px 0;padding:10px 12px;background:#fff;border:1px solid #e8d0c0;border-radius:4px}
 .ad-label{font-size:10px;color:#aaa;text-align:center;letter-spacing:2px;margin-bottom:8px;border-bottom:1px dashed #e8d0c0;padding-bottom:5px}
 .rakuten-ad{margin:8px 0;display:flex;justify-content:center;gap:8px;align-items:flex-start}
@@ -381,13 +393,19 @@ body.admin .appear-form{border-bottom-color:#4a4a4a}
 body.admin .appear-form input{background:#333;border-color:#555;color:#eee}
 body.admin .appear-cancel-btn{background:#2a2a2a;color:#aaa;border-color:#555}
 body.admin .appear-loading,body.admin .appear-empty{color:#888}
-body.admin .appear-item{border-bottom-color:#4a4a4a}
+body.admin .appear-item-wrap{border-bottom-color:#4a4a4a}
 body.admin .appear-label{color:#e0e0e0}
 body.admin .appear-note{color:#888}
 body.admin .appear-vote-cnt{color:#888}
 body.admin .appear-vote-btn{background:#333;color:#bbb;border-color:#555}
 body.admin .appear-vote-btn.voted{background:#cc4422;color:#fff;border-color:#cc4422}
 body.admin .appear-add-btn{background:#2a2a2a;color:#ff9966;border-color:#cc4422}
+body.admin .appear-delreq-btn{color:#777}
+body.admin .appear-delreq-reason{color:#ff6666}
+body.admin .appear-delreq-status{color:#888}
+body.admin .appear-delreq-vote-btn{background:#333;color:#ff6666;border-color:#884444}
+body.admin .appear-delreq-vote-btn:hover{background:#cc4422;color:#fff}
+body.admin .appear-delreq-form input{background:#333;border-color:#555;color:#eee}
 body.admin .empty{color:#888}
 body.admin .opbg{background:#cc4422}
 body.admin .medal-post{background:#2a2515;border-left-color:#ffaa44}
@@ -815,7 +833,14 @@ var I18N={
     appear_empty:"まだ登場回の投稿がありません。最初の投稿をしてみよう！",
     appear_vote:"👍 投票", appear_voted:"✅ 投票済",
     appear_label_err:"登場回を入力してください。",
-    appear_fail_add:"投稿に失敗しました: ", appear_fail_vote:"投票に失敗しました: "
+    appear_fail_add:"投稿に失敗しました: ", appear_fail_vote:"投票に失敗しました: ",
+    appear_delreq_btn:"🗑 削除依頼", appear_delreq_pending:"削除依頼中", appear_delreq_voted:"賛成済み",
+    appear_delreq_vote:"⚠️ 削除に賛成",
+    appear_delreq_reason_ph:"削除してほしい理由（例：間違えて登録してしまいました）",
+    appear_delreq_submit:"依頼する", appear_delreq_cancel:"キャンセル",
+    appear_delreq_reason_err:"理由を入力してください。",
+    appear_delreq_dup:"このレスにはすでに削除依頼が出ています。",
+    appear_delreq_fail:"削除依頼に失敗しました: ", appear_delreq_vote_fail:"操作に失敗しました: "
   },
   en:{
     new_thread:"+ New Thread", close_form:"▲ Close", form_h2:"■ Create a New Thread",
@@ -882,7 +907,14 @@ var I18N={
     appear_empty:"No episodes yet. Be the first to add one!",
     appear_vote:"👍 Vote", appear_voted:"✅ Voted",
     appear_label_err:"Please enter an episode.",
-    appear_fail_add:"Failed to submit: ", appear_fail_vote:"Failed to vote: "
+    appear_fail_add:"Failed to submit: ", appear_fail_vote:"Failed to vote: ",
+    appear_delreq_btn:"🗑 Request removal", appear_delreq_pending:"Removal requested", appear_delreq_voted:"You agreed",
+    appear_delreq_vote:"⚠️ Agree to remove",
+    appear_delreq_reason_ph:"Reason for removal (e.g. Added by mistake)",
+    appear_delreq_submit:"Request", appear_delreq_cancel:"Cancel",
+    appear_delreq_reason_err:"Please enter a reason.",
+    appear_delreq_dup:"This entry already has a pending removal request.",
+    appear_delreq_fail:"Failed to request removal: ", appear_delreq_vote_fail:"Action failed: "
   },
   ko:{
     new_thread:"+ 새 글 작성", close_form:"▲ 닫기", form_h2:"■ 새 스레드 작성",
@@ -949,7 +981,14 @@ var I18N={
     appear_empty:"아직 등록된 등장회가 없습니다. 첫 등록을 해보세요!",
     appear_vote:"👍 투표", appear_voted:"✅ 투표완료",
     appear_label_err:"등장회를 입력해 주세요.",
-    appear_fail_add:"등록에 실패했습니다: ", appear_fail_vote:"투표에 실패했습니다: "
+    appear_fail_add:"등록에 실패했습니다: ", appear_fail_vote:"투표에 실패했습니다: ",
+    appear_delreq_btn:"🗑 삭제 요청", appear_delreq_pending:"삭제 요청 중", appear_delreq_voted:"찬성함",
+    appear_delreq_vote:"⚠️ 삭제 찬성",
+    appear_delreq_reason_ph:"삭제 이유 (예: 실수로 등록했습니다)",
+    appear_delreq_submit:"요청하기", appear_delreq_cancel:"취소",
+    appear_delreq_reason_err:"이유를 입력해 주세요.",
+    appear_delreq_dup:"이미 이 항목에 삭제 요청이 있습니다.",
+    appear_delreq_fail:"삭제 요청에 실패했습니다: ", appear_delreq_vote_fail:"작업에 실패했습니다: "
   }
 };
 
@@ -977,11 +1016,13 @@ var CHARA_ALIASES={
 };
 var TC={"週刊少年ジャンプ":"#cc0000","週刊少年マガジン":"#1a56a0","週刊少年サンデー":"#2e7d32","少年チャンピオン":"#e65100","ジャンプ＋":"#880044","その他漫画":"#555","アニメ":"#6a1a6a","ゲーム":"#1565c0"};
 var KANSO=200;
+var DELREQ_THRESHOLD=3; /* 削除依頼: 依頼者以外の3人が賛成すると削除される */
 var st={thread:null,cat:"すべて",q:"",sort:"new"};
 var th=[];
 /* キャラごとの「登場回・活躍回」投稿(キャラタグ名 → {loading,list}) */
 var appearanceCache={};
 var appearanceFormOpenFor=null;
+var deleteReqFormOpenFor=null;
 var loading=true;
 var fMag="",fWork="",fChara="";
 
@@ -2162,7 +2203,7 @@ function renderAppearanceBox(charaTag){
   }else{
     html+='<div class="appear-list">'+cache.list.map(function(a,i){
       var voted=!!a.votedByMe;
-      return '<div class="appear-item">'+
+      var itemHtml='<div class="appear-item">'+
         '<span class="appear-rank">'+(i+1)+'</span>'+
         '<div class="appear-body"><span class="appear-label">'+esc(a.label)+'</span>'+
         (a.note?'<span class="appear-note">'+esc(a.note)+'</span>':"")+'</div>'+
@@ -2170,6 +2211,27 @@ function renderAppearanceBox(charaTag){
         '<button class="appear-vote-btn'+(voted?" voted":"")+'" onclick="A.voteAppearance(this.dataset.id,this.dataset.c)" data-id="'+esc(a.id)+'" data-c="'+esc(charaTag)+'">'+(voted?t("appear_voted"):t("appear_vote"))+'</button>'+
         (adminMode?'<span class="appear-del" onclick="A.deleteAppearance(this.dataset.id,this.dataset.c)" data-id="'+esc(a.id)+'" data-c="'+esc(charaTag)+'">'+t("del")+'</span>':"")+
         '</div>';
+      var subHtml='';
+      if(a.delReq){
+        var isRequester=a.delReq.uid===myIp;
+        var dVoted=a.delReq.votedByMe;
+        var cnt=a.delReq.voteCount+'/'+DELREQ_THRESHOLD;
+        subHtml='<div class="appear-delreq">'+
+          '<span class="appear-delreq-reason">🗑 '+esc(a.delReq.reason)+'</span>'+
+          (isRequester?'<span class="appear-delreq-status">'+t("appear_delreq_pending")+'('+cnt+')</span>':
+            dVoted?'<span class="appear-delreq-status">'+t("appear_delreq_voted")+'('+cnt+')</span>':
+            '<button class="appear-delreq-vote-btn" onclick="A.voteDeleteAppearance(this.dataset.rid,this.dataset.id,this.dataset.c)" data-rid="'+esc(a.delReq.id)+'" data-id="'+esc(a.id)+'" data-c="'+esc(charaTag)+'">'+t("appear_delreq_vote")+'('+cnt+')</button>')+
+          '</div>';
+      }else if(deleteReqFormOpenFor===a.id){
+        subHtml='<div class="appear-delreq-form">'+
+          '<input type="text" id="delreq-reason-inp" maxlength="200" placeholder="'+esc(t("appear_delreq_reason_ph"))+'">'+
+          '<button class="appear-submit-btn" onclick="A.submitDeleteRequest(this.dataset.id,this.dataset.c)" data-id="'+esc(a.id)+'" data-c="'+esc(charaTag)+'">'+t("appear_delreq_submit")+'</button>'+
+          '<button class="appear-cancel-btn" onclick="A.toggleDeleteRequestForm(this.dataset.id)" data-id="'+esc(a.id)+'">'+t("appear_delreq_cancel")+'</button>'+
+          '</div>';
+      }else{
+        subHtml='<span class="appear-delreq-btn" onclick="A.toggleDeleteRequestForm(this.dataset.id)" data-id="'+esc(a.id)+'">'+t("appear_delreq_btn")+'</span>';
+      }
+      return '<div class="appear-item-wrap">'+itemHtml+subHtml+'</div>';
     }).join("")+'</div>';
   }
   return html+'</div>';
@@ -2180,19 +2242,44 @@ async function loadAppearances(charaTag){
     if(aRes.error) throw aRes.error;
     var rows=aRes.data||[];
     var ids=rows.map(function(r){return r.id;});
-    var votes=[];
+    var votes=[],delReqs=[],delVotes=[];
     if(ids.length){
       var vRes=await sb.from("chara_appearance_votes").select("appearance_id,uid").in("appearance_id",ids);
       if(vRes.error) throw vRes.error;
       votes=vRes.data||[];
+      /* 削除依頼テーブルは後から追加されたので、未作成の環境でも登場回一覧自体は出せるように
+         ここだけ失敗を握りつぶす(新しいテーブルが無ければ削除依頼機能が出ないだけ) */
+      try{
+        var drRes=await sb.from("chara_appearance_delete_requests").select("*").in("appearance_id",ids);
+        if(drRes.error) throw drRes.error;
+        delReqs=drRes.data||[];
+        var reqIds=delReqs.map(function(r){return r.id;});
+        if(reqIds.length){
+          var dvRes=await sb.from("chara_appearance_delete_votes").select("request_id,uid").in("request_id",reqIds);
+          if(dvRes.error) throw dvRes.error;
+          delVotes=dvRes.data||[];
+        }
+      }catch(e2){
+        delReqs=[];delVotes=[];
+        console.error("loadAppearances (delete requests) error:",e2);
+      }
     }
     var voteCount={},votedMine={};
     votes.forEach(function(v){
       voteCount[v.appearance_id]=(voteCount[v.appearance_id]||0)+1;
       if(v.uid===myIp) votedMine[v.appearance_id]=true;
     });
+    var delVoteCount={},delVotedMine={};
+    delVotes.forEach(function(v){
+      delVoteCount[v.request_id]=(delVoteCount[v.request_id]||0)+1;
+      if(v.uid===myIp) delVotedMine[v.request_id]=true;
+    });
+    var delReqByAppearance={};
+    delReqs.forEach(function(r){
+      delReqByAppearance[r.appearance_id]={id:r.id,reason:r.reason,uid:r.uid,voteCount:delVoteCount[r.id]||0,votedByMe:!!delVotedMine[r.id]};
+    });
     var list=rows.map(function(r){
-      return{id:r.id,label:r.label,note:r.note,uid:r.uid,voteCount:voteCount[r.id]||0,votedByMe:!!votedMine[r.id]};
+      return{id:r.id,label:r.label,note:r.note,uid:r.uid,voteCount:voteCount[r.id]||0,votedByMe:!!votedMine[r.id],delReq:delReqByAppearance[r.id]||null};
     });
     list.sort(function(a,b){return b.voteCount-a.voteCount||a.id-b.id;});
     appearanceCache[charaTag]={loading:false,list:list};
@@ -2264,6 +2351,62 @@ async function deleteAppearance(id,charaTag){
     render();
   }catch(e){
     alert(t("fail_del")+(e.message||e));
+  }
+}
+/* 「間違えて登録した」などの削除依頼。依頼者以外の3人が賛成すると自動的に削除される */
+function toggleDeleteRequestForm(id){
+  id=Number(id);
+  deleteReqFormOpenFor=(deleteReqFormOpenFor===id)?null:id;
+  render();
+  if(deleteReqFormOpenFor){
+    setTimeout(function(){var el=document.getElementById("delreq-reason-inp"); if(el) el.focus();},50);
+  }
+}
+async function submitDeleteRequest(id,charaTag){
+  id=Number(id);
+  var inp=document.getElementById("delreq-reason-inp");
+  var reason=inp?inp.value.trim().slice(0,200):"";
+  if(!reason){ alert(t("appear_delreq_reason_err")); return; }
+  try{
+    var res=await sb.from("chara_appearance_delete_requests").insert({appearance_id:id,reason:reason,uid:myIp}).select().single();
+    if(res.error) throw res.error;
+    var row=res.data;
+    var cache=appearanceCache[charaTag];
+    if(cache){
+      for(var i=0;i<cache.list.length;i++){
+        if(cache.list[i].id===id){ cache.list[i].delReq={id:row.id,reason:row.reason,uid:row.uid,voteCount:0,votedByMe:false}; break; }
+      }
+    }
+    deleteReqFormOpenFor=null;
+    render();
+  }catch(e){
+    if(e.code==="23505"){ deleteReqFormOpenFor=null; alert(t("appear_delreq_dup")); render(); return; }
+    alert(t("appear_delreq_fail")+(e.message||e));
+  }
+}
+async function voteDeleteAppearance(requestId,appearanceId,charaTag){
+  requestId=Number(requestId); appearanceId=Number(appearanceId);
+  var cache=appearanceCache[charaTag];
+  if(!cache) return;
+  var item=null;
+  for(var i=0;i<cache.list.length;i++){ if(cache.list[i].id===appearanceId){item=cache.list[i];break;} }
+  if(!item||!item.delReq||item.delReq.votedByMe||item.delReq.uid===myIp) return;
+  try{
+    var res=await sb.from("chara_appearance_delete_votes").insert({request_id:requestId,uid:myIp});
+    if(res.error){
+      if(res.error.code==="23505"){ item.delReq.votedByMe=true; render(); return; }
+      throw res.error;
+    }
+    item.delReq.votedByMe=true;
+    item.delReq.voteCount=(item.delReq.voteCount||0)+1;
+    if(item.delReq.voteCount>=DELREQ_THRESHOLD){
+      var delRes=await sb.from("chara_appearances").delete().eq("id",appearanceId);
+      if(delRes.error) throw delRes.error;
+      cache.list=cache.list.filter(function(a){return a.id!==appearanceId;});
+    }
+    render();
+  }catch(e){
+    alert(t("appear_delreq_vote_fail")+(e.message||e));
   }
 }
 
@@ -2802,7 +2945,8 @@ return{top:top,cat:cat,openT:openT,loadNew:loadNew,toggleForm:toggleForm,submit:
   setWork:setWork,setChara:setChara,renderTagUI:renderTagUI,showSuggest:showSuggest,pickSuggest:pickSuggest,
   sortBy:sortBy,showDoc:showDoc,hideDoc:hideDoc,toggleRules:toggleRules,recoverOp:recoverOp,setOpPassword:setOpPassword,setCaution:setCaution,acceptCaution:acceptCaution,editTags:editTags,
   chooseLang:chooseLang,acceptNotice:acceptNotice,setLang:setLang,translatePost:translatePost,translateTitle:translateTitle,logoTap:logoTap,previewThumb:previewThumb,anchor:anchor,jumpTo:jumpTo,popAnchor:popAnchor,popHide:popHide,
-  toggleAppearanceForm:toggleAppearanceForm,submitAppearance:submitAppearance,voteAppearance:voteAppearance,deleteAppearance:deleteAppearance};
+  toggleAppearanceForm:toggleAppearanceForm,submitAppearance:submitAppearance,voteAppearance:voteAppearance,deleteAppearance:deleteAppearance,
+  toggleDeleteRequestForm:toggleDeleteRequestForm,submitDeleteRequest:submitDeleteRequest,voteDeleteAppearance:voteDeleteAppearance};
 })();
 </script>
 </body>
