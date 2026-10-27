@@ -65,10 +65,17 @@ module.exports = async function handler(req, res) {
     }
 
     // ここから先はクローラー向け：登場回・活躍回ランキングとスレ一覧を直接返す
-    const appearances = await sbGet(
-      `chara_appearances?chara_tag=eq.${encodeURIComponent(name)}&select=id,label,note&order=id.asc&limit=200`
+    // media_type/volume列は後から追加したので、未作成の環境でもページ自体は出せるようフォールバックする
+    let appearances = await sbGet(
+      `chara_appearances?chara_tag=eq.${encodeURIComponent(name)}&select=id,label,note,media_type,volume&order=id.asc&limit=200`
     );
-    const appearanceIds = (appearances || []).map((a) => a.id);
+    if (!Array.isArray(appearances)) {
+      appearances = await sbGet(
+        `chara_appearances?chara_tag=eq.${encodeURIComponent(name)}&select=id,label,note&order=id.asc&limit=200`
+      );
+    }
+    if (!Array.isArray(appearances)) appearances = [];
+    const appearanceIds = appearances.map((a) => a.id);
     let voteCount = {};
     if (appearanceIds.length) {
       const votes = await sbGet(
@@ -78,7 +85,7 @@ module.exports = async function handler(req, res) {
         voteCount[v.appearance_id] = (voteCount[v.appearance_id] || 0) + 1;
       });
     }
-    const rankedAppearances = (appearances || [])
+    const rankedAppearances = appearances
       .map((a) => ({ ...a, votes: voteCount[a.id] || 0 }))
       .sort((a, b) => b.votes - a.votes || a.id - b.id);
 
@@ -87,12 +94,17 @@ module.exports = async function handler(req, res) {
       ? `${name}が活躍した回・登場回を、ファンの投票でランキング。${rankedAppearances.slice(0, 3).map((a) => a.label).join("、")}など。`
       : `${name}の関連スレッド・感想一覧。${threads.slice(0, 3).map((t) => t.title).join("、")}など。`;
 
+    const mediaTag = (a) => {
+      if (a.media_type === "anime") return "📺アニメ";
+      if (a.media_type === "manga") return `📖漫画${a.volume ? ` ${a.volume}巻` : ""}`;
+      return "";
+    };
     const appearancesHtml = rankedAppearances.length
       ? `<h2>登場回・活躍回ランキング</h2>
 <ol class="appear-list">${rankedAppearances
           .map(
             (a) => `
-  <li><span class="label">${esc(a.label)}</span>${a.note ? `<span class="note"> - ${esc(a.note)}</span>` : ""}<span class="votes">(${a.votes}票)</span></li>`
+  <li>${mediaTag(a) ? `<span class="media">${esc(mediaTag(a))}</span> ` : ""}<span class="label">${esc(a.label)}</span>${a.note ? `<span class="note"> - ${esc(a.note)}</span>` : ""}<span class="votes">(${a.votes}票)</span></li>`
           )
           .join("")}
 </ol>`
@@ -124,6 +136,7 @@ h2{font-size:15px;color:#e05a00;margin-top:24px;border-bottom:2px solid #e05a00;
 .appear-list{padding-left:22px}
 .appear-list li{margin-bottom:6px;font-size:14px}
 .appear-list .note{color:#888;font-size:13px}
+.appear-list .media{font-size:11px;background:#fff0e0;color:#c04a00;border-radius:999px;padding:1px 7px;margin-right:2px}
 .appear-list .votes{color:#c04a00;font-size:12px;margin-left:4px}
 .thread-list{list-style:none;padding:0}
 .thread-list li{border-bottom:1px solid #ecd2c2;padding:8px 0}
