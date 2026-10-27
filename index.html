@@ -246,6 +246,7 @@ body.admin #contact-form label{color:#ff9966}
 .appear-hdr{background:#e05a00;color:#fff;font-size:12px;font-weight:700;padding:6px 10px}
 .appear-form{padding:8px 10px;border-bottom:1px solid #ecd2c2;display:flex;flex-direction:column;gap:6px}
 .appear-form input{font-size:12px;padding:6px 8px;border:1px solid #e0c0a0;border-radius:2px;width:100%;box-sizing:border-box;font-family:inherit}
+.appear-pass-help{font-size:10px;color:#aaa}
 .appear-form-btns{display:flex;gap:6px}
 .appear-submit-btn{font-size:11px;padding:5px 14px;border:1px solid #e05a00;background:#e05a00;color:#fff;border-radius:2px;cursor:pointer;font-weight:700}
 .appear-cancel-btn{font-size:11px;padding:5px 14px;border:1px solid #ccc;background:#fff;color:#888;border-radius:2px;cursor:pointer}
@@ -262,6 +263,10 @@ body.admin #contact-form label{color:#ff9966}
 .appear-vote-btn{font-size:11px;border:1px solid #ddd;padding:3px 10px;color:#aaa;border-radius:2px;background:#fff;cursor:pointer;flex-shrink:0}
 .appear-vote-btn.voted{border-color:#e05a00;color:#e05a00;font-weight:700;cursor:default}
 .appear-del{font-size:11px;color:#c00;cursor:pointer;flex-shrink:0;margin-left:2px}
+.appear-edit{font-size:11px;color:#888;cursor:pointer;flex-shrink:0}
+.appear-edit:hover{color:#e05a00}
+.appear-edit-pass{font-size:11px;color:#bbb;cursor:pointer;flex-shrink:0}
+.appear-edit-pass:hover{color:#e05a00}
 .appear-delreq-btn{display:block;padding:0 10px 8px 32px;font-size:11px;color:#bbb;cursor:pointer}
 .appear-delreq-btn:hover{color:#c00}
 .appear-delreq{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:0 10px 8px 32px;font-size:11px}
@@ -406,6 +411,11 @@ body.admin .appear-delreq-status{color:#888}
 body.admin .appear-delreq-vote-btn{background:#333;color:#ff6666;border-color:#884444}
 body.admin .appear-delreq-vote-btn:hover{background:#cc4422;color:#fff}
 body.admin .appear-delreq-form input{background:#333;border-color:#555;color:#eee}
+body.admin .appear-pass-help{color:#777}
+body.admin .appear-edit{color:#aaa}
+body.admin .appear-edit:hover{color:#ff9966}
+body.admin .appear-edit-pass{color:#777}
+body.admin .appear-edit-pass:hover{color:#ff9966}
 body.admin .empty{color:#888}
 body.admin .opbg{background:#cc4422}
 body.admin .medal-post{background:#2a2515;border-left-color:#ffaa44}
@@ -840,7 +850,14 @@ var I18N={
     appear_delreq_submit:"依頼する", appear_delreq_cancel:"キャンセル",
     appear_delreq_reason_err:"理由を入力してください。",
     appear_delreq_dup:"このレスにはすでに削除依頼が出ています。",
-    appear_delreq_fail:"削除依頼に失敗しました: ", appear_delreq_vote_fail:"操作に失敗しました: "
+    appear_delreq_fail:"削除依頼に失敗しました: ", appear_delreq_vote_fail:"操作に失敗しました: ",
+    appear_pass_ph:"🔑 編集用合言葉（任意・4文字以上）",
+    appear_pass_help:"💡 別の端末からこの登場回を編集したい場合に必要です。",
+    appear_edit:"✏️ 編集", appear_edit_pass:"🔑 合言葉で編集",
+    appear_edit_label_prompt:"登場回を編集：", appear_edit_note_prompt:"コメントを編集（空欄でもOK）：",
+    appear_edit_fail:"編集に失敗しました: ",
+    appear_verify_prompt:"投稿時に設定した合言葉を入力してください：",
+    appear_verify_none:"この登場回には合言葉が設定されていません。"
   },
   en:{
     new_thread:"+ New Thread", close_form:"▲ Close", form_h2:"■ Create a New Thread",
@@ -914,7 +931,14 @@ var I18N={
     appear_delreq_submit:"Request", appear_delreq_cancel:"Cancel",
     appear_delreq_reason_err:"Please enter a reason.",
     appear_delreq_dup:"This entry already has a pending removal request.",
-    appear_delreq_fail:"Failed to request removal: ", appear_delreq_vote_fail:"Action failed: "
+    appear_delreq_fail:"Failed to request removal: ", appear_delreq_vote_fail:"Action failed: ",
+    appear_pass_ph:"🔑 Edit passphrase (optional, 4+ chars)",
+    appear_pass_help:"💡 Needed to edit this entry from another device.",
+    appear_edit:"✏️ Edit", appear_edit_pass:"🔑 Edit with passphrase",
+    appear_edit_label_prompt:"Edit the episode:", appear_edit_note_prompt:"Edit the comment (can be blank):",
+    appear_edit_fail:"Failed to edit: ",
+    appear_verify_prompt:"Enter the passphrase you set when posting:",
+    appear_verify_none:"No passphrase is set for this entry."
   },
   ko:{
     new_thread:"+ 새 글 작성", close_form:"▲ 닫기", form_h2:"■ 새 스레드 작성",
@@ -988,7 +1012,14 @@ var I18N={
     appear_delreq_submit:"요청하기", appear_delreq_cancel:"취소",
     appear_delreq_reason_err:"이유를 입력해 주세요.",
     appear_delreq_dup:"이미 이 항목에 삭제 요청이 있습니다.",
-    appear_delreq_fail:"삭제 요청에 실패했습니다: ", appear_delreq_vote_fail:"작업에 실패했습니다: "
+    appear_delreq_fail:"삭제 요청에 실패했습니다: ", appear_delreq_vote_fail:"작업에 실패했습니다: ",
+    appear_pass_ph:"🔑 수정용 암호 (선택, 4자 이상)",
+    appear_pass_help:"💡 다른 기기에서 이 등장회를 수정하려면 필요합니다.",
+    appear_edit:"✏️ 수정", appear_edit_pass:"🔑 암호로 수정",
+    appear_edit_label_prompt:"등장회 수정:", appear_edit_note_prompt:"코멘트 수정(비워도 됨):",
+    appear_edit_fail:"수정에 실패했습니다: ",
+    appear_verify_prompt:"등록할 때 설정한 암호를 입력해 주세요:",
+    appear_verify_none:"이 등장회에는 암호가 설정되어 있지 않습니다."
   }
 };
 
@@ -2197,6 +2228,8 @@ function renderAppearanceBox(charaTag){
     html+='<div class="appear-form">'+
       '<input type="text" id="appear-label-inp" maxlength="60" placeholder="'+esc(t("appear_label_ph"))+'">'+
       '<input type="text" id="appear-note-inp" maxlength="200" placeholder="'+esc(t("appear_note_ph"))+'">'+
+      '<input type="text" id="appear-pass-inp" maxlength="40" placeholder="'+esc(t("appear_pass_ph"))+'">'+
+      '<div class="appear-pass-help">'+t("appear_pass_help")+'</div>'+
       '<div class="appear-form-btns">'+
       '<button class="appear-submit-btn" onclick="A.submitAppearance(this.dataset.c)" data-c="'+esc(charaTag)+'">'+t("appear_submit")+'</button>'+
       '<button class="appear-cancel-btn" onclick="A.toggleAppearanceForm(this.dataset.c)" data-c="'+esc(charaTag)+'">'+t("appear_cancel")+'</button>'+
@@ -2209,12 +2242,17 @@ function renderAppearanceBox(charaTag){
   }else{
     html+='<div class="appear-list">'+cache.list.map(function(a,i){
       var voted=!!a.votedByMe;
+      var canEdit=adminMode||a.uid===myIp||isVerifiedAppearance(a.id);
+      var editHtml=canEdit?
+        '<span class="appear-edit" onclick="A.editAppearance(this.dataset.id,this.dataset.c)" data-id="'+esc(a.id)+'" data-c="'+esc(charaTag)+'">'+t("appear_edit")+'</span>':
+        '<span class="appear-edit-pass" onclick="A.verifyAppearanceEdit(this.dataset.id,this.dataset.c)" data-id="'+esc(a.id)+'" data-c="'+esc(charaTag)+'">'+t("appear_edit_pass")+'</span>';
       var itemHtml='<div class="appear-item">'+
         '<span class="appear-rank">'+(i+1)+'</span>'+
         '<div class="appear-body"><span class="appear-label">'+esc(a.label)+'</span>'+
         (a.note?'<span class="appear-note">'+esc(a.note)+'</span>':"")+'</div>'+
         '<span class="appear-vote-cnt">'+a.voteCount+'</span>'+
         '<button class="appear-vote-btn'+(voted?" voted":"")+'" onclick="A.voteAppearance(this.dataset.id,this.dataset.c)" data-id="'+esc(a.id)+'" data-c="'+esc(charaTag)+'">'+(voted?t("appear_voted"):t("appear_vote"))+'</button>'+
+        editHtml+
         (adminMode?'<span class="appear-del" onclick="A.deleteAppearance(this.dataset.id,this.dataset.c)" data-id="'+esc(a.id)+'" data-c="'+esc(charaTag)+'">'+t("del")+'</span>':"")+
         '</div>';
       var subHtml='';
@@ -2244,7 +2282,8 @@ function renderAppearanceBox(charaTag){
 }
 async function loadAppearances(charaTag){
   try{
-    var aRes=await sb.from("chara_appearances").select("*").eq("chara_tag",charaTag).order("id",{ascending:true});
+    /* edit_password(編集用合言葉)は一覧取得では選ばない。合言葉での編集時に個別取得して照合する */
+    var aRes=await sb.from("chara_appearances").select("id,chara_tag,label,note,uid").eq("chara_tag",charaTag).order("id",{ascending:true});
     if(aRes.error) throw aRes.error;
     var rows=aRes.data||[];
     var ids=rows.map(function(r){return r.id;});
@@ -2305,11 +2344,14 @@ function toggleAppearanceForm(charaTag){
 async function submitAppearance(charaTag){
   var labelInp=document.getElementById("appear-label-inp");
   var noteInp=document.getElementById("appear-note-inp");
+  var passInp=document.getElementById("appear-pass-inp");
   var label=labelInp?labelInp.value.trim().slice(0,60):"";
   var note=noteInp?noteInp.value.trim().slice(0,200):"";
+  var pass=passInp?passInp.value.trim().slice(0,40):"";
   if(!label){ alert(t("appear_label_err")); return; }
+  if(pass&&pass.length<4){ alert(t("oppass_short")); return; }
   try{
-    var res=await sb.from("chara_appearances").insert({chara_tag:charaTag,label:label,note:note||null,uid:myIp}).select().single();
+    var res=await sb.from("chara_appearances").insert({chara_tag:charaTag,label:label,note:note||null,uid:myIp,edit_password:pass||null}).select("id,chara_tag,label,note,uid").single();
     if(res.error) throw res.error;
     var row=res.data;
     var cache=appearanceCache[charaTag]||{loading:false,list:[]};
@@ -2317,6 +2359,7 @@ async function submitAppearance(charaTag){
     cache.list.push({id:row.id,label:row.label,note:row.note,uid:row.uid,voteCount:0,votedByMe:false});
     cache.list.sort(function(a,b){return b.voteCount-a.voteCount||a.id-b.id;});
     appearanceCache[charaTag]=cache;
+    if(pass) addVerifiedAppearance(row.id); /* この端末では合言葉を入れ直さなくても編集できるようにしておく */
     appearanceFormOpenFor=null;
     render();
   }catch(e){
@@ -2414,6 +2457,53 @@ async function voteDeleteAppearance(requestId,appearanceId,charaTag){
   }catch(e){
     alert(t("appear_delreq_vote_fail")+(e.message||e));
   }
+}
+/* 登場回の編集: 投稿した本人(この端末)・合言葉で確認済みの端末・管理者が編集できる */
+function getVerifiedAppearances(){try{var v=lsGet("kmh_appear_verified");return v?JSON.parse(v):[];}catch(e){return [];}}
+function addVerifiedAppearance(id){
+  var list=getVerifiedAppearances();var s=String(id);
+  if(list.indexOf(s)<0){list.push(s);lsSet("kmh_appear_verified",JSON.stringify(list));}
+}
+function isVerifiedAppearance(id){return getVerifiedAppearances().indexOf(String(id))>=0;}
+async function editAppearance(id,charaTag){
+  id=Number(id);
+  var cache=appearanceCache[charaTag];
+  var item=cache?cache.list.filter(function(a){return a.id===id;})[0]:null;
+  if(!item) return;
+  var newLabel=prompt(t("appear_edit_label_prompt"),item.label);
+  if(newLabel===null) return;
+  newLabel=newLabel.trim().slice(0,60);
+  if(!newLabel){ alert(t("appear_label_err")); return; }
+  var newNote=prompt(t("appear_edit_note_prompt"),item.note||"");
+  if(newNote===null) return;
+  newNote=newNote.trim().slice(0,200);
+  try{
+    var res=await sb.from("chara_appearances").update({label:newLabel,note:newNote||null}).eq("id",id);
+    if(res.error) throw res.error;
+    item.label=newLabel;item.note=newNote||null;
+    render();
+  }catch(e){
+    alert(t("appear_edit_fail")+(e.message||e));
+  }
+}
+/* 他の端末から「合言葉」で本人確認して、編集できるようにする(スレ主合言葉と同じ仕組み) */
+async function verifyAppearanceEdit(id,charaTag){
+  id=Number(id);
+  var pwd=prompt(t("appear_verify_prompt"));
+  if(pwd===null) return;
+  pwd=pwd.trim();
+  if(pwd.length<4){ alert(t("recover_short")); return; }
+  try{
+    var res=await sb.from("chara_appearances").select("edit_password").eq("id",id).single();
+    if(res.error) throw res.error;
+    var saved=res.data&&res.data.edit_password;
+    if(!saved){ alert(t("appear_verify_none")); return; }
+    if(saved===pwd){
+      addVerifiedAppearance(id);
+      render();
+      editAppearance(id,charaTag);
+    }else{ alert(t("recover_wrong")); }
+  }catch(e){ alert(t("fail_auth")+(e.message||e)); }
 }
 
 function getMedalPost(t2){
@@ -2964,7 +3054,8 @@ return{top:top,cat:cat,openT:openT,loadNew:loadNew,toggleForm:toggleForm,submit:
   sortBy:sortBy,showDoc:showDoc,hideDoc:hideDoc,toggleRules:toggleRules,recoverOp:recoverOp,setOpPassword:setOpPassword,setCaution:setCaution,acceptCaution:acceptCaution,editTags:editTags,
   chooseLang:chooseLang,acceptNotice:acceptNotice,setLang:setLang,translatePost:translatePost,translateTitle:translateTitle,logoTap:logoTap,previewThumb:previewThumb,anchor:anchor,jumpTo:jumpTo,popAnchor:popAnchor,popHide:popHide,
   toggleAppearanceForm:toggleAppearanceForm,submitAppearance:submitAppearance,voteAppearance:voteAppearance,deleteAppearance:deleteAppearance,
-  toggleDeleteRequestForm:toggleDeleteRequestForm,submitDeleteRequest:submitDeleteRequest,voteDeleteAppearance:voteDeleteAppearance};
+  toggleDeleteRequestForm:toggleDeleteRequestForm,submitDeleteRequest:submitDeleteRequest,voteDeleteAppearance:voteDeleteAppearance,
+  editAppearance:editAppearance,verifyAppearanceEdit:verifyAppearanceEdit};
 })();
 </script>
 </body>
