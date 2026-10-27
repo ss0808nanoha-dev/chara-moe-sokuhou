@@ -247,6 +247,7 @@ body.admin #contact-form label{color:#ff9966}
 .appear-collapse-btn{cursor:pointer;font-size:13px;padding:0 4px;opacity:.9}
 .appear-collapse-btn:hover{opacity:1}
 .appear-sort-bar{display:flex;gap:4px;padding:6px 10px;border-bottom:1px solid #ecd2c2}
+.appear-filter-bar{display:flex;gap:4px;padding:0 10px 6px;border-bottom:1px solid #ecd2c2;flex-wrap:wrap}
 .appear-sort-btn{font-size:11px;padding:3px 10px;border:1px solid #e0c0a0;border-radius:2px;background:#fff;color:#888;cursor:pointer}
 .appear-sort-btn.on{background:#e05a00;color:#fff;border-color:#e05a00;font-weight:700}
 .appear-more{text-align:center;padding:8px 10px;font-size:12px;color:#e05a00;cursor:pointer;border-top:1px dashed #ecd2c2}
@@ -409,6 +410,7 @@ body.admin .rank-val{color:#888}
 body.admin .appear-box{background:#2a2a2a;border-color:#444}
 body.admin .appear-hdr{background:#3a1500;color:#ff9966}
 body.admin .appear-sort-bar{border-bottom-color:#4a4a4a}
+body.admin .appear-filter-bar{border-bottom-color:#4a4a4a}
 body.admin .appear-sort-btn{background:#2a2a2a;color:#aaa;border-color:#555}
 body.admin .appear-sort-btn.on{background:#cc4422;color:#fff;border-color:#cc4422}
 body.admin .appear-more{color:#ff9966;border-top-color:#4a4a4a}
@@ -886,7 +888,8 @@ var I18N={
     appear_media_anime:"アニメ", appear_media_manga:"漫画",
     appear_volume_ph:"単行本 何巻？（任意・例：18）", appear_volume_unit:"巻",
     appear_edit_media_prompt:"媒体を入力してください（アニメ→a / 漫画→m / 不明なら空欄）：",
-    appear_edit_volume_prompt:"単行本の巻数を入力してください（任意）："
+    appear_edit_volume_prompt:"単行本の巻数を入力してください（任意）：",
+    appear_filter_all:"すべて", appear_empty_filtered:"このカテゴリの登場回はまだありません。"
   },
   en:{
     new_thread:"+ New Thread", close_form:"▲ Close", form_h2:"■ Create a New Thread",
@@ -973,7 +976,8 @@ var I18N={
     appear_media_anime:"Anime", appear_media_manga:"Manga",
     appear_volume_ph:"Volume # (optional, e.g. 18)", appear_volume_unit:" vol.",
     appear_edit_media_prompt:"Enter the media type (anime -> a / manga -> m / blank if unknown):",
-    appear_edit_volume_prompt:"Enter the volume number (optional):"
+    appear_edit_volume_prompt:"Enter the volume number (optional):",
+    appear_filter_all:"All", appear_empty_filtered:"No entries in this category yet."
   },
   ko:{
     new_thread:"+ 새 글 작성", close_form:"▲ 닫기", form_h2:"■ 새 스레드 작성",
@@ -1060,7 +1064,8 @@ var I18N={
     appear_media_anime:"애니", appear_media_manga:"만화",
     appear_volume_ph:"단행본 몇 권? (선택・예: 18)", appear_volume_unit:"권",
     appear_edit_media_prompt:"매체를 입력해 주세요 (애니→a / 만화→m / 모르면 공란):",
-    appear_edit_volume_prompt:"단행본 권수를 입력해 주세요 (선택):"
+    appear_edit_volume_prompt:"단행본 권수를 입력해 주세요 (선택):",
+    appear_filter_all:"전체", appear_empty_filtered:"이 카테고리의 등장회는 아직 없습니다."
   }
 };
 
@@ -1099,6 +1104,7 @@ var appearanceCollapsed=false;   /* 登場回ボックス自体を▽/▲で畳�
 var appearanceListExpanded=false;/* キャラ検索直後はスレ一覧が隠れないよう1件だけ表示(もっと見るで展開) */
 var appearanceSortMode="num";    /* "rank"=投票ランキング順, "num"=ラベル中の数値順(デフォルト) */
 var appearanceFormMedia=null;    /* 投稿フォームで選択中の媒体("anime"|"manga"|null) */
+var appearanceMediaFilter="all"; /* 一覧の絞り込み("all"|"anime"|"manga")。未設定の投稿は"manga"扱いにする */
 var loading=true;
 var fMag="",fWork="",fChara="";
 
@@ -2314,12 +2320,23 @@ function renderAppearanceBox(charaTag){
     html+='<div class="appear-empty">'+t("appear_empty")+'</div>';
   }else{
     var sorted=sortAppearanceList(cache.list,appearanceSortMode);
-    var showAll=appearanceListExpanded||sorted.length<=1;
-    var shown=showAll?sorted:sorted.slice(0,1);
     html+='<div class="appear-sort-bar">'+
       '<button class="appear-sort-btn'+(appearanceSortMode==="rank"?" on":"")+'" onclick="A.setAppearanceSort(\'rank\')">'+t("appear_sort_rank")+'</button>'+
       '<button class="appear-sort-btn'+(appearanceSortMode==="num"?" on":"")+'" onclick="A.setAppearanceSort(\'num\')">'+t("appear_sort_num")+'</button>'+
       '</div>';
+    html+='<div class="appear-filter-bar">'+
+      '<button class="appear-sort-btn'+(appearanceMediaFilter==="all"?" on":"")+'" onclick="A.setAppearanceMediaFilter(\'all\')">'+t("appear_filter_all")+'</button>'+
+      '<button class="appear-sort-btn'+(appearanceMediaFilter==="manga"?" on":"")+'" onclick="A.setAppearanceMediaFilter(\'manga\')">📖 '+t("appear_media_manga")+'</button>'+
+      '<button class="appear-sort-btn'+(appearanceMediaFilter==="anime"?" on":"")+'" onclick="A.setAppearanceMediaFilter(\'anime\')">📺 '+t("appear_media_anime")+'</button>'+
+      '</div>';
+    /* 媒体未設定の投稿は、絞り込み上は「漫画」として扱う */
+    var filtered=appearanceMediaFilter==="all"?sorted:sorted.filter(function(a){return (a.mediaType||"manga")===appearanceMediaFilter;});
+    if(!filtered.length){
+      html+='<div class="appear-empty">'+t("appear_empty_filtered")+'</div></div>';
+      return html;
+    }
+    var showAll=appearanceListExpanded||filtered.length<=1;
+    var shown=showAll?filtered:filtered.slice(0,1);
     html+='<div class="appear-list">'+shown.map(function(a,i){
       var voted=!!a.votedByMe;
       var canEdit=adminMode||a.uid===myIp||isVerifiedAppearance(a.id);
@@ -2360,10 +2377,10 @@ function renderAppearanceBox(charaTag){
       }
       return '<div class="appear-item-wrap">'+itemHtml+subHtml+'</div>';
     }).join("")+'</div>';
-    if(sorted.length>1){
+    if(filtered.length>1){
       html+=showAll?
         '<div class="appear-more" onclick="A.toggleAppearanceListExpand()">'+t("appear_less")+'</div>':
-        '<div class="appear-more" onclick="A.toggleAppearanceListExpand()">'+t("appear_more").replace("{n}",sorted.length-1)+'</div>';
+        '<div class="appear-more" onclick="A.toggleAppearanceListExpand()">'+t("appear_more").replace("{n}",filtered.length-1)+'</div>';
     }
   }
   return html+'</div>';
@@ -2437,6 +2454,7 @@ function toggleAppearanceForm(charaTag){
 function toggleAppearanceCollapse(){ appearanceCollapsed=!appearanceCollapsed; render(); }
 function toggleAppearanceListExpand(){ appearanceListExpanded=!appearanceListExpanded; render(); }
 function setAppearanceSort(mode){ appearanceSortMode=mode; render(); }
+function setAppearanceMediaFilter(mode){ appearanceMediaFilter=mode; appearanceListExpanded=false; render(); }
 /* 投稿フォームの媒体選択(アニメ/漫画)。入力中のラベル等が消えないよう、全体の再描画はしない */
 function setAppearanceFormMedia(media){
   appearanceFormMedia=(appearanceFormMedia===media)?null:media;
@@ -2468,7 +2486,7 @@ async function submitAppearance(charaTag){
   var label=labelInp?labelInp.value.trim().slice(0,60):"";
   var note=noteInp?noteInp.value.trim().slice(0,200):"";
   var pass=passInp?passInp.value.trim().slice(0,40):"";
-  var media=appearanceFormMedia; /* "anime"|"manga"|null */
+  var media=appearanceFormMedia||"manga"; /* 媒体を選ばなかった場合は漫画扱いにする */
   var volume=(media==="manga"&&volInp)?volInp.value.trim().slice(0,20):"";
   if(!label){ alert(t("appear_label_err")); return; }
   if(pass&&pass.length<4){ alert(t("oppass_short")); return; }
@@ -3190,7 +3208,7 @@ return{top:top,cat:cat,openT:openT,loadNew:loadNew,toggleForm:toggleForm,submit:
   toggleDeleteRequestForm:toggleDeleteRequestForm,submitDeleteRequest:submitDeleteRequest,voteDeleteAppearance:voteDeleteAppearance,
   editAppearance:editAppearance,verifyAppearanceEdit:verifyAppearanceEdit,
   toggleAppearanceCollapse:toggleAppearanceCollapse,toggleAppearanceListExpand:toggleAppearanceListExpand,setAppearanceSort:setAppearanceSort,
-  setAppearanceFormMedia:setAppearanceFormMedia};
+  setAppearanceFormMedia:setAppearanceFormMedia,setAppearanceMediaFilter:setAppearanceMediaFilter};
 })();
 </script>
 </body>
