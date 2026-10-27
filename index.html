@@ -1559,6 +1559,10 @@ function getCharaTags(){
   th.forEach(function(t2){if(t2.charaTag) all[t2.charaTag]=(all[t2.charaTag]||0)+1;});
   return Object.keys(all).sort(function(a,b){return all[b]-all[a];});
 }
+/* 検索語がキャラ名タグと完全一致するか(=「キャラクタータブ」とみなし、/c/名前 のURLに対応させる) */
+function isCharaTag(name){
+  return !!(name&&getCharaTags().indexOf(name)>=0);
+}
 function getAllTags(){
   var all={};
   th.forEach(function(t2){
@@ -1776,8 +1780,8 @@ function render(){
   updateWatermark();
   setTimeout(updateWatermark,60);
 }
-function doSearch(){var inp=document.getElementById("sq");if(inp){st.q=inp.value.trim();render();}}
-function clearSearch(){st.q="";var inp=document.getElementById("sq");if(inp)inp.value="";render();}
+function doSearch(){var inp=document.getElementById("sq");if(inp){st.q=inp.value.trim();updateHash();render();}}
+function clearSearch(){st.q="";var inp=document.getElementById("sq");if(inp)inp.value="";updateHash();render();}
 function searchKey(e){if(e.key==="Enter")doSearch();}
 function searchByTag(tag){
   st.thread=null;st.cat="すべて";st.q=tag;updateHash();render();
@@ -2088,12 +2092,14 @@ function heroBanner(){
   var thumb=repThumbForChara(name)||repThumbForWork(name)||null;
   var cls="hero-jack"+(thumb?" has-thumb":"");
   var thumbHtml=thumb?'<div class="hj-thumb"><img src="'+esc(thumb)+'" alt="" loading="lazy"></div>':"";
+  /* キャラ名ならGoogleが辿れる本物のURL(/c/名前)を付ける。作品名はページが無いのでonclickのみ */
+  var href=isCharaTag(name)?' href="/c/'+encodeURIComponent(name)+'"':"";
   return '<div class="'+cls+'">'+
     '<div class="hj-crown">👑</div>'+
     thumbHtml+
     '<div class="hj-badge">'+t("hero_badge")+'</div>'+
-    '<div class="hj-name"><a onclick="A.searchByTag(this.dataset.t)" data-t="'+esc(name)+'">'+esc(name)+'</a></div>'+
-    '<a class="hj-cta" onclick="A.searchByTag(this.dataset.t)" data-t="'+esc(name)+'">'+t("hero_cta")+'</a>'+
+    '<div class="hj-name"><a'+href+' onclick="A.searchByTag(this.dataset.t);return false;" data-t="'+esc(name)+'">'+esc(name)+'</a></div>'+
+    '<a class="hj-cta"'+href+' onclick="A.searchByTag(this.dataset.t);return false;" data-t="'+esc(name)+'">'+t("hero_cta")+'</a>'+
     '</div>';
 }
 
@@ -2122,7 +2128,7 @@ function renderList(){
   });
   /* 検索語がキャラ名タグと完全一致する場合は「キャラクタータブ」とみなし、
      人気/急上昇を右に寄せて、空いた場所に「登場回・活躍回」投稿欄を出す */
-  var isCharaView=!!(st.q&&getCharaTags().indexOf(st.q)>=0);
+  var isCharaView=isCharaTag(st.q);
   var sortBtns;
   if(isCharaView){
     sortBtns='<div id="sort-bar" class="sort-bar-chara">'+sortBtnHtml[0]+
@@ -2154,7 +2160,7 @@ function renderList(){
     var chH=r.charaRank.length?r.charaRank.map(function(x,i){
       var ct=repThumbForChara(x.name);
       var cThumb=ct?'<img class="rank-thumb" src="'+esc(ct)+'" alt="" loading="lazy">':"";
-      return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span><span class="rank-name"><a onclick="A.searchByTag(this.dataset.t)" data-t="'+esc(x.name)+'">'+esc(x.name)+'</a></span>'+cThumb+'<span class="rank-val">'+x.val+t("res_unit")+'</span></div>';
+      return '<div class="rank-item"><span class="rank-no">'+(i+1)+'</span><span class="rank-name"><a href="/c/'+encodeURIComponent(x.name)+'" onclick="A.searchByTag(this.dataset.t);return false;" data-t="'+esc(x.name)+'">'+esc(x.name)+'</a></span>'+cThumb+'<span class="rank-val">'+x.val+t("res_unit")+'</span></div>';
     }).join(""):'<div class="rank-item" style="color:#bbb;font-size:11px">'+t("no_data")+'</div>';
     top+='<div class="rank-wrap"><div class="rank-box"><div class="rank-hdr">'+t("rank_thread")+'</div>'+thH+'</div></div>';
     top+='<div class="rank-wrap">'+
@@ -2626,6 +2632,7 @@ var skipNextHashChange=false;
 function updateHash(){
   var newHash="";
   if(st.thread) newHash="#t="+st.thread.id;
+  else if(isCharaTag(st.q)) newHash="#c="+encodeURIComponent(st.q); /* /c/名前 のクローラー向けページと対応させる */
   if(location.hash===newHash) return;
   skipNextHashChange=true;
   if(newHash){location.hash=newHash;}
@@ -2637,7 +2644,18 @@ function applyHash(){
     var id=Number(m[1]);
     for(var i=0;i<th.length;i++){if(th[i].id===id){st.thread=th[i];render();resetPollBase();window.scrollTo(0,0);return;}}
     st.thread=null;render();resetPollBase();window.scrollTo(0,0);
-  }else{st.thread=null;render();resetPollBase();window.scrollTo(0,0);}
+    return;
+  }
+  var cm=location.hash.match(/^#c=(.+)$/);
+  if(cm){
+    var name=decodeURIComponent(cm[1]);
+    st.thread=null;st.cat="すべて";st.q=name;
+    render();
+    var inp=document.getElementById("sq");if(inp)inp.value=name;
+    resetPollBase();window.scrollTo(0,0);
+    return;
+  }
+  st.thread=null;render();resetPollBase();window.scrollTo(0,0);
 }
 window.addEventListener("hashchange",function(){
   if(skipNextHashChange){skipNextHashChange=false;return;}
