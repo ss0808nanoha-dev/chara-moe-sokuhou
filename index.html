@@ -94,6 +94,25 @@ input.err,textarea.err,select.err{border-color:#c00 !important}
 .thumb-label{display:block;font-size:13px;font-weight:700;color:#e05a00;margin-bottom:6px}
 #f-thumb{width:100%;font-size:12px;margin-bottom:6px}
 #thumb-preview img{max-width:120px;max-height:120px;border-radius:4px;border:1px solid #e0c0a0}
+.poll-box{background:#fff8f3;border:1px dashed #f0b890;border-radius:4px;padding:10px 12px;margin-bottom:7px}
+#poll-toggle-btn{display:block;width:100%;background:#fff;border:1px solid #e0c0a0;border-radius:2px;color:#e05a00;font-size:13px;font-weight:700;padding:7px;cursor:pointer}
+#poll-toggle-btn.on{background:#e05a00;color:#fff;border-color:#e05a00}
+#poll-fields{margin-top:8px}
+#poll-fields input{display:block;width:100%;box-sizing:border-box;font-size:12px;padding:6px 8px;border:1px solid #e0c0a0;border-radius:2px;margin-bottom:6px;font-family:inherit}
+#poll-add-opt-btn{font-size:11px;padding:4px 10px;border:1px solid #e0c0a0;border-radius:2px;background:#fff;color:#888;cursor:pointer}
+#poll-add-opt-btn:hover{background:#fff3e8}
+/* スレ内に表示するアンケート本体 */
+.poll-box-view{background:#fff;border:2px solid #e05a00;border-radius:6px;padding:12px;margin:10px 0}
+.poll-question{font-weight:700;color:#c04a00;font-size:14px;margin-bottom:10px}
+.poll-options,.poll-results{display:flex;flex-direction:column;gap:7px}
+.poll-opt-btn{display:block;width:100%;box-sizing:border-box;text-align:left;background:#fff8f3;border:1px solid #f0b890;border-radius:999px;padding:8px 14px;font-size:13px;color:#333;cursor:pointer}
+.poll-opt-btn:hover{background:#ffe9d8;border-color:#e05a00}
+.poll-result-row{position:relative;border:1px solid #ecd2c2;border-radius:999px;padding:8px 14px;overflow:hidden;font-size:13px}
+.poll-result-row.mine{border-color:#e05a00}
+.poll-result-bar{position:absolute;left:0;top:0;bottom:0;background:#ffe3cc;z-index:0}
+.poll-result-label{position:relative;z-index:1;font-weight:700;color:#333}
+.poll-result-pct{position:relative;z-index:1;float:right;color:#c04a00;font-weight:700}
+.poll-total{font-size:11px;color:#aaa;margin-top:8px;text-align:right}
 .th-thumb{width:58px;height:76px;object-fit:cover;border-radius:4px;flex-shrink:0;margin-left:8px}
 .rank-thumb{width:32px;height:42px;object-fit:cover;border-radius:3px;flex-shrink:0;margin-left:6px}
 .rank-wrap{display:flex;gap:8px;margin-bottom:10px}
@@ -466,6 +485,21 @@ body.admin .oppass-label{color:#ff9966}
 body.admin #fwrap #f-oppass{border-color:#ff7733;background:#2a2a2a}
 body.admin .thumb-box{background:#332016;border-color:#7a4a28}
 body.admin .thumb-label{color:#ff9966}
+body.admin .poll-box{background:#332016;border-color:#7a4a28}
+body.admin #poll-toggle-btn{background:#2a2a2a;color:#ff9966;border-color:#7a4a28}
+body.admin #poll-toggle-btn.on{background:#cc4422;color:#fff;border-color:#cc4422}
+body.admin #poll-fields input{background:#333;border-color:#555;color:#eee}
+body.admin #poll-add-opt-btn{background:#2a2a2a;color:#aaa;border-color:#555}
+body.admin .poll-box-view{background:#2a2a2a;border-color:#cc4422}
+body.admin .poll-question{color:#ff9966}
+body.admin .poll-opt-btn{background:#332016;border-color:#7a4a28;color:#e0e0e0}
+body.admin .poll-opt-btn:hover{background:#3a1500;border-color:#cc4422}
+body.admin .poll-result-row{border-color:#4a4a4a}
+body.admin .poll-result-row.mine{border-color:#cc4422}
+body.admin .poll-result-bar{background:#4a2a10}
+body.admin .poll-result-label{color:#e0e0e0}
+body.admin .poll-result-pct{color:#ff9966}
+body.admin .poll-total{color:#888}
 body.admin .pname.lang-ja{color:#6ab0ff}
 body.admin .pname.lang-ko{color:#b89cff}
 body.admin .pname.lang-en{color:#9bd84a}
@@ -579,6 +613,17 @@ body.admin .hero-jack .hj-cta:hover{background:#ff8a44}
       <label class="thumb-label" id="g-thumblabel" for="f-thumb">🖼 サムネイル画像（任意）</label>
       <input type="file" id="f-thumb" accept="image/*" onchange="A.previewThumb()">
       <div id="thumb-preview"></div>
+    </div>
+    <div class="poll-box">
+      <button type="button" id="poll-toggle-btn" onclick="A.togglePollForm()">📊 アンケートを追加（任意）</button>
+      <div id="poll-fields" style="display:none">
+        <input id="poll-question" placeholder="質問文（任意・空欄ならスレタイを使います）" maxlength="100">
+        <div id="poll-options-list">
+          <input class="poll-opt-inp" placeholder="選択肢1" maxlength="40">
+          <input class="poll-opt-inp" placeholder="選択肢2" maxlength="40">
+        </div>
+        <button type="button" id="poll-add-opt-btn" onclick="A.addPollOptionField()">＋ 選択肢を追加</button>
+      </div>
     </div>
     <div class="form-foot">
       <span class="ccount" id="fcc">0/1000</span>
@@ -893,7 +938,11 @@ var I18N={
     appear_edit_media_prompt:"媒体を入力してください（アニメ→a / 漫画→m / 不明なら空欄）：",
     appear_edit_volume_prompt:"単行本の巻数を入力してください（任意）：",
     appear_filter_all:"すべて", appear_empty_filtered:"このカテゴリの登場回はまだありません。",
-    appear_media_product_hint:"タップすると関連商品を探します"
+    appear_media_product_hint:"タップすると関連商品を探します",
+    poll_toggle_btn:"📊 アンケートを追加（任意）",
+    poll_question_ph:"質問文（任意・空欄ならスレタイを使います）",
+    poll_opt_ph:"選択肢{n}", poll_add_opt_btn:"＋ 選択肢を追加",
+    poll_total_votes:"{n}票", poll_vote_fail:"投票に失敗しました: "
   },
   en:{
     new_thread:"+ New Thread", close_form:"▲ Close", form_h2:"■ Create a New Thread",
@@ -982,7 +1031,11 @@ var I18N={
     appear_edit_media_prompt:"Enter the media type (anime -> a / manga -> m / blank if unknown):",
     appear_edit_volume_prompt:"Enter the volume number (optional):",
     appear_filter_all:"All", appear_empty_filtered:"No entries in this category yet.",
-    appear_media_product_hint:"Tap to find related products"
+    appear_media_product_hint:"Tap to find related products",
+    poll_toggle_btn:"📊 Add a poll (optional)",
+    poll_question_ph:"Question (optional, uses the thread title if blank)",
+    poll_opt_ph:"Option {n}", poll_add_opt_btn:"＋ Add an option",
+    poll_total_votes:"{n} votes", poll_vote_fail:"Failed to vote: "
   },
   ko:{
     new_thread:"+ 새 글 작성", close_form:"▲ 닫기", form_h2:"■ 새 스레드 작성",
@@ -1071,7 +1124,11 @@ var I18N={
     appear_edit_media_prompt:"매체를 입력해 주세요 (애니→a / 만화→m / 모르면 공란):",
     appear_edit_volume_prompt:"단행본 권수를 입력해 주세요 (선택):",
     appear_filter_all:"전체", appear_empty_filtered:"이 카테고리의 등장회는 아직 없습니다.",
-    appear_media_product_hint:"탭하면 관련 상품을 찾아드립니다"
+    appear_media_product_hint:"탭하면 관련 상품을 찾아드립니다",
+    poll_toggle_btn:"📊 설문 추가（선택）",
+    poll_question_ph:"질문（선택・비워두면 스레드 제목을 사용합니다）",
+    poll_opt_ph:"선택지{n}", poll_add_opt_btn:"＋ 선택지 추가",
+    poll_total_votes:"{n}표", poll_vote_fail:"투표에 실패했습니다: "
   }
 };
 
@@ -1111,6 +1168,7 @@ var appearanceListExpanded=false;/* キャラ検索直後はスレ一覧が隠�
 var appearanceSortMode="num";    /* "rank"=投票ランキング順, "num"=ラベル中の数値順(デフォルト) */
 var appearanceFormMedia=null;    /* 投稿フォームで選択中の媒体("anime"|"manga"|null) */
 var appearanceMediaFilter="all"; /* 一覧の絞り込み("all"|"anime"|"manga")。未設定の投稿は"manga"扱いにする */
+var pollCache={}; /* スレID → {loading,poll:null|{id,question,options:[{id,label,voteCount,votedByMe}],totalVotes,votedByMe}} */
 var loading=true;
 var fMag="",fWork="",fChara="";
 
@@ -1215,6 +1273,11 @@ function applyStaticI18n(){
   setPH("f-oppass","oppass_ph");
   setHTML("g-oppasshelp","oppass_help");
   setText("g-thumblabel","thumb_label");
+  setText("poll-toggle-btn","poll_toggle_btn");
+  setPH("poll-question","poll_question_ph");
+  setText("poll-add-opt-btn","poll_add_opt_btn");
+  var pollOptInps=document.querySelectorAll(".poll-opt-inp");
+  pollOptInps.forEach(function(inp,idx){ inp.placeholder=t("poll_opt_ph").replace("{n}",idx+1); });
   setText("g-submitbtn","submit_btn");
   /* ルールボタン(開いているかどうかで文言を変える)＋中身も言語に合わせる */
   var rb=document.getElementById("rules-body");
@@ -1738,11 +1801,44 @@ function toggleForm(){
   var open=fw.style.display==="block";
   fw.style.display=open?"none":"block";
   if(nb)nb.textContent=open?t("new_thread"):t("close_form");
-  if(!open){fMag="";fWork="";fChara="";renderTagUI();}
+  if(!open){
+    fMag="";fWork="";fChara="";renderTagUI();
+    var pf=document.getElementById("poll-fields");
+    var ptbtn=document.getElementById("poll-toggle-btn");
+    if(pf){pf.style.display="none";}
+    if(ptbtn)ptbtn.classList.remove("on");
+  }
 }
 function showErr(id,show){
   var el=document.getElementById(id);if(!el)return;
   el.className="field-err"+(show?" show":"");
+}
+
+/* スレ立てフォームの「アンケートを追加」開閉 */
+function togglePollForm(){
+  var fields=document.getElementById("poll-fields");
+  var btn=document.getElementById("poll-toggle-btn");
+  if(!fields)return;
+  var open=fields.style.display!=="none";
+  fields.style.display=open?"none":"block";
+  if(btn)btn.classList.toggle("on",!open);
+  if(open){
+    var q=document.getElementById("poll-question");if(q)q.value="";
+    var opts=document.querySelectorAll(".poll-opt-inp");
+    for(var i=0;i<opts.length;i++){opts[i].value="";}
+  }
+}
+function addPollOptionField(){
+  var list=document.getElementById("poll-options-list");
+  if(!list)return;
+  var count=list.querySelectorAll(".poll-opt-inp").length;
+  if(count>=4)return;
+  var inp=document.createElement("input");
+  inp.className="poll-opt-inp";inp.maxLength=40;
+  inp.placeholder=t("poll_opt_ph").replace("{n}",count+1);
+  list.appendChild(inp);
+  var addBtn=document.getElementById("poll-add-opt-btn");
+  if(addBtn&&count+1>=4)addBtn.style.display="none";
 }
 
 /* サムネ画像を選んだときのプレビュー表示 */
@@ -1820,6 +1916,27 @@ async function submit(){
       thread_id:newThread.id, name:name.trim(), body:body.trim(), uid:myIp, post_lang:postLang
     });
     if(pIns&&pIns.error) throw new Error(pIns.error);
+    /* アンケートが有効なら、スレ・最初の投稿に続けてポールも作成する */
+    var pollFields=document.getElementById("poll-fields");
+    if(pollFields&&pollFields.style.display!=="none"){
+      var qInp=document.getElementById("poll-question");
+      var question=(qInp?qInp.value.trim():"").slice(0,100);
+      var optLabels=Array.prototype.slice.call(document.querySelectorAll(".poll-opt-inp"))
+        .map(function(inp){return inp.value.trim().slice(0,40);}).filter(Boolean);
+      if(optLabels.length>=2){
+        /* ここが失敗しても(未マイグレーション環境など)、スレ自体は作成済みなので
+           全体を失敗扱いにはせず、アンケートだけ諦める */
+        try{
+          var pollIns=await sb.from("thread_polls").insert({thread_id:newThread.id,question:question||title.trim()}).select().single();
+          if(pollIns.error) throw pollIns.error;
+          var optRows=optLabels.map(function(label){return {poll_id:pollIns.data.id,label:label};});
+          var optIns=await sb.from("thread_poll_options").insert(optRows);
+          if(optIns.error) throw optIns.error;
+        }catch(pollErr){
+          console.error("poll create error:",pollErr);
+        }
+      }
+    }
     fMag="";fWork="";fChara="";
     ["f-title","f-name","f-body","f-oppass"].forEach(function(id){var el=document.getElementById(id);if(el){el.value="";el.className="";}});
     var ft=document.getElementById("f-thumb");if(ft)ft.value="";
@@ -1827,6 +1944,20 @@ async function submit(){
     var fcat=document.getElementById("f-cat");if(fcat){fcat.value="";fcat.className="";}
     ["err-title"].forEach(function(id){showErr(id,false);});
     var fcc=document.getElementById("fcc");if(fcc)fcc.textContent="0/1000";
+    var pq=document.getElementById("poll-question");if(pq)pq.value="";
+    var polist=document.getElementById("poll-options-list");
+    if(polist){
+      polist.innerHTML="";
+      for(var oi=0;oi<2;oi++){
+        var oinp=document.createElement("input");
+        oinp.className="poll-opt-inp";oinp.maxLength=40;
+        oinp.placeholder=t("poll_opt_ph").replace("{n}",oi+1);
+        polist.appendChild(oinp);
+      }
+    }
+    var paddbtn=document.getElementById("poll-add-opt-btn");if(paddbtn)paddbtn.style.display="";
+    if(pollFields)pollFields.style.display="none";
+    var ptbtn=document.getElementById("poll-toggle-btn");if(ptbtn)ptbtn.classList.remove("on");
     document.getElementById("fwrap").style.display="none";
     var nb=document.getElementById("new-btn");if(nb)nb.textContent=t("new_thread");
     if(opPass){alert(t("created_ok").replace("{p}",opPass));}
@@ -2700,6 +2831,89 @@ function getMedalPost(t2){
   return bc>0?best:null;
 }
 
+/* ============================================================
+   スレに付けられたアンケート(あれば1スレ1件)。SNS連携での自動生成スレ等で使う。
+   ============================================================ */
+async function loadPoll(threadId){
+  pollCache[threadId]={loading:true,poll:undefined};
+  try{
+    var pRes=await sb.from("thread_polls").select("id,question").eq("thread_id",threadId).maybeSingle();
+    if(pRes.error) throw pRes.error;
+    if(!pRes.data){ pollCache[threadId]={loading:false,poll:null}; render(); return; }
+    var poll=pRes.data;
+    var oRes=await sb.from("thread_poll_options").select("id,label").eq("poll_id",poll.id).order("id",{ascending:true});
+    if(oRes.error) throw oRes.error;
+    var options=oRes.data||[];
+    var optIds=options.map(function(o){return o.id;});
+    var votes=[];
+    if(optIds.length){
+      var vRes=await sb.from("thread_poll_votes").select("option_id,uid").in("option_id",optIds);
+      if(vRes.error) throw vRes.error;
+      votes=vRes.data||[];
+    }
+    var voteCount={},votedByMe=null;
+    votes.forEach(function(v){
+      voteCount[v.option_id]=(voteCount[v.option_id]||0)+1;
+      if(v.uid===myIp) votedByMe=v.option_id;
+    });
+    var total=votes.length;
+    pollCache[threadId]={loading:false,poll:{
+      id:poll.id,question:poll.question,votedByMe:votedByMe,totalVotes:total,
+      options:options.map(function(o){return{id:o.id,label:o.label,voteCount:voteCount[o.id]||0};})
+    }};
+  }catch(e){
+    pollCache[threadId]={loading:false,poll:null};
+    console.error("loadPoll error:",e);
+  }
+  render();
+}
+function renderPollBox(t2){
+  var entry=pollCache[t2.id];
+  if(entry===undefined){ loadPoll(t2.id); return ""; }
+  if(entry.loading||!entry.poll) return "";
+  var poll=entry.poll;
+  var voted=poll.votedByMe!==null;
+  var rows=poll.options.map(function(o){
+    var pct=poll.totalVotes>0?Math.round(o.voteCount/poll.totalVotes*100):0;
+    var isMine=o.id===poll.votedByMe;
+    if(voted){
+      return '<div class="poll-result-row'+(isMine?" mine":"")+'">'+
+        '<div class="poll-result-bar" style="width:'+pct+'%"></div>'+
+        '<span class="poll-result-label">'+(isMine?"✅ ":"")+esc(o.label)+'</span>'+
+        '<span class="poll-result-pct">'+pct+'%</span>'+
+        '</div>';
+    }
+    return '<button class="poll-opt-btn" onclick="A.votePollOption(this.dataset.pid,this.dataset.oid,this.dataset.tid)" data-pid="'+esc(poll.id)+'" data-oid="'+esc(o.id)+'" data-tid="'+esc(t2.id)+'">'+esc(o.label)+'</button>';
+  }).join("");
+  return '<div class="poll-box-view">'+
+    '<div class="poll-question">📊 '+esc(poll.question||t2.title)+'</div>'+
+    '<div class="poll-'+(voted?"results":"options")+'">'+rows+'</div>'+
+    (voted?'<div class="poll-total">'+t("poll_total_votes").replace("{n}",poll.totalVotes)+'</div>':'')+
+    '</div>';
+}
+async function votePollOption(pollId,optionId,threadId){
+  pollId=Number(pollId);optionId=Number(optionId);threadId=Number(threadId);
+  var entry=pollCache[threadId];
+  if(!entry||!entry.poll||entry.poll.votedByMe!==null) return;
+  var poll=entry.poll;
+  var opt=poll.options.filter(function(o){return o.id===optionId;})[0];
+  if(!opt) return;
+  poll.votedByMe=optionId;
+  opt.voteCount=(opt.voteCount||0)+1;
+  poll.totalVotes=(poll.totalVotes||0)+1;
+  render();
+  try{
+    var res=await sb.from("thread_poll_votes").insert({poll_id:pollId,option_id:optionId,uid:myIp});
+    if(res.error){ if(res.error.code!=="23505") throw res.error; }
+  }catch(e){
+    poll.votedByMe=null;
+    opt.voteCount=Math.max(0,(opt.voteCount||1)-1);
+    poll.totalVotes=Math.max(0,(poll.totalVotes||1)-1);
+    render();
+    alert(t("poll_vote_fail")+(e.message||e));
+  }
+}
+
 function renderThread(){
   var t2=st.thread;
   /* 閲覧注意スレに未受諾で入った場合は、確認ゲートを先に出す */
@@ -2776,6 +2990,7 @@ function renderThread(){
     /* 管理者だけ: チェックを入れたレスをまとめて削除 */
     (adminMode?'<br><button id="bulk-del-btn" class="kanso-op-btn" style="border-color:#c00;color:#c00;display:'+(Object.keys(selectedPosts).length>0?"inline-block":"none")+'" onclick="A.bulkDeletePosts()">選択した'+Object.keys(selectedPosts).length+'件を削除</button>':"")+
     '</div>'+
+    renderPollBox(t2)+
     '<div id="posts-wrap">'+posts+'</div>'+
     autoAdSlot(t2,"autoad_mid_"+t2.id)+
     /* 完走したスレでは、返信欄を出さずに完走メッセージを表示する(全員一律) */
@@ -3233,6 +3448,7 @@ function boot(){
 boot();
 
 return{top:top,cat:cat,openT:openT,loadNew:loadNew,toggleForm:toggleForm,submit:submit,reply:reply,
+  togglePollForm:togglePollForm,addPollOptionField:addPollOptionField,votePollOption:votePollOption,
   doLike:doLike,toggleMedal:toggleMedal,doKanso:doKanso,deleteThread:deleteThread,deletePost:deletePost,editPost:editPost,
   toggleSelectPost:toggleSelectPost,bulkDeletePosts:bulkDeletePosts,
   searchKey:searchKey,doSearch:doSearch,clearSearch:clearSearch,searchByTag:searchByTag,report:report,
