@@ -270,12 +270,14 @@ body.admin #contact-form label{color:#ff9966}
 .appear-list{display:flex;flex-direction:column}
 .appear-item-wrap{border-bottom:1px solid #ecd2c2}
 .appear-item-wrap:last-child{border-bottom:none}
-.appear-item{display:flex;align-items:flex-start;gap:6px;padding:7px 10px 4px;font-size:12px}
+.appear-item{display:flex;flex-direction:column;gap:5px;padding:7px 10px 8px;font-size:12px}
+.appear-item-top{display:flex;align-items:flex-start;gap:6px}
+.appear-item-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-left:22px}
 .appear-rank{font-weight:900;color:#e05a00;width:16px;flex-shrink:0;font-size:12px;text-align:center}
 .appear-body{flex:1;min-width:0;display:flex;flex-direction:column}
 .appear-label{font-weight:700;color:#333;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .appear-note{font-size:11px;color:#999;white-space:normal;word-break:break-word}
-.appear-vote-cnt{font-size:11px;color:#aaa;flex-shrink:0;min-width:14px;text-align:right}
+.appear-vote-cnt{font-size:11px;color:#aaa;flex-shrink:0;min-width:14px}
 .appear-vote-btn{font-size:11px;border:1px solid #ddd;padding:3px 10px;color:#aaa;border-radius:2px;background:#fff;cursor:pointer;flex-shrink:0}
 .appear-vote-btn.voted{border-color:#e05a00;color:#e05a00;font-weight:700;cursor:default}
 .appear-del{font-size:11px;color:#c00;cursor:pointer;flex-shrink:0;margin-left:2px}
@@ -283,8 +285,8 @@ body.admin #contact-form label{color:#ff9966}
 .appear-edit:hover{color:#e05a00}
 .appear-edit-pass{font-size:11px;color:#bbb;cursor:pointer;flex-shrink:0}
 .appear-edit-pass:hover{color:#e05a00}
-.appear-delreq-btn{display:block;padding:0 10px 8px 32px;font-size:11px;color:#bbb;cursor:pointer}
-.appear-delreq-btn:hover{color:#c00}
+.appear-delreq-trigger{font-size:11px;color:#bbb;cursor:pointer;flex-shrink:0}
+.appear-delreq-trigger:hover{color:#c00}
 .appear-delreq{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:0 10px 8px 32px;font-size:11px}
 .appear-delreq-reason{color:#c00;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .appear-delreq-status{color:#999;flex-shrink:0}
@@ -431,7 +433,7 @@ body.admin .appear-vote-cnt{color:#888}
 body.admin .appear-vote-btn{background:#333;color:#bbb;border-color:#555}
 body.admin .appear-vote-btn.voted{background:#cc4422;color:#fff;border-color:#cc4422}
 body.admin .appear-add-btn{background:#2a2a2a;color:#ff9966;border-color:#cc4422}
-body.admin .appear-delreq-btn{color:#777}
+body.admin .appear-delreq-trigger{color:#777}
 body.admin .appear-delreq-reason{color:#ff6666}
 body.admin .appear-delreq-status{color:#888}
 body.admin .appear-delreq-vote-btn{background:#333;color:#ff6666;border-color:#884444}
@@ -2375,15 +2377,22 @@ function renderAppearanceBox(charaTag){
       var mediaBadge="";
       if(a.mediaType==="anime") mediaBadge='<span class="appear-media-badge anime" title="'+esc(t("appear_media_product_hint"))+'" onclick="event.stopPropagation();A.openAppearanceProduct(this.dataset.c,this.dataset.v)" data-c="'+esc(charaTag)+'" data-v="">📺 '+t("appear_media_anime")+'</span>';
       else if(a.mediaType==="manga") mediaBadge='<span class="appear-media-badge manga" title="'+esc(t("appear_media_product_hint"))+'" onclick="event.stopPropagation();A.openAppearanceProduct(this.dataset.c,this.dataset.v)" data-c="'+esc(charaTag)+'" data-v="'+esc(a.volume||"")+'">📖 '+t("appear_media_manga")+(a.volume?' '+esc(a.volume)+t("appear_volume_unit"):'')+'</span>';
+      /* 削除依頼が無く、理由入力中でもない通常時は、削除依頼リンクも投票・編集と同じ行に並べる */
+      var delTriggerHtml=(!a.delReq&&deleteReqFormOpenFor!==a.id)?
+        '<span class="appear-delreq-trigger" onclick="A.toggleDeleteRequestForm(this.dataset.id)" data-id="'+esc(a.id)+'">'+t("appear_delreq_btn")+'</span>':"";
       var itemHtml='<div class="appear-item">'+
+        '<div class="appear-item-top">'+
         '<span class="appear-rank">'+(i+1)+'</span>'+
         '<div class="appear-body"><span class="appear-label-row">'+mediaBadge+'<span class="appear-label">'+esc(a.label)+'</span></span>'+
         (a.note?'<span class="appear-note">'+esc(a.note)+'</span>':"")+'</div>'+
+        '</div>'+
+        '<div class="appear-item-actions">'+
         '<span class="appear-vote-cnt">'+a.voteCount+'</span>'+
         '<button class="appear-vote-btn'+(voted?" voted":"")+'" onclick="A.voteAppearance(this.dataset.id,this.dataset.c)" data-id="'+esc(a.id)+'" data-c="'+esc(charaTag)+'">'+(voted?t("appear_voted"):t("appear_vote"))+'</button>'+
         editHtml+
+        delTriggerHtml+
         (adminMode?'<span class="appear-del" onclick="A.deleteAppearance(this.dataset.id,this.dataset.c)" data-id="'+esc(a.id)+'" data-c="'+esc(charaTag)+'">'+t("del")+'</span>':"")+
-        '</div>';
+        '</div></div>';
       var subHtml='';
       if(a.delReq){
         var isRequester=a.delReq.uid===myIp;
@@ -2401,8 +2410,6 @@ function renderAppearanceBox(charaTag){
           '<button class="appear-submit-btn" onclick="A.submitDeleteRequest(this.dataset.id,this.dataset.c)" data-id="'+esc(a.id)+'" data-c="'+esc(charaTag)+'">'+t("appear_delreq_submit")+'</button>'+
           '<button class="appear-cancel-btn" onclick="A.toggleDeleteRequestForm(this.dataset.id)" data-id="'+esc(a.id)+'">'+t("appear_delreq_cancel")+'</button>'+
           '</div>';
-      }else{
-        subHtml='<span class="appear-delreq-btn" onclick="A.toggleDeleteRequestForm(this.dataset.id)" data-id="'+esc(a.id)+'">'+t("appear_delreq_btn")+'</span>';
       }
       return '<div class="appear-item-wrap">'+itemHtml+subHtml+'</div>';
     }).join("")+'</div>';
