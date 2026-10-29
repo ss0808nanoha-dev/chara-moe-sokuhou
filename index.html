@@ -2834,16 +2834,25 @@ function getMedalPost(t2){
 /* ============================================================
    スレに付けられたアンケート(あれば1スレ1件)。SNS連携での自動生成スレ等で使う。
    ============================================================ */
-async function loadPoll(threadId){
+function pollDelay(ms){return new Promise(function(r){setTimeout(r,ms);});}
+/* SNS連携等でスレ作成直後にポールが参照されると、thread_polls→thread_poll_options の
+   insertが連続して完了する前に読みに来てしまうことがある(数百ms〜数秒のズレ)。
+   「ポールが無い/選択肢が0件」のときだけ少し待って最大2回まで再挑戦し、本当に無い場合だけ諦める。 */
+async function loadPoll(threadId,retriesLeft){
+  if(retriesLeft===undefined) retriesLeft=2;
   pollCache[threadId]={loading:true,poll:undefined};
   try{
     var pRes=await sb.from("thread_polls").select("id,question").eq("thread_id",threadId).maybeSingle();
     if(pRes.error) throw pRes.error;
-    if(!pRes.data){ pollCache[threadId]={loading:false,poll:null}; render(); return; }
+    if(!pRes.data){
+      if(retriesLeft>0){ await pollDelay(1000); return loadPoll(threadId,retriesLeft-1); }
+      pollCache[threadId]={loading:false,poll:null}; render(); return;
+    }
     var poll=pRes.data;
     var oRes=await sb.from("thread_poll_options").select("id,label").eq("poll_id",poll.id).order("id",{ascending:true});
     if(oRes.error) throw oRes.error;
     var options=oRes.data||[];
+    if(!options.length&&retriesLeft>0){ await pollDelay(1000); return loadPoll(threadId,retriesLeft-1); }
     var optIds=options.map(function(o){return o.id;});
     var votes=[];
     if(optIds.length){
