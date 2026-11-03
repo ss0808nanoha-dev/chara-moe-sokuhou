@@ -218,6 +218,17 @@ body.admin .post.jump-hl{animation:jumphlA 1.6s ease-out}
 #reply-box h3{font-size:12px;font-weight:700;color:#e05a00;margin-bottom:8px}
 #reply-box input,#reply-box textarea{width:100%;display:block;margin-bottom:7px}
 #reply-box textarea{height:100px}
+.reply-hint{font-size:11px;color:#a05a30;background:#fff6ee;border-radius:2px;padding:5px 8px;margin-bottom:8px}
+#reply-fab{position:fixed;right:14px;bottom:18px;z-index:50;background:#e05a00;color:#fff;font-weight:900;font-size:13px;padding:10px 16px;border-radius:999px;box-shadow:0 3px 10px rgba(0,0,0,.25);display:none}
+#reply-fab.show{display:block}
+.share-bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0 2px;font-size:11px;color:#888}
+.share-bar a,.share-bar button{font-size:11px;font-weight:700;border-radius:2px;padding:3px 10px;text-decoration:none;color:#fff}
+.share-x{background:#111}.share-line{background:#06c755}.share-th{background:#444}
+.share-bar button.share-copy{background:#fff;color:#e05a00;border:1px solid #e05a00}
+#welcome-box{background:#fff;border:1px solid #f0c8a8;border-left:4px solid #e05a00;padding:8px 64px 8px 10px;margin-bottom:10px;font-size:12px;line-height:1.7;position:relative}
+#welcome-box .wb-close{position:absolute;right:6px;top:4px;font-size:11px;color:#aaa}
+#post-toast{position:fixed;left:50%;bottom:70px;transform:translateX(-50%);background:#222;color:#fff;font-size:12px;padding:8px 16px;border-radius:999px;z-index:60;opacity:0;transition:opacity .3s;pointer-events:none}
+#post-toast.show{opacity:.92}
 .back-btn{display:inline-block;font-size:11px;color:#e05a00;margin-bottom:8px}
 #search-bar{background:#fff;border:1px solid #e8d0c0;border-top:3px solid #e05a00;padding:8px 10px;margin-bottom:10px;display:flex;gap:6px;align-items:center}
 #search-bar input{flex:1;padding:6px 10px;border:1px solid #ccc;border-radius:2px;font-size:13px}
@@ -517,6 +528,8 @@ body.admin .hero-jack .hj-cta:hover{background:#ff8a44}
 <body>
 <button id="new-posts-btn" onclick="A.loadNew()"></button>
 <div id="anchor-pop"></div>
+<button id="reply-fab" onclick="A.goReply()"></button>
+<div id="post-toast"></div>
 
 <!-- ページ全体の背景に敷き詰める商品タイル -->
 <div id="bg-watermark"></div>
@@ -870,7 +883,7 @@ var I18N={
     empty_list:"まだスレッドがありません。最初のスレを立ててみよう！",
     back_list:"← スレ一覧に戻る", kanso_badge:"完走",
     res_count:"件のレス", last_update:"最終更新: ",
-    reply_h3:"■ 返信する", reply_name_ph:"名前（省略可）", reply_body_ph:"本文（必須・1000文字以内）", reply_btn:"書き込む",
+    reply_h3:"■ 返信する", reply_name_ph:"名前（省略可）", reply_body_ph:"本文（必須・1000文字以内）", reply_btn:"書き込む", reply_hint:"💬 登録不要・匿名で書き込めます。ひとことの感想でも大歓迎！", reply_fab:"✏️ 書き込む", reply_done:"✅ 書き込みました！", share_label:"このスレを広める", share_copy:"🔗 リンクをコピー", share_copied:"✅ コピーしました", welcome_text:"はじめての方へ：<b>登録不要・完全匿名</b>で、誰でもすぐ書き込めます。<b>叩き・アンチ禁止</b>なので、好きなキャラの話を安心してどうぞ。読むだけでも、ひとことだけでも大歓迎です！", welcome_close:"とじる",
     new_posts:"新着{n}件を読み込む",
     like:"♡ いいね", liked:"♥ いいね済", report:"報告", reported:"報告済", del:"削除",
     kanso_btn:"✅ 完走にする", del_thread_btn:"🗑 スレを削除", kanso_done_label:"✅ 完走スレ",
@@ -963,7 +976,7 @@ var I18N={
     empty_list:"No threads yet. Be the first to post!",
     back_list:"← Back to list", kanso_badge:"Done",
     res_count:" replies", last_update:"Last update: ",
-    reply_h3:"■ Reply", reply_name_ph:"Name (optional)", reply_body_ph:"Body (required, max 1000)", reply_btn:"Post",
+    reply_h3:"■ Reply", reply_name_ph:"Name (optional)", reply_body_ph:"Body (required, max 1000)", reply_btn:"Post", reply_hint:"💬 No sign-up needed. Post anonymously — even a one-liner is welcome!", reply_fab:"✏️ Reply", reply_done:"✅ Posted!", share_label:"Share this thread", share_copy:"🔗 Copy link", share_copied:"✅ Copied", welcome_text:"New here? <b>No sign-up, fully anonymous</b> — anyone can post right away. <b>No bashing allowed</b>, so talk about the characters you love without worry!", welcome_close:"Close",
     new_posts:"Load {n} new",
     like:"♡ Like", liked:"♥ Liked", report:"Report", reported:"Reported", del:"Delete",
     kanso_btn:"✅ Mark as done", del_thread_btn:"🗑 Delete thread", kanso_done_label:"✅ Completed",
@@ -1056,7 +1069,7 @@ var I18N={
     empty_list:"아직 스레드가 없습니다. 첫 글을 작성해 보세요!",
     back_list:"← 목록으로", kanso_badge:"완주",
     res_count:"개 댓글", last_update:"마지막 업데이트: ",
-    reply_h3:"■ 답글 작성", reply_name_ph:"이름 (생략 가능)", reply_body_ph:"본문 (필수, 1000자 이내)", reply_btn:"작성",
+    reply_h3:"■ 답글 작성", reply_name_ph:"이름 (생략 가능)", reply_body_ph:"본문 (필수, 1000자 이내)", reply_btn:"작성", reply_hint:"💬 가입 없이 익명으로 작성할 수 있어요. 한마디 감상도 환영!", reply_fab:"✏️ 작성", reply_done:"✅ 작성했습니다!", share_label:"이 스레드 공유", share_copy:"🔗 링크 복사", share_copied:"✅ 복사됨", welcome_text:"처음 오셨나요? <b>가입 불필요・완전 익명</b>으로 누구나 바로 작성할 수 있어요. <b>비난・안티 금지</b>이니 좋아하는 캐릭터 이야기를 편하게 나눠 주세요!", welcome_close:"닫기",
     new_posts:"새 글 {n}개 보기",
     like:"♡ 좋아요", liked:"♥ 좋아요 완료", report:"신고", reported:"신고됨", del:"삭제",
     kanso_btn:"✅ 완주 처리", del_thread_btn:"🗑 스레드 삭제", kanso_done_label:"✅ 완주 스레드",
@@ -1570,14 +1583,29 @@ async function logoTap(){
 /* ============================================================
    Supabaseとのデータやりとり
    ============================================================ */
+/* Supabaseは1回の取得が最大1000件までなので、1000件ずつ区切って全件取る */
+async function fetchAllRows(table,orderCol){
+  var all=[],from=0,size=1000;
+  while(true){
+    var q=sb.from(table).select("*");
+    if(orderCol) q=q.order(orderCol,{ascending:true});
+    var r=await q.range(from,from+size-1);
+    if(r.error) return {data:null,error:r.error};
+    all=all.concat(r.data||[]);
+    if(!r.data||r.data.length<size) break;
+    from+=size;
+  }
+  return {data:all,error:null};
+}
+/* GA4イベント送信（gtagが読めない環境でも落ちないように） */
+function track(name,params){ try{ if(window.gtag) window.gtag("event",name,params||{}); }catch(e){} }
+
 async function loadAll(){
   loading=true;
   render();
   try{
-    var tRes=await sb.from("threads").select("*").order("id",{ascending:true});
-    var pRes=await sb.from("posts").select("*").order("id",{ascending:true});
-    var lRes=await sb.from("likes").select("*");
-    var rRes=await sb.from("reports").select("*");
+    var rs=await Promise.all([fetchAllRows("threads","id"),fetchAllRows("posts","id"),fetchAllRows("likes","id"),fetchAllRows("reports","id")]);
+    var tRes=rs[0],pRes=rs[1],lRes=rs[2],rRes=rs[3];
     if(tRes.error) throw tRes.error;
     if(pRes.error) throw pRes.error;
     if(lRes.error) throw lRes.error;
@@ -1962,6 +1990,7 @@ async function submit(){
     var nb=document.getElementById("new-btn");if(nb)nb.textContent=t("new_thread");
     if(opPass){alert(t("created_ok").replace("{p}",opPass));}
     var newThreadId=newThread.id;
+    track("thread_create",{thread_id:String(newThreadId)});
     await loadAll();
     for(var i=0;i<th.length;i++){
       if(th[i].id===newThreadId){st.thread=th[i];updateHash();render();window.scrollTo(0,0);break;}
@@ -1995,7 +2024,17 @@ function render(){
   var main=document.getElementById("main");
   if(loading){main.innerHTML='<div class="empty">'+t("loading")+'</div>';updateWatermark();return;}
   ensureTopItems();
+  /* いいね・新着読み込みなどで再描画しても、書きかけの返信が消えないようにする */
+  var rb=document.getElementById("r-body"),rn=document.getElementById("r-name");
+  var draftBody=rb?rb.value:null,draftName=rn?rn.value:null,draftFocus=rb&&document.activeElement===rb;
   main.innerHTML=st.thread?renderThread():renderList();
+  if(draftBody!==null){
+    var rb2=document.getElementById("r-body"),rn2=document.getElementById("r-name");
+    if(rb2) rb2.value=draftBody;
+    if(rn2) rn2.value=draftName;
+    if(rb2&&draftFocus) rb2.focus();
+  }
+  updateFab();
   updateWatermark();
   setTimeout(updateWatermark,60);
 }
@@ -2347,6 +2386,13 @@ function heroBanner(){
     '</div>';
 }
 
+/* 初めての人向けの案内（とじたら二度と出さない） */
+function welcomeHtml(){
+  if(lsGet("kmh_welcome_closed")==="1") return "";
+  return '<div id="welcome-box"><button class="wb-close" onclick="A.dismissWelcome()">✕ '+t("welcome_close")+'</button>'+t("welcome_text")+'</div>';
+}
+function dismissWelcome(){ lsSet("kmh_welcome_closed","1"); var el=document.getElementById("welcome-box"); if(el) el.remove(); }
+
 function renderList(){
   var base=viewThreads().slice();
   var list=st.q?base.filter(function(t2){
@@ -2382,7 +2428,7 @@ function renderList(){
     sortBtns='<div id="sort-bar">'+sortBtnHtml.join("")+'</div>';
   }
   var top='';
-  if(!st.q&&viewThreads().length){ top+=heroBanner(); }
+  if(!st.q&&viewThreads().length){ top+=welcomeHtml()+heroBanner(); }
   top+='<div id="search-bar"><input id="sq" type="text" placeholder="'+esc(t("search_ph"))+'" onkeydown="A.searchKey(event)"><button onclick="A.doSearch()">🔍</button>'+(st.q?'<span class="search-clear" onclick="A.clearSearch()">✕</span>':"")+' </div>';
   top+=sortBtns;
   if(isCharaView){ top+=renderAppearanceBox(st.q); }
@@ -2908,6 +2954,7 @@ async function votePollOption(pollId,optionId,threadId){
   var opt=poll.options.filter(function(o){return o.id===optionId;})[0];
   if(!opt) return;
   poll.votedByMe=optionId;
+  track("poll_vote",{thread_id:String(threadId)});
   opt.voteCount=(opt.voteCount||0)+1;
   poll.totalVotes=(poll.totalVotes||0)+1;
   render();
@@ -2921,6 +2968,58 @@ async function votePollOption(pollId,optionId,threadId){
     render();
     alert(t("poll_vote_fail")+(e.message||e));
   }
+}
+
+function threadShareUrl(t2){ return "https://chara-moe-sokuhou.com/t/"+t2.id; }
+function threadShareText(t2){
+  var tag=t2.workTag?" #"+t2.workTag.replace(/[\s・]/g,""):"";
+  return t2.title+"｜キャラ萌え速報"+tag;
+}
+function shareBarHtml(t2){
+  if(t2.cautionReason) return ""; /* 閲覧注意スレは拡散ボタンを出さない */
+  var u=encodeURIComponent(threadShareUrl(t2)), tx=encodeURIComponent(threadShareText(t2));
+  return '<div class="share-bar"><span>'+t("share_label")+'</span>'+
+    '<a class="share-x" target="_blank" rel="noopener" onclick="A.trackShare(\'x\')" href="https://x.com/intent/post?text='+tx+'&url='+u+'">X</a>'+
+    '<a class="share-line" target="_blank" rel="noopener" onclick="A.trackShare(\'line\')" href="https://social-plugins.line.me/lineit/share?url='+u+'">LINE</a>'+
+    '<a class="share-th" target="_blank" rel="noopener" onclick="A.trackShare(\'threads\')" href="https://www.threads.net/intent/post?text='+encodeURIComponent(threadShareText(t2)+" "+threadShareUrl(t2))+'">Threads</a>'+
+    '<button class="share-copy" onclick="A.copyThreadLink(this)">'+t("share_copy")+'</button>'+
+    '</div>';
+}
+function trackShare(method){ if(st.thread) track("share",{method:method,content_type:"thread",item_id:String(st.thread.id)}); }
+function copyThreadLink(btn){
+  if(!st.thread) return;
+  var url=threadShareUrl(st.thread);
+  var done=function(){ if(btn){ btn.textContent=t("share_copied"); setTimeout(function(){ btn.textContent=t("share_copy"); },1600);} };
+  trackShare("copy");
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(done,function(){ prompt("URL",url); }); }
+  else { prompt("URL",url); }
+}
+/* 返信欄が画面外のときだけ右下に「書き込む」ボタンを出す */
+var fabObserver=null;
+function updateFab(){
+  var fab=document.getElementById("reply-fab");
+  if(!fab) return;
+  fab.textContent=t("reply_fab");
+  if(fabObserver){ fabObserver.disconnect(); fabObserver=null; }
+  var box=document.getElementById("reply-box");
+  if(!st.thread||!box){ fab.classList.remove("show"); return; }
+  if(!("IntersectionObserver" in window)){ fab.classList.add("show"); return; }
+  fabObserver=new IntersectionObserver(function(es){
+    fab.classList.toggle("show",!es[0].isIntersecting);
+  });
+  fabObserver.observe(box);
+}
+function goReply(){
+  var box=document.getElementById("reply-box"), ta=document.getElementById("r-body");
+  if(!box) return;
+  box.scrollIntoView({behavior:"smooth",block:"center"});
+  setTimeout(function(){ if(ta) ta.focus(); },350);
+}
+function showToast(msg){
+  var el=document.getElementById("post-toast");
+  if(!el) return;
+  el.textContent=msg; el.classList.add("show");
+  clearTimeout(showToast._t); showToast._t=setTimeout(function(){ el.classList.remove("show"); },2200);
 }
 
 function renderThread(){
@@ -2998,6 +3097,7 @@ function renderThread(){
     (adminMode?'<br><button class="admin-tag-btn" onclick="A.editTags(this.dataset.tid)" data-tid="'+esc(t2.id)+'">🏷 タグを編集（管理者）</button>':"")+
     /* 管理者だけ: チェックを入れたレスをまとめて削除 */
     (adminMode?'<br><button id="bulk-del-btn" class="kanso-op-btn" style="border-color:#c00;color:#c00;display:'+(Object.keys(selectedPosts).length>0?"inline-block":"none")+'" onclick="A.bulkDeletePosts()">選択した'+Object.keys(selectedPosts).length+'件を削除</button>':"")+
+    shareBarHtml(t2)+
     '</div>'+
     renderPollBox(t2)+
     '<div id="posts-wrap">'+posts+'</div>'+
@@ -3006,6 +3106,7 @@ function renderThread(){
     (isK
       ? '<div class="kanso-closed">'+t("kanso_closed")+'</div>'
       : '<div id="reply-box"><h3>'+t("reply_h3")+'</h3>'+
+        '<div class="reply-hint">'+t("reply_hint")+'</div>'+
         '<input id="r-name" placeholder="'+esc(t("reply_name_ph"))+'">'+
         '<textarea id="r-body" placeholder="'+esc(t("reply_body_ph"))+'" maxlength="1000"></textarea>'+
         '<div class="form-foot"><span></span><button class="sub-btn" onclick="A.reply()">'+t("reply_btn")+'</button></div></div>'
@@ -3167,7 +3268,7 @@ function top(){st.thread=null;st.q="";st.cat="すべて"; selectedPosts={}; var 
 function cat(c){st.cat=c;st.thread=null;st.q=""; updateHash(); render(); resetPollBase(); window.scrollTo(0,0);}
 function openT(id){
   selectedPosts={};
-  for(var i=0;i<th.length;i++){if(String(th[i].id)===String(id)){st.thread=th[i]; updateHash(); render(); resetPollBase(); window.scrollTo(0,0); return;}}
+  for(var i=0;i<th.length;i++){if(String(th[i].id)===String(id)){st.thread=th[i]; track("thread_view",{thread_id:String(id)}); updateHash(); render(); resetPollBase(); window.scrollTo(0,0); return;}}
 }
 
 async function doLike(pid){
@@ -3178,6 +3279,7 @@ async function doLike(pid){
     }
   }
   if(!post||post.likedByMe)return;
+  track("like",{post_id:String(pid)});
   post.likedByMe=true;
   post.likeCount=(post.likeCount||0)+1;
   render();
@@ -3426,9 +3528,12 @@ async function reply(){
       thread_id:Number(st.thread.id), name:name.trim(), body:body.trim(), uid:myIp, post_lang:postLang
     });
     if(res.error) throw new Error(res.error);
+    var rbEl=document.getElementById("r-body"); if(rbEl) rbEl.value=""; /* 送信済みの本文は下書きとして残さない */
+    track("reply_post",{thread_id:String(st.thread.id)});
     await loadAll();
-    /* 投稿後は画面の一番上に戻す(レス自体はスレの一番下に追加される) */
-    setTimeout(function(){window.scrollTo({top:0,behavior:"smooth"});},80);
+    /* 投稿後は自分のレス（スレの一番下）までスクロールして光らせ、ちゃんと書き込めたことが分かるようにする */
+    showToast(t("reply_done"));
+    setTimeout(function(){ if(st.thread) jumpTo(st.thread.posts.length); },120);
   }catch(e){
     alert(t("fail_reply")+(e.message||e));
     console.error("reply error:",e);
@@ -3456,7 +3561,8 @@ function boot(){
 }
 boot();
 
-return{top:top,cat:cat,openT:openT,loadNew:loadNew,toggleForm:toggleForm,submit:submit,reply:reply,
+return{goReply:goReply,copyThreadLink:copyThreadLink,trackShare:trackShare,dismissWelcome:dismissWelcome,
+  top:top,cat:cat,openT:openT,loadNew:loadNew,toggleForm:toggleForm,submit:submit,reply:reply,
   togglePollForm:togglePollForm,addPollOptionField:addPollOptionField,votePollOption:votePollOption,
   doLike:doLike,toggleMedal:toggleMedal,doKanso:doKanso,deleteThread:deleteThread,deletePost:deletePost,editPost:editPost,
   toggleSelectPost:toggleSelectPost,bulkDeletePosts:bulkDeletePosts,

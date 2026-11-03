@@ -127,6 +127,14 @@ module.exports = async function handler(req, res) {
 <meta property="og:title" content="${esc(pageTitle)}">
 <meta property="og:description" content="${esc(description)}">
 <meta property="og:url" content="${SITE_URL}/c/${encodeURIComponent(name)}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ダラルズ｜キャラ萌え速報">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:image" content="${SITE_URL}/ogp.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${esc(pageTitle)}">
+<meta name="twitter:description" content="${esc(description)}">
+<meta name="twitter:image" content="${SITE_URL}/ogp.png">
 <link rel="canonical" href="${SITE_URL}/c/${encodeURIComponent(name)}">
 <style>
 *{box-sizing:border-box}

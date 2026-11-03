@@ -27,7 +27,7 @@ function esc(s) {
 
 async function fetchThread(id) {
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/threads?id=eq.${id}&select=id,title,work_tag,chara_tag,cat,caution_reason`,
+    `${SUPABASE_URL}/rest/v1/threads?id=eq.${id}&select=id,title,work_tag,chara_tag,cat,caution_reason,thumb_url`,
     { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
   );
   const rows = await res.json();
@@ -82,7 +82,34 @@ module.exports = async function handler(req, res) {
     const posts = await fetchPosts(id);
     const tagLine = [thread.work_tag, thread.chara_tag].filter(Boolean).join(" ");
     const pageTitle = `${thread.title}${tagLine ? `【${tagLine}】` : ""} - キャラ萌え速報`;
-    const description = (posts[0] && posts[0].body ? posts[0].body : thread.title || "").slice(0, 120);
+    const description = (posts[0] && posts[0].body ? posts[0].body : thread.title || "").replace(/\s+/g, " ").slice(0, 120);
+    // SNSでリンクを貼ったときに画像付きカードになるよう、スレのサムネ（なければ共通OGP画像）を使う
+    const ogImage = thread.thumb_url || `${SITE_URL}/ogp.png`;
+    const firstTs = posts[0] && posts[0].created_at;
+    const lastTs = posts.length ? posts[posts.length - 1].created_at : firstTs;
+    // Google向けの構造化データ（掲示板スレであることを伝える）
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "DiscussionForumPosting",
+      headline: thread.title,
+      url: `${SITE_URL}/t/${id}`,
+      text: posts[0] ? posts[0].body : thread.title,
+      datePublished: firstTs,
+      dateModified: lastTs,
+      author: { "@type": "Person", name: (posts[0] && posts[0].name) || "萌えてる匿名さん" },
+      image: ogImage,
+      interactionStatistic: {
+        "@type": "InteractionCounter",
+        interactionType: "https://schema.org/CommentAction",
+        userInteractionCount: Math.max(posts.length - 1, 0),
+      },
+      comment: posts.slice(1, 30).map((p) => ({
+        "@type": "Comment",
+        text: p.body,
+        datePublished: p.created_at,
+        author: { "@type": "Person", name: p.name || "萌えてる匿名さん" },
+      })),
+    };
 
     const postsHtml = posts
       .map(
@@ -104,6 +131,15 @@ module.exports = async function handler(req, res) {
 <meta property="og:title" content="${esc(pageTitle)}">
 <meta property="og:description" content="${esc(description)}">
 <meta property="og:url" content="${SITE_URL}/t/${id}">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="ダラルズ｜キャラ萌え速報">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:image" content="${esc(ogImage)}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${esc(pageTitle)}">
+<meta name="twitter:description" content="${esc(description)}">
+<meta name="twitter:image" content="${esc(ogImage)}">
+<script type="application/ld+json">${JSON.stringify(jsonLd).replace(/</g, "\\u003c")}</script>
 <link rel="canonical" href="${SITE_URL}/t/${id}">
 <style>
 *{box-sizing:border-box}
@@ -120,6 +156,7 @@ h1{font-size:19px;color:#c04a00;margin-bottom:4px}
 <h1>${esc(thread.title)}</h1>
 ${tagLine ? `<div class="tags">${esc(tagLine)}</div>` : ""}
 <div class="posts">${postsHtml}</div>
+<a class="back" href="/#t=${id}">このスレに書き込む（登録不要・匿名）</a><br>
 <a class="back" href="/">← キャラ萌え速報 トップへ</a>
 </body>
 </html>`;
