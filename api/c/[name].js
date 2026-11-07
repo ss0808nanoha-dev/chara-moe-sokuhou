@@ -89,10 +89,18 @@ module.exports = async function handler(req, res) {
       .map((a) => ({ ...a, votes: voteCount[a.id] || 0 }))
       .sort((a, b) => b.votes - a.votes || a.id - b.id);
 
-    const pageTitle = `${name}の登場回・活躍回まとめ - キャラ萌え速報`;
+    // 「アレクシスネス 登場回」のようなフルネーム検索だけでなく、「カイザー スレ」のような
+    // 短い呼び名+「スレ」での検索にも出せるよう、タイトル・説明文に短縮名と「スレ」を含める。
+    // 「・」区切りの名前は最後の部分(名字 or ファーストネーム)を短い呼び名として使う。
+    // 「・」が無い名前(例: 黒名蘭世)は無理に分割せず、フルネームのみ扱う。
+    const shortName = name.includes("・") ? name.split("・").pop() : null;
+    const pageTitle = shortName
+      ? `${name}の登場回・活躍回まとめ｜${shortName}語りスレ - キャラ萌え速報`
+      : `${name}の登場回・活躍回まとめ｜語りスレ - キャラ萌え速報`;
+    const shortSuffix = shortName ? `(${shortName})` : "";
     const description = rankedAppearances.length
-      ? `${name}が活躍した回・登場回を、ファンの投票でランキング。${rankedAppearances.slice(0, 3).map((a) => a.label).join("、")}など。`
-      : `${name}の関連スレッド・感想一覧。${threads.slice(0, 3).map((t) => t.title).join("、")}など。`;
+      ? `${name}${shortSuffix}が活躍した回・登場回を、ファンの投票でランキング。${rankedAppearances.slice(0, 3).map((a) => a.label).join("、")}など。匿名掲示板「キャラ萌え速報」のスレッド一覧も。`
+      : `${name}${shortSuffix}の関連スレッド・感想掲示板。${threads.slice(0, 3).map((t) => t.title).join("、")}など。`;
 
     const mediaTag = (a) => {
       if (a.media_type === "anime") return "📺アニメ";
