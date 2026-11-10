@@ -114,7 +114,7 @@ input.err,textarea.err,select.err{border-color:#c00 !important}
 .poll-result-label{position:relative;z-index:1;font-weight:700;color:#333}
 .poll-result-pct{position:relative;z-index:1;float:right;color:#c04a00;font-weight:700}
 .poll-total{font-size:11px;color:#aaa;margin-top:8px;text-align:right}
-.th-thumb{width:58px;height:76px;object-fit:cover;border-radius:4px;flex-shrink:0;margin-left:8px}
+.th-thumb{width:58px;height:76px;object-fit:cover;border-radius:4px;flex-shrink:0}
 .rank-thumb{width:32px;height:42px;object-fit:cover;border-radius:3px;flex-shrink:0;margin-left:6px}
 .rank-wrap{display:flex;gap:8px;margin-bottom:10px}
 .rank-box{flex:1;background:#fff;border:1px solid #e0c0a0;overflow:hidden;min-width:0}
@@ -152,6 +152,7 @@ body.admin .admin-tag-btn:hover{background:#cc4422;color:#fff}
 .th-cat{font-size:10px;font-weight:700;background:#e05a00;color:#fff;padding:1px 6px;border-radius:2px}
 .th-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .th-title{font-size:14px;font-weight:700;color:#222;line-height:1.4;text-align:left;flex:1;min-width:0}
+.th-side{display:flex;align-items:center;gap:6px;flex-shrink:0}
 .th-res{font-size:11px;color:#e05a00;border:1px solid #e0c0a0;padding:1px 7px;white-space:nowrap;flex-shrink:0;font-weight:700;border-radius:2px}
 .th-meta{font-size:10px;color:#bbb;margin-top:3px}
 .kanso-badge{font-size:10px;background:#e05a00;color:#fff;padding:1px 6px;margin-left:4px;border-radius:2px;font-weight:700}
@@ -2425,7 +2426,7 @@ function renderList(){
     return '<a class="th-item'+(t2.cautionReason?" caution":"")+'" href="'+(t2.cautionReason?"#t="+esc(t2.id):"/t/"+esc(t2.id))+'" onclick="A.openT(this.dataset.id);return false;" data-id="'+esc(t2.id)+'">'+
       ((badges||t2.cautionReason)?'<div class="th-badges">'+(t2.cautionReason?'<span class="caution-badge">'+t("caution_badge")+'</span>':"")+badges+'</div>':"")+
       '<div class="th-top"><div class="th-title">'+esc(t2.title)+(isK?'<span class="kanso-badge">'+t("kanso_badge")+'</span>':"")+tlTitleBtn+
-      '</div>'+(t2.thumbUrl?'<img class="th-thumb" src="'+esc(t2.thumbUrl)+'" alt="" loading="lazy">':"")+'<span class="th-res">'+t2.posts.length+t("res_unit")+'</span></div>'+
+      '</div><div class="th-side">'+(t2.thumbUrl?'<img class="th-thumb" src="'+esc(t2.thumbUrl)+'" alt="" loading="lazy">':"")+'<span class="th-res">'+t2.posts.length+t("res_unit")+'</span></div></div>'+
       (t2.showTitleTl&&t2.titleTranslated?'<div class="pbody-tl" style="margin-left:0"><span class="tl-tag">'+t("tl_tag")+'</span>'+esc(t2.titleTranslated)+'</div>':"")+
       '<div class="th-meta">'+fmt(last.ts)+'</div></a>';
   }).join("")+'</div>'+botAd;
