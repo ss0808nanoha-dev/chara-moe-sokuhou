@@ -46,11 +46,18 @@ module.exports = async function handler(req, res) {
       `threads?chara_tag=eq.${encodeURIComponent(name)}&caution_reason=is.null&select=id,title&order=id.desc&limit=100`
     );
 
-    if (!Array.isArray(threads) || threads.length === 0) {
-      res.statusCode = 404;
-      res.setHeader("Content-Type", "text/html; charset=utf-8");
-      res.end("<!doctype html><html><body>キャラクターが見つかりません</body></html>");
-      return;
+    // スレがまだ無くても、登場回が登録されていればキャラページとして扱う
+    let threadList = Array.isArray(threads) ? threads : [];
+    if (threadList.length === 0) {
+      const anyAppearance = await sbGet(
+        `chara_appearances?chara_tag=eq.${encodeURIComponent(name)}&select=id&limit=1`
+      );
+      if (!Array.isArray(anyAppearance) || anyAppearance.length === 0) {
+        res.statusCode = 404;
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
+        res.end("<!doctype html><html><body>キャラクターが見つかりません</body></html>");
+        return;
+      }
     }
 
     const ua = req.headers["user-agent"] || "";
@@ -100,7 +107,7 @@ module.exports = async function handler(req, res) {
     const shortSuffix = shortName ? `(${shortName})` : "";
     const description = rankedAppearances.length
       ? `${name}${shortSuffix}が活躍した回・登場回を、ファンの投票でランキング。${rankedAppearances.slice(0, 3).map((a) => a.label).join("、")}など。匿名掲示板「キャラ萌え速報」のスレッド一覧も。`
-      : `${name}${shortSuffix}の関連スレッド・感想掲示板。${threads.slice(0, 3).map((t) => t.title).join("、")}など。`;
+      : `${name}${shortSuffix}の関連スレッド・感想掲示板。${threadList.slice(0, 3).map((t) => t.title).join("、")}など。`;
 
     const mediaTag = (a) => {
       if (a.media_type === "anime") return "📺アニメ";
@@ -118,12 +125,14 @@ module.exports = async function handler(req, res) {
 </ol>`
       : "";
 
-    const threadsHtml = `<h2>${esc(name)}の関連スレッド</h2>
-<ul class="thread-list">${threads
-      .map((th) => `
+    const threadsHtml = threadList.length
+      ? `<h2>${esc(name)}の関連スレッド</h2>
+<ul class="thread-list">${threadList
+          .map((th) => `
   <li><a href="/t/${th.id}">${esc(th.title)}</a></li>`)
-      .join("")}
-</ul>`;
+          .join("")}
+</ul>`
+      : "";
 
     const html = `<!doctype html>
 <html lang="ja">

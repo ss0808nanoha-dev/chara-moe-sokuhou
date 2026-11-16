@@ -1,6 +1,6 @@
 // Googleがスレッド一覧・キャラ一覧を発見できるよう、閲覧注意タグの付いていないスレッドの
-// /t/ID と、そのスレッドが持つキャラ名タグの /c/名前 一覧をサイトマップとして返す
-// （閲覧注意スレ・そこにしか出てこないキャラは意図的に含めない＝検索に出さない）
+// /t/ID と、キャラ名タグ(スレ由来＋登場回由来)の /c/名前 一覧をサイトマップとして返す
+// （閲覧注意スレは意図的に含めない＝検索に出さない）
 
 const SUPABASE_URL = "https://xflcbgsonmvvzbefbreq.supabase.co";
 const SUPABASE_KEY = "sb_publishable_in8cVtZwe3SbE0l6Y3Jf2Q_awVX6mJY";
@@ -17,8 +17,21 @@ module.exports = async function handler(req, res) {
     .map((t) => `  <url><loc>${SITE_URL}/t/${t.id}</loc></url>`)
     .join("\n");
 
+  // スレがまだ無く、登場回だけ登録されているキャラも /c/名前 ページとして載せる
+  let appearanceCharas = [];
+  try {
+    const ar = await fetch(
+      `${SUPABASE_URL}/rest/v1/chara_appearances?select=chara_tag`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+    );
+    const rows = await ar.json();
+    if (Array.isArray(rows)) appearanceCharas = rows.map((a) => a.chara_tag);
+  } catch (e) {
+    console.error(e);
+  }
+
   const charaNames = Array.from(
-    new Set(threads.map((t) => t.chara_tag).filter(Boolean))
+    new Set([...threads.map((t) => t.chara_tag), ...appearanceCharas].filter(Boolean))
   );
   const charaUrls = charaNames
     .map((name) => `  <url><loc>${SITE_URL}/c/${encodeURIComponent(name)}</loc></url>`)

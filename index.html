@@ -221,7 +221,8 @@ body.admin .post.jump-hl{animation:jumphlA 1.6s ease-out}
 #reply-box input,#reply-box textarea{width:100%;display:block;margin-bottom:7px}
 #reply-box textarea{height:100px}
 .back-btn{display:inline-block;font-size:11px;color:#e05a00;margin-bottom:8px}
-#search-bar{background:#fff;border:1px solid #e8d0c0;border-top:3px solid #e05a00;padding:8px 10px;margin-bottom:10px;display:flex;gap:6px;align-items:center}
+#search-bar{background:#fff;border:1px solid #e8d0c0;border-top:3px solid #e05a00;padding:8px 10px;margin-bottom:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+#sq-suggest{flex-basis:100%;margin:0}
 #search-bar input{flex:1;padding:6px 10px;border:1px solid #ccc;border-radius:2px;font-size:13px}
 #search-bar input:focus{border-color:#e05a00}
 #search-bar button{background:#e05a00;color:#fff;font-size:12px;font-weight:700;padding:6px 14px;border-radius:2px;flex-shrink:0}
@@ -1170,6 +1171,7 @@ var appearanceListExpanded=false;/* キャラ検索直後はスレ一覧が隠�
 var appearanceSortMode="num";    /* "rank"=投票ランキング順, "num"=ラベル中の数値順(デフォルト) */
 var appearanceFormMedia=null;    /* 投稿フォームで選択中の媒体("anime"|"manga"|null) */
 var appearanceMediaFilter="all"; /* 一覧の絞り込み("all"|"anime"|"manga")。未設定の投稿は"manga"扱いにする */
+var appearCharaTags=[]; /* 登場回が登録されているキャラ名(スレが無いキャラも含む) */
 var pollCache={}; /* スレID → {loading,poll:null|{id,question,options:[{id,label,voteCount,votedByMe}],totalVotes,votedByMe}} */
 var loading=true;
 var fMag="",fWork="",fChara="";
@@ -1641,6 +1643,15 @@ async function loadAll(){
       };
     });
     th=th.filter(function(t2){return t2.posts.length>0;});
+    /* スレがまだ無くても登場回だけ登録されているキャラも、キャラとして検索・候補表示できるようにする */
+    try{
+      var acRes=await sb.from("chara_appearances").select("chara_tag");
+      if(!acRes.error){
+        var acSeen={};
+        appearCharaTags=(acRes.data||[]).map(function(r){return r.chara_tag;})
+          .filter(function(n){if(!n||acSeen[n])return false;acSeen[n]=true;return true;});
+      }
+    }catch(e2){ console.error("appearCharaTags error:",e2); }
     loading=false;
     if(st.thread){
       var found=null;
@@ -1716,6 +1727,8 @@ function getWorkTags(){
 function getCharaTags(){
   var all={};
   th.forEach(function(t2){if(t2.charaTag) all[t2.charaTag]=(all[t2.charaTag]||0)+1;});
+  /* スレはまだ無いが登場回だけ登録されたキャラも、件数0として末尾に並べる */
+  appearCharaTags.forEach(function(n){if(!(n in all)) all[n]=0;});
   return Object.keys(all).sort(function(a,b){return all[b]-all[a];});
 }
 /* 検索語がキャラ名タグと完全一致するか(=「キャラクタータブ」とみなし、/c/名前 のURLに対応させる) */
@@ -1728,6 +1741,7 @@ function getAllTags(){
     if(t2.workTag) all[t2.workTag]=(all[t2.workTag]||0)+1;
     if(t2.charaTag) all[t2.charaTag]=(all[t2.charaTag]||0)+1;
   });
+  appearCharaTags.forEach(function(n){if(!(n in all)) all[n]=0;});
   return Object.keys(all).sort(function(a,b){return all[b]-all[a];});
 }
 function showSuggest(inpId,listId){
@@ -1755,6 +1769,7 @@ function pickSuggest(el){
   /* 候補を選んだ時点で、そのままタグとして確定する(「追加」を押さなくてよい) */
   if(inpId==="work-inp") setWork();
   else if(inpId==="chara-inp") setChara();
+  else if(inpId==="sq") doSearch(); /* 検索窓の候補はタップでそのまま検索 */
 }
 
 /* ============================================================
@@ -2391,7 +2406,7 @@ function renderList(){
   }
   var top='';
   if(!st.q&&viewThreads().length){ top+=heroBanner(); }
-  top+='<div id="search-bar"><input id="sq" type="text" placeholder="'+esc(t("search_ph"))+'" onkeydown="A.searchKey(event)"><button onclick="A.doSearch()">🔍</button>'+(st.q?'<span class="search-clear" onclick="A.clearSearch()">✕</span>':"")+' </div>';
+  top+='<div id="search-bar"><input id="sq" type="text" autocomplete="off" placeholder="'+esc(t("search_ph"))+'" onkeydown="A.searchKey(event)" oninput="A.showSuggest(\'sq\',\'sq-suggest\')"><button onclick="A.doSearch()">🔍</button>'+(st.q?'<span class="search-clear" onclick="A.clearSearch()">✕</span>':"")+'<div id="sq-suggest" class="suggest-list"></div></div>';
   top+=sortBtns;
   if(isCharaView){ top+=renderAppearanceBox(st.q); }
   if(!st.q&&viewThreads().length>0){
