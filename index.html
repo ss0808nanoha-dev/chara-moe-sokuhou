@@ -1553,6 +1553,12 @@ async function logoTap(){
        合言葉が合えば管理者モードON、合わなければ入力語で普通に検索する(=本物の検索窓として機能)。 */
     var kw=prompt("キャラ名・作品名で検索：");
     if(kw===null||!kw.trim()) return;
+    var trimmedKw=kw.trim();
+    /* 登場回クイック投稿(自分用ページ)への合言葉。検索語として扱われないよう先に判定する */
+    if(trimmedKw==="toujoumatome"){
+      location.href="/quickadd.html";
+      return;
+    }
     var ok=await verifyAdminKey(kw);
     if(ok){
       adminMode=!adminMode;
