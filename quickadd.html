@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>登場回クイック投稿（自分用）</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif;background:#fff4f0;color:#222;padding:14px;padding-bottom:60px}
+h1{font-size:16px;color:#c04a00;margin:0 0 12px}
+.card{background:#fff;border:1px solid #e8d0c0;border-radius:6px;padding:14px;margin-bottom:12px}
+label{display:block;font-size:12px;font-weight:700;color:#888;margin-bottom:4px}
+input[type=text],input[list]{width:100%;box-sizing:border-box;font-size:16px;padding:10px;border:1px solid #e0c0a0;border-radius:4px;margin-bottom:12px;font-family:inherit}
+input:focus{outline:none;border-color:#e05a00;box-shadow:0 0 0 2px rgba(224,90,0,.15)}
+.media-row{display:flex;gap:8px;margin-bottom:12px}
+.media-btn{flex:1;font-size:14px;font-weight:700;padding:12px;border:2px solid #e0c0a0;border-radius:6px;background:#fff;color:#888;cursor:pointer}
+.media-btn.on{background:#e05a00;color:#fff;border-color:#e05a00}
+#vol-wrap{display:none}
+.submit-btn{display:block;width:100%;font-size:16px;font-weight:700;padding:14px;border:none;border-radius:6px;background:#e05a00;color:#fff;cursor:pointer}
+.submit-btn:active{background:#c04a00}
+.submit-btn:disabled{background:#ccc}
+#msg{font-size:12px;margin-top:8px;min-height:16px}
+#msg.ok{color:#2a8a3a}
+#msg.err{color:#c00}
+#recent{margin-top:16px}
+#recent h2{font-size:13px;color:#888;margin:0 0 8px}
+.recent-item{background:#fff;border:1px solid #ecd2c2;border-left:4px solid #e05a00;border-radius:4px;padding:8px 10px;margin-bottom:6px;font-size:13px}
+.recent-item .chara{font-weight:700;color:#c04a00}
+.recent-item .label{font-weight:700}
+.recent-item .note{color:#888;font-size:12px;display:block}
+.recent-item .media{font-size:10px;background:#fff0e0;color:#c04a00;border-radius:999px;padding:1px 7px;margin-right:4px}
+.undo-btn{font-size:11px;color:#c00;cursor:pointer;float:right}
+</style>
+</head>
+<body>
+<h1>📝 登場回クイック投稿（自分用）</h1>
+<div class="card">
+  <label for="chara-inp">キャラクター名</label>
+  <input type="text" id="chara-inp" list="chara-list" placeholder="例：アレクシス・ネス" autocomplete="off">
+  <datalist id="chara-list"></datalist>
+
+  <div class="media-row">
+    <button type="button" class="media-btn on" id="media-anime" onclick="setMedia('anime')">📺 アニメ</button>
+    <button type="button" class="media-btn" id="media-manga" onclick="setMedia('manga')">📖 漫画</button>
+  </div>
+
+  <div id="vol-wrap">
+    <label for="vol-inp">単行本 何巻？</label>
+    <input type="text" id="vol-inp" placeholder="例：18" inputmode="numeric">
+  </div>
+
+  <label for="label-inp">登場回</label>
+  <input type="text" id="label-inp" placeholder="例：3期5話" maxlength="60">
+
+  <label for="note-inp">ひとことコメント（任意）</label>
+  <input type="text" id="note-inp" placeholder="例：初登場シーン" maxlength="200">
+
+  <button type="button" class="submit-btn" id="submit-btn" onclick="submitEntry()">投稿する（キャラ名はそのまま残ります）</button>
+  <div id="msg"></div>
+</div>
+
+<div id="recent"></div>
+
+<script>
+var SUPABASE_URL = "https://xflcbgsonmvvzbefbreq.supabase.co";
+var SUPABASE_KEY = "sb_publishable_in8cVtZwe3SbE0l6Y3Jf2Q_awVX6mJY";
+var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+/* 本サイト(index.html)と同じ匿名ID方式。これで後からメインサイト側でも編集・削除依頼ができる */
+var myIp=(function(){var v=lsGet("kmh_ip");if(!v){v=Math.random().toString(36).slice(2,10).toUpperCase();lsSet("kmh_ip",v);}return v;})();
+
+var currentMedia="anime";
+function setMedia(m){
+  currentMedia=m;
+  document.getElementById("media-anime").classList.toggle("on",m==="anime");
+  document.getElementById("media-manga").classList.toggle("on",m==="manga");
+  document.getElementById("vol-wrap").style.display=(m==="manga")?"block":"none";
+}
+
+/* 既存のキャラ名候補(スレ・登場回の両方から集めて重複排除)をオートコンプリートに入れる */
+async function loadCharaList(){
+  try{
+    var names={};
+    var tRes=await sb.from("threads").select("chara_tag").not("chara_tag","is",null);
+    (tRes.data||[]).forEach(function(r){ if(r.chara_tag) names[r.chara_tag]=true; });
+    var aRes=await sb.from("chara_appearances").select("chara_tag");
+    (aRes.data||[]).forEach(function(r){ if(r.chara_tag) names[r.chara_tag]=true; });
+    var list=document.getElementById("chara-list");
+    list.innerHTML=Object.keys(names).sort().map(function(n){return '<option value="'+esc(n)+'">';}).join("");
+  }catch(e){ console.error("loadCharaList error:",e); }
+}
+loadCharaList();
+
+var recentEntries=[];
+function renderRecent(){
+  var box=document.getElementById("recent");
+  if(!recentEntries.length){ box.innerHTML=""; return; }
+  box.innerHTML='<h2>今回追加した分（'+recentEntries.length+'件）</h2>'+
+    recentEntries.map(function(e,i){
+      var mediaBadge=e.mediaType==="anime"?'<span class="media">📺アニメ</span>':
+        (e.mediaType==="manga"?'<span class="media">📖漫画'+(e.volume?' '+esc(e.volume)+'巻':'')+'</span>':'');
+      return '<div class="recent-item">'+
+        '<span class="undo-btn" onclick="undoEntry('+i+',this)">取り消す</span>'+
+        '<span class="chara">'+esc(e.charaTag)+'</span> '+mediaBadge+
+        '<div class="label">'+esc(e.label)+'</div>'+
+        (e.note?'<span class="note">'+esc(e.note)+'</span>':'')+
+        '</div>';
+    }).join("");
+}
+async function undoEntry(i,btnEl){
+  var e=recentEntries[i];
+  if(!e) return;
+  btnEl.textContent="削除中…";
+  try{
+    var res=await sb.from("chara_appearances").delete().eq("id",e.id);
+    if(res.error) throw res.error;
+    recentEntries.splice(i,1);
+    renderRecent();
+  }catch(err){
+    alert("取り消しに失敗しました: "+(err.message||err));
+  }
+}
+
+async function submitEntry(){
+  var charaInp=document.getElementById("chara-inp");
+  var labelInp=document.getElementById("label-inp");
+  var noteInp=document.getElementById("note-inp");
+  var volInp=document.getElementById("vol-inp");
+  var msg=document.getElementById("msg");
+  var btn=document.getElementById("submit-btn");
+
+  var charaTag=charaInp.value.trim();
+  var label=labelInp.value.trim().slice(0,60);
+  var note=noteInp.value.trim().slice(0,200);
+  var volume=(currentMedia==="manga")?volInp.value.trim().slice(0,20):"";
+
+  msg.className="";msg.textContent="";
+  if(!charaTag){ msg.className="err"; msg.textContent="キャラクター名を入力してください。"; charaInp.focus(); return; }
+  if(!label){ msg.className="err"; msg.textContent="登場回を入力してください。"; labelInp.focus(); return; }
+
+  btn.disabled=true; btn.textContent="投稿中…";
+  try{
+    var res=await sb.from("chara_appearances").insert({
+      chara_tag:charaTag, label:label, note:note||null, uid:myIp,
+      media_type:currentMedia, volume:volume||null
+    }).select("id").single();
+    if(res.error) throw res.error;
+
+    recentEntries.unshift({id:res.data.id, charaTag:charaTag, label:label, note:note, mediaType:currentMedia, volume:volume});
+    renderRecent();
+
+    /* キャラ名・媒体・巻数はそのまま残して、登場回とコメントだけ空にする→連続投稿が速い */
+    labelInp.value=""; noteInp.value="";
+    msg.className="ok"; msg.textContent="✅ 投稿しました！続けてこのキャラの別の回も入力できます。";
+    labelInp.focus();
+    loadCharaList();
+  }catch(e){
+    msg.className="err"; msg.textContent="投稿に失敗しました: "+(e.message||e);
+  }finally{
+    btn.disabled=false; btn.textContent="投稿する（キャラ名はそのまま残ります）";
+  }
+}
+
+document.getElementById("label-inp").addEventListener("keydown",function(ev){
+  if(ev.key==="Enter"){ ev.preventDefault(); submitEntry(); }
+});
+</script>
+</body>
+</html>
