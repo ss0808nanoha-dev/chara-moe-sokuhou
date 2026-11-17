@@ -83,6 +83,13 @@ module.exports = async function handler(req, res) {
     const tagLine = [thread.work_tag, thread.chara_tag].filter(Boolean).join(" ");
     const pageTitle = `${thread.title}${tagLine ? `【${tagLine}】` : ""} - キャラ萌え速報`;
     const description = (posts[0] && posts[0].body ? posts[0].body : thread.title || "").slice(0, 120);
+    // キャラ名タグはキャラページ(/c/名前)へリンクし、Googleがスレからキャラページへたどれるようにする。
+    // 閲覧注意スレは上で全員リダイレクト済みなので、ここに来るのは閲覧注意でないスレだけ(サイトマップと同じ条件)。
+    const charaHref = thread.chara_tag ? `/c/${encodeURIComponent(thread.chara_tag)}` : "";
+    const tagParts = [];
+    if (thread.work_tag) tagParts.push(esc(thread.work_tag));
+    if (thread.chara_tag) tagParts.push(`<a href="${charaHref}">${esc(thread.chara_tag)}</a>`);
+    const tagsHtml = tagParts.length ? `<div class="tags">${tagParts.join(" ")}</div>` : "";
 
     const postsHtml = posts
       .map(
@@ -110,6 +117,7 @@ module.exports = async function handler(req, res) {
 body{font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif;background:#fff4f0;color:#222;max-width:680px;margin:0 auto;padding:16px;line-height:1.6}
 h1{font-size:19px;color:#c04a00;margin-bottom:4px}
 .tags{color:#e05a00;font-size:13px;margin-bottom:14px}
+.tags a{color:#c04a00}
 .post{border-bottom:1px solid #ecd2c2;padding:10px 0}
 .pname{font-size:12px;color:#888;margin-bottom:2px}
 .pbody{font-size:14px;white-space:pre-wrap}
@@ -118,8 +126,9 @@ h1{font-size:19px;color:#c04a00;margin-bottom:4px}
 </head>
 <body>
 <h1>${esc(thread.title)}</h1>
-${tagLine ? `<div class="tags">${esc(tagLine)}</div>` : ""}
+${tagsHtml}
 <div class="posts">${postsHtml}</div>
+${charaHref ? `<a class="back" href="${charaHref}">${esc(thread.chara_tag)}の登場回・活躍回まとめ →</a><br>` : ""}
 <a class="back" href="/">← キャラ萌え速報 トップへ</a>
 </body>
 </html>`;
