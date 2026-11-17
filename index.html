@@ -231,6 +231,7 @@ body.admin .post.jump-hl{animation:jumphlA 1.6s ease-out}
 #site-footer{margin-top:30px;padding:18px 12px 30px;text-align:center;border-top:1px solid #f0c0a0;color:#888;font-size:11px;line-height:1.8}
 #site-footer a{color:#c04a00;cursor:pointer;margin:0 6px;text-decoration:underline}
 #site-footer a:hover{color:#a03a00}
+#site-footer .foot-sns{margin-top:6px}
 .doc-modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
 .doc-modal.on{display:flex}
 .doc-box{background:#fff;border-radius:6px;max-width:720px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,.3)}
@@ -644,6 +645,7 @@ body.admin .hero-jack .hj-cta:hover{background:#ff8a44}
     <div>
       <a id="g-foot-terms" href="/terms.html" onclick="A.showDoc('terms');return false;">利用規約</a>|<a id="g-foot-privacy" href="/privacy.html" onclick="A.showDoc('privacy');return false;">プライバシーポリシー</a>|<a id="g-foot-about" onclick="A.showDoc('about')">このサイトについて</a>|<a id="g-foot-contact" onclick="A.showDoc('contact')">お問い合わせ</a>
     </div>
+    <div class="foot-sns"><span id="g-foot-sns">公式SNS</span>：<a href="https://x.com/charamoesokuhou" target="_blank" rel="noopener">X</a>|<a href="https://www.threads.com/@chara.moe.sokuhou" target="_blank" rel="noopener">Threads</a>|<a href="https://www.youtube.com/@%E3%82%AD%E3%83%A3%E3%83%A9%E8%90%8C%E3%81%88%E9%80%9F%E5%A0%B1" target="_blank" rel="noopener">YouTube</a></div>
     <div style="margin-top:8px">© キャラ萌え速報</div>
   </footer>
 </div>
@@ -799,6 +801,13 @@ body.admin .hero-jack .hj-cta:hover{background:#ff8a44}
         <li>完走スレのいいね最多レスには金メダル🥇が付きます</li>
         <li>海外ユーザーも歓迎（English welcome）</li>
       </ul>
+      <h3 id="g-about-sns">公式SNS</h3>
+      <p id="g-about-sns-desc">運営からのお知らせや、アンケート・話題のスレを発信しています。</p>
+      <ul>
+        <li><strong>X</strong>：<a href="https://x.com/charamoesokuhou" target="_blank" rel="noopener">@charamoesokuhou</a></li>
+        <li><strong>Threads</strong>：<a href="https://www.threads.com/@chara.moe.sokuhou" target="_blank" rel="noopener">@chara.moe.sokuhou</a></li>
+        <li><strong>YouTube</strong>：<a href="https://www.youtube.com/@%E3%82%AD%E3%83%A3%E3%83%A9%E8%90%8C%E3%81%88%E9%80%9F%E5%A0%B1" target="_blank" rel="noopener">@キャラ萌え速報</a></li>
+      </ul>
       <div class="meta">© キャラ萌え速報</div>
     </div>
   </div>
@@ -895,6 +904,7 @@ var I18N={
     deleted_post:"このレスは削除されています", hidden_post:"⚠️ このレスは複数の報告により非表示になっています",
     loading:"読み込み中...", load_fail:"⚠️ データの読み込みに失敗しました。<br>通信環境を確認して、ページを再読み込みしてください。",
     foot_terms:"利用規約", foot_privacy:"プライバシーポリシー", foot_about:"このサイトについて", foot_contact:"お問い合わせ",
+    foot_sns:"公式SNS", about_sns_desc:"運営からのお知らせや、アンケート・話題のスレを発信しています。",
     confirm_kanso:"このスレッドを完走にしますか？", confirm_del_thread:"このスレッドを削除しますか？元に戻せません。",
     confirm_del_post:"このレスを削除しますか？", confirm_report:"このレスを通報しますか？\n（規約違反のレスに対してのみ使用してください）",
     report_done:"報告を受け付けました。ご協力ありがとうございます。", already_reported:"このレスは既に報告済みです。",
@@ -988,6 +998,7 @@ var I18N={
     deleted_post:"This reply was deleted", hidden_post:"⚠️ Hidden due to multiple reports",
     loading:"Loading...", load_fail:"⚠️ Failed to load data.<br>Check your connection and reload the page.",
     foot_terms:"Terms", foot_privacy:"Privacy Policy", foot_about:"About", foot_contact:"Contact",
+    foot_sns:"Official SNS", about_sns_desc:"We post announcements, polls, and trending threads here.",
     confirm_kanso:"Mark this thread as completed?", confirm_del_thread:"Delete this thread? This cannot be undone.",
     confirm_del_post:"Delete this reply?", confirm_report:"Report this reply?\n(Only for posts that violate the rules)",
     report_done:"Report received. Thank you for your help.", already_reported:"You have already reported this reply.",
@@ -1081,6 +1092,7 @@ var I18N={
     deleted_post:"삭제된 댓글입니다", hidden_post:"⚠️ 다수의 신고로 숨김 처리되었습니다",
     loading:"불러오는 중...", load_fail:"⚠️ 데이터를 불러오지 못했습니다.<br>연결을 확인하고 페이지를 새로고침해 주세요.",
     foot_terms:"이용약관", foot_privacy:"개인정보 처리방침", foot_about:"사이트 소개", foot_contact:"문의하기",
+    foot_sns:"공식 SNS", about_sns_desc:"운영 공지, 설문, 화제의 스레드를 전하고 있습니다.",
     confirm_kanso:"이 스레드를 완주 처리할까요?", confirm_del_thread:"이 스레드를 삭제할까요? 되돌릴 수 없습니다.",
     confirm_del_post:"이 댓글을 삭제할까요?", confirm_report:"이 댓글을 신고할까요?\n(규칙 위반 게시물에만 사용하세요)",
     report_done:"신고가 접수되었습니다. 협조해 주셔서 감사합니다.", already_reported:"이미 신고한 댓글입니다.",
@@ -1292,6 +1304,9 @@ function applyStaticI18n(){
   setText("g-foot-privacy","foot_privacy");
   setText("g-foot-about","foot_about");
   setText("g-foot-contact","foot_contact");
+  setText("g-foot-sns","foot_sns");
+  setText("g-about-sns","foot_sns");
+  setText("g-about-sns-desc","about_sns_desc");
   /* 言語切替ボタンのアクティブ表示 */
   var sws=document.querySelectorAll(".lang-sw-btn");
   for(var i=0;i<sws.length;i++){
