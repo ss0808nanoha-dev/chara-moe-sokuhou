@@ -20,6 +20,8 @@ input:focus{outline:none;border-color:#e05a00;box-shadow:0 0 0 2px rgba(224,90,0
 #vol-wrap{display:none}
 .section-title{font-size:13px;font-weight:700;color:#c04a00;margin:4px 0 8px;border-bottom:1px dashed #e8d0c0;padding-bottom:4px}
 .chara-block{position:relative;background:#fff8f3;border:1px solid #f0d4c0;border-radius:6px;padding:12px 12px 2px;margin-bottom:10px}
+@keyframes dupflash{0%,60%{box-shadow:0 0 0 3px #e05a00;background:#ffe6d2}100%{box-shadow:none}}
+.chara-block.dup-flash{animation:dupflash 1.6s ease-out}
 .chara-block-no{font-size:11px;font-weight:700;color:#e05a00;margin-bottom:6px}
 .chara-del{position:absolute;top:8px;right:10px;font-size:12px;color:#c00;cursor:pointer;background:none;border:none;padding:2px 4px}
 .hint{font-size:10px;color:#aaa;margin:-8px 0 10px}
@@ -109,8 +111,41 @@ function addCharaBlock(focus){
     '<label>ひとことコメント（任意）</label>'+
     '<input type="text" class="chara-note-inp" placeholder="例：初登場シーン" maxlength="200">';
   wrap.appendChild(div);
+  div.querySelector(".chara-name-inp").addEventListener("change",function(){ checkDuplicate(div); });
   renumberBlocks();
   if(focus) div.querySelector(".chara-name-inp").focus();
+}
+/* 同じキャラを2回入れたら、既に入力済みの欄へ移動する(重複した欄は片付ける) */
+function findBlockByName(name,except){
+  var blocks=document.querySelectorAll(".chara-block");
+  for(var i=0;i<blocks.length;i++){
+    if(blocks[i]===except) continue;
+    if(blocks[i].querySelector(".chara-name-inp").value.trim()===name) return blocks[i];
+  }
+  return null;
+}
+function jumpToBlock(block){
+  block.classList.remove("dup-flash");
+  void block.offsetWidth;
+  block.classList.add("dup-flash");
+  block.scrollIntoView({behavior:"smooth",block:"center"});
+  block.querySelector(".chara-note-inp").focus({preventScroll:true});
+}
+function checkDuplicate(block){
+  var name=block.querySelector(".chara-name-inp").value.trim();
+  if(!name) return;
+  var existing=findBlockByName(name,block);
+  if(!existing) return;
+  var note=block.querySelector(".chara-note-inp").value.trim();
+  if(note){
+    block.querySelector(".chara-name-inp").value="";
+  }else{
+    block.remove();
+    renumberBlocks();
+  }
+  var msg=document.getElementById("msg");
+  msg.className="err"; msg.textContent="「"+name+"」はすでに入力済みなので、その欄に移動しました。";
+  jumpToBlock(existing);
 }
 function removeCharaBlock(btn){
   var block=btn.closest(".chara-block");
@@ -183,7 +218,14 @@ async function submitEntry(){
   for(var i=0;i<blocks.length;i++){
     var name=blocks[i].querySelector(".chara-name-inp").value.trim();
     var note=blocks[i].querySelector(".chara-note-inp").value.trim().slice(0,200);
-    if(name) rows.push({charaTag:name,note:note});
+    if(!name) continue;
+    var dup=findBlockByName(name,blocks[i]);
+    if(dup&&Array.prototype.indexOf.call(blocks,dup)<i){
+      msg.className="err"; msg.textContent="「"+name+"」が2回入力されています。1つにまとめてください。";
+      jumpToBlock(blocks[i]);
+      return;
+    }
+    rows.push({charaTag:name,note:note});
   }
 
   msg.className="";msg.textContent="";
