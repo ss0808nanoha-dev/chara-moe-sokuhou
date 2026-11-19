@@ -31,6 +31,9 @@ input:focus{outline:none;border-color:#e05a00;box-shadow:0 0 0 2px rgba(224,90,0
 .submit-btn:active{background:#c04a00}
 .submit-btn:disabled{background:#ccc}
 #msg{font-size:12px;margin-top:8px;min-height:16px}
+.back-btn{display:block;width:100%;margin-top:8px;font-size:13px;font-weight:700;padding:11px;border:2px solid #888;border-radius:6px;background:#fff;color:#555;cursor:pointer}
+.back-btn:active{background:#f2f2f2}
+.back-btn:disabled{color:#bbb;border-color:#ddd}
 #msg.ok{color:#2a8a3a}
 #msg.err{color:#c00}
 #recent{margin-top:16px}
@@ -66,6 +69,7 @@ input:focus{outline:none;border-color:#e05a00;box-shadow:0 0 0 2px rgba(224,90,0
 
   <button type="button" class="submit-btn" id="submit-btn" onclick="submitEntry()">まとめて投稿する</button>
   <div id="msg"></div>
+  <div id="back-wrap"></div>
 </div>
 
 <div id="recent"></div>
@@ -198,8 +202,60 @@ async function undoEntry(i,btnEl){
     if(res.error) throw res.error;
     recentEntries.splice(i,1);
     renderRecent();
+    if(lastBatch&&lastBatch.ids.indexOf(e.id)>=0){
+      lastBatch.ids=lastBatch.ids.filter(function(x){return x!==e.id;});
+      lastBatch.rows=lastBatch.rows.filter(function(r){return r.id!==e.id;});
+      if(!lastBatch.ids.length) lastBatch=null;
+      renderBackBtn();
+    }
   }catch(err){
     alert("取り消しに失敗しました: "+(err.message||err));
+  }
+}
+
+/* 直前の「まとめて投稿」を取り消して、その内容を入力画面に戻す */
+var lastBatch=null;
+function renderBackBtn(){
+  var wrap=document.getElementById("back-wrap");
+  if(!lastBatch){ wrap.innerHTML=""; return; }
+  wrap.innerHTML='<button type="button" class="back-btn" onclick="backToLastBatch(this)">↩ 戻る：「'+esc(lastBatch.label)+'」('+lastBatch.ids.length+'人分)の投稿を取り消して入力画面に戻す</button>';
+}
+function formHasInput(){
+  if(document.getElementById("label-inp").value.trim()) return true;
+  var inps=document.querySelectorAll(".chara-name-inp,.chara-note-inp");
+  for(var i=0;i<inps.length;i++){ if(inps[i].value.trim()) return true; }
+  return false;
+}
+async function backToLastBatch(btnEl){
+  var b=lastBatch;
+  if(!b) return;
+  if(formHasInput()&&!confirm("いま入力中の内容は消えて、「"+b.label+"」の投稿内容に置き換わります。戻りますか？")) return;
+  btnEl.disabled=true; btnEl.textContent="戻しています…";
+  var msg=document.getElementById("msg");
+  try{
+    var res=await sb.from("chara_appearances").delete().in("id",b.ids);
+    if(res.error) throw res.error;
+    recentEntries=recentEntries.filter(function(e){return b.ids.indexOf(e.id)<0;});
+    renderRecent();
+    /* 入力画面を投稿前の状態に戻す */
+    setMedia(b.media);
+    document.getElementById("vol-inp").value=b.volume||"";
+    document.getElementById("label-inp").value=b.label;
+    document.getElementById("chara-blocks").innerHTML="";
+    b.rows.forEach(function(r){
+      addCharaBlock(false);
+      var blocks=document.querySelectorAll(".chara-block");
+      var last=blocks[blocks.length-1];
+      last.querySelector(".chara-name-inp").value=r.charaTag;
+      last.querySelector(".chara-note-inp").value=r.note||"";
+    });
+    lastBatch=null;
+    renderBackBtn();
+    msg.className="ok"; msg.textContent="↩ 投稿を取り消して、入力画面に戻しました。続きを入力してからもう一度投稿してください。";
+    window.scrollTo({top:0,behavior:"smooth"});
+  }catch(e){
+    btnEl.disabled=false; renderBackBtn();
+    msg.className="err"; msg.textContent="戻せませんでした: "+(e.message||e);
   }
 }
 
@@ -250,10 +306,15 @@ async function submitEntry(){
     }
     renderRecent();
 
+    /* 途中で間違えて投稿したとき用に、直前の投稿内容を覚えておく(「戻る」で入力画面に復元できる) */
+    lastBatch={ids:inserted.map(function(r){return r.id;}),label:label,media:currentMedia,volume:volume,
+      rows:inserted.map(function(r){return {id:r.id,charaTag:r.chara_tag,note:r.note};})};
+
     /* 媒体・巻数は残し、登場回とキャラ欄だけリセット→次の回をすぐ入力できる */
     labelInp.value="";
     resetCharaBlocks();
     msg.className="ok"; msg.textContent="✅ "+inserted.length+"人分を投稿しました！続けて次の回を入力できます。";
+    renderBackBtn();
     labelInp.focus();
     loadCharaList();
   }catch(e){
