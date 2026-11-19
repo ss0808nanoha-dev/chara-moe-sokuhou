@@ -125,6 +125,18 @@ input.err,textarea.err,select.err{border-color:#c00 !important}
 .rank-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rank-val{color:#aaa;flex-shrink:0;font-size:10px}
 #thread-list{display:flex;flex-direction:column;gap:1px}
+/* スレ一覧のカタログ表示(タイルを敷き詰める) */
+#thread-list.catalog{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:4px}
+.cat-item{position:relative;display:flex;gap:6px;height:78px;background:#fff;border:1px solid #e8d0c0;overflow:hidden;text-decoration:none;color:#222}
+.cat-item:hover{border-color:#e05a00;background:#fff9f5}
+.cat-item.caution{background:#f7f0ff;border-color:#c9a0e8}
+.cat-thumb{width:70px;height:76px;flex-shrink:0;background:#f4e6dc;overflow:hidden}
+.cat-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.cat-initial{display:flex;width:100%;height:100%;align-items:center;justify-content:center;color:#fff;font-size:26px;font-weight:900;background:#e05a00}
+.cat-title{flex:1;min-width:0;font-size:12px;font-weight:700;line-height:1.35;padding:4px 4px 0 0;max-height:54px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;word-break:break-all}
+.cat-caution{margin-right:2px}
+.cat-res{position:absolute;right:0;bottom:0;background:#555;color:#fff;font-size:11px;font-weight:700;padding:1px 6px;border-top-left-radius:3px}
+.cat-kanso{position:absolute;left:74px;bottom:2px;font-size:9px;background:#e05a00;color:#fff;padding:0 5px;border-radius:2px;font-weight:700}
 .th-item{background:#fff;border:1px solid #e8d0c0;padding:8px 10px;display:block;width:100%;text-align:left;cursor:pointer;text-decoration:none}
 .th-item:hover{border-color:#e05a00;background:#fff9f5}
 .th-item.caution{background:#f7f0ff;border-color:#c9a0e8}
@@ -450,6 +462,9 @@ body.admin .appear-media-btn.on{background:#cc4422;color:#fff;border-color:#cc44
 body.admin .appear-media-badge.anime{background:#1f2a3a;color:#8bc4ff}
 body.admin .appear-media-badge.manga{background:#3a1500;color:#ff9966}
 body.admin .appear-media-badge.other{background:#1f3320;color:#9fd88a}
+body.admin .cat-item{background:#2a2a2a;border-color:#444;color:#e0e0e0}
+body.admin .cat-item.caution{background:#2a2036;border-color:#6a4a8a}
+body.admin .cat-thumb{background:#333}
 body.admin .appear-cancel-btn{background:#2a2a2a;color:#aaa;border-color:#555}
 body.admin .appear-loading,body.admin .appear-empty{color:#888}
 body.admin .appear-item-wrap{border-bottom-color:#4a4a4a}
@@ -2462,18 +2477,22 @@ function renderList(){
   top+=topAdSlot("topautoad"); /* 一覧・検索結果ともに上部に広告 */
   var botAd=list.length?topAdSlot("botautoad"):"";
   if(!list.length)return top+'<div class="empty">'+t("empty_list")+'</div>'+botAd;
-  return top+'<div id="thread-list">'+list.map(function(t2){
+  /* カタログ表示: サムネ＋タイトル＋レス数のタイルを敷き詰めて、1画面でたくさん見られるようにする */
+  return top+'<div id="thread-list" class="catalog">'+list.map(function(t2){
     var last=t2.posts[t2.posts.length-1];
     var isK=t2.kanso||t2.posts.length>=KANSO;
-    var badges=makeBadges(t2.tags,t2.cat);
-    var canTlTitle=(t2.titleLang||"ja")!==(uiLang||"ja");
-    var tlTitleBtn=canTlTitle?'<span class="tl-btn" onclick="event.stopPropagation();A.translateTitle(this.dataset.tid)" data-tid="'+esc(t2.id)+'">'+(t2.titleTranslating?t("tl_translating"):(t2.showTitleTl&&t2.titleTranslated?t("show_original"):t("translate")))+'</span>':"";
-    return '<a class="th-item'+(t2.cautionReason?" caution":"")+'" href="'+(t2.cautionReason?"#t="+esc(t2.id):"/t/"+esc(t2.id))+'" onclick="A.openT(this.dataset.id);return false;" data-id="'+esc(t2.id)+'">'+
-      ((badges||t2.cautionReason)?'<div class="th-badges">'+(t2.cautionReason?'<span class="caution-badge">'+t("caution_badge")+'</span>':"")+badges+'</div>':"")+
-      '<div class="th-top"><div class="th-title">'+esc(t2.title)+(isK?'<span class="kanso-badge">'+t("kanso_badge")+'</span>':"")+tlTitleBtn+
-      '</div><div class="th-side">'+(t2.thumbUrl?'<img class="th-thumb" src="'+esc(t2.thumbUrl)+'" alt="" loading="lazy">':"")+'<span class="th-res">'+t2.posts.length+t("res_unit")+'</span></div></div>'+
-      (t2.showTitleTl&&t2.titleTranslated?'<div class="pbody-tl" style="margin-left:0"><span class="tl-tag">'+t("tl_tag")+'</span>'+esc(t2.titleTranslated)+'</div>':"")+
-      '<div class="th-meta">'+fmt(last.ts)+'</div></a>';
+    var title=(t2.showTitleTl&&t2.titleTranslated)?t2.titleTranslated:t2.title;
+    /* サムネが無いスレは、同じキャラ/作品のスレのサムネで代用。それも無ければ頭文字のタイル */
+    var thumb=t2.thumbUrl||(t2.charaTag&&repThumbForChara(t2.charaTag))||(t2.workTag&&repThumbForWork(t2.workTag))||"";
+    var thumbHtml=thumb?'<img src="'+esc(thumb)+'" alt="" loading="lazy">':
+      '<span class="cat-initial" style="background:'+tcol(t2.magTag||t2.cat||"")+'">'+esc((t2.charaTag||t2.workTag)?(t2.charaTag||t2.workTag).charAt(0):"💬")+'</span>';
+    var tip=t2.title+(t2.charaTag?" / "+t2.charaTag:"")+" / "+fmt(last.ts);
+    return '<a class="cat-item'+(t2.cautionReason?" caution":"")+'" title="'+esc(tip)+'" href="'+(t2.cautionReason?"#t="+esc(t2.id):"/t/"+esc(t2.id))+'" onclick="A.openT(this.dataset.id);return false;" data-id="'+esc(t2.id)+'">'+
+      '<div class="cat-thumb">'+thumbHtml+'</div>'+
+      '<div class="cat-title">'+(t2.cautionReason?'<span class="cat-caution">⚠️</span>':"")+esc(title)+'</div>'+
+      (isK?'<span class="cat-kanso">'+t("kanso_badge")+'</span>':"")+
+      '<span class="cat-res">💬 '+t2.posts.length+'</span>'+
+      '</a>';
   }).join("")+'</div>'+botAd;
 }
 
