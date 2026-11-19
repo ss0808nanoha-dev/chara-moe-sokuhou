@@ -2131,6 +2131,12 @@ var _raktCache={};                 /* keyword -> items(取得済み) */
 var _raktInflight={};              /* keyword -> 実行中のPromise(重複防止) */
 var _raktChain=Promise.resolve();  /* 直列化用のチェーン */
 function _raktDelay(ms){return new Promise(function(r){setTimeout(r,ms);});}
+/* 楽天アフィリエイトID。ここに設定すると、サイト内の楽天リンクがすべてアフィリエイトリンクになる(空なら通常リンクのまま) */
+var RAKUTEN_AFF_ID="";
+function rakutenAffLink(url){
+  if(!RAKUTEN_AFF_ID||!url) return url;
+  return "https://hb.afl.rakuten.co.jp/hgc/"+RAKUTEN_AFF_ID+"/?pc="+encodeURIComponent(url)+"&m="+encodeURIComponent(url);
+}
 function _raktFetchOne(q){
   if(_raktCache[q]!==undefined) return Promise.resolve(_raktCache[q]);   /* キャッシュ命中 */
   if(_raktInflight[q]) return _raktInflight[q];                          /* 同じ語の実行中に相乗り */
@@ -2140,7 +2146,8 @@ function _raktFetchOne(q){
         var url=SUPABASE_URL+"/functions/v1/rakuten-search?keyword="+encodeURIComponent(q);
         var resp=await fetch(url,{headers:{"Authorization":"Bearer "+SUPABASE_KEY,"apikey":SUPABASE_KEY}});
         var data=await resp.json();
-        var items=((data&&data.items)||[]).slice(0,8).filter(function(it){return it&&it.img;});
+        var items=((data&&data.items)||[]).slice(0,8).filter(function(it){return it&&it.img;})
+          .map(function(it){return {img:it.img,link:rakutenAffLink(it.link)};});
         if(items.length){ _raktCache[q]=items; }   /* 成功時だけキャッシュ(空はキャッシュせず後で再挑戦可) */
         delete _raktInflight[q];
         return items;
@@ -2379,7 +2386,7 @@ async function openAppearanceProduct(charaTag,volume){
   if(work) queries.push(work);
   queries.push(charaTag);
   var fallbackQ=(work?work+" ":"")+(volume?volume+"巻":"");
-  var fallbackUrl="https://search.rakuten.co.jp/search/mall/"+encodeURIComponent((fallbackQ.trim())||charaTag)+"/";
+  var fallbackUrl=rakutenAffLink("https://search.rakuten.co.jp/search/mall/"+encodeURIComponent((fallbackQ.trim())||charaTag)+"/");
   try{
     var items=await fetchRakutenItems(queries);
     var url=(items&&items.length)?items[0].link:fallbackUrl;
