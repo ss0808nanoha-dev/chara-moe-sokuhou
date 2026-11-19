@@ -285,6 +285,8 @@ body.admin #contact-form label{color:#ff9966}
 .appear-media-badge:hover{filter:brightness(0.95)}
 .appear-media-badge.anime{background:#e8f0ff;color:#2a5ca8}
 .appear-media-badge.manga{background:#fff0e0;color:#c04a00}
+.appear-media-badge.other{background:#eef6ea;color:#3a7a2a;cursor:default;white-space:normal}
+.appear-media-badge.other:hover{filter:none}
 .appear-pass-help{font-size:10px;color:#aaa}
 .appear-form-btns{display:flex;gap:6px}
 .appear-submit-btn{font-size:11px;padding:5px 14px;border:1px solid #e05a00;background:#e05a00;color:#fff;border-radius:2px;cursor:pointer;font-weight:700}
@@ -447,6 +449,7 @@ body.admin .appear-media-btn{background:#2a2a2a;color:#aaa;border-color:#555}
 body.admin .appear-media-btn.on{background:#cc4422;color:#fff;border-color:#cc4422}
 body.admin .appear-media-badge.anime{background:#1f2a3a;color:#8bc4ff}
 body.admin .appear-media-badge.manga{background:#3a1500;color:#ff9966}
+body.admin .appear-media-badge.other{background:#1f3320;color:#9fd88a}
 body.admin .appear-cancel-btn{background:#2a2a2a;color:#aaa;border-color:#555}
 body.admin .appear-loading,body.admin .appear-empty{color:#888}
 body.admin .appear-item-wrap{border-bottom-color:#4a4a4a}
@@ -946,9 +949,11 @@ var I18N={
     appear_verify_none:"この登場回には合言葉が設定されていません。",
     appear_sort_rank:"🏆 ランキング順", appear_sort_num:"🔢 数値順",
     appear_more:"▽ もっと見る（他に{n}件）", appear_less:"▲ 閉じる",
-    appear_media_anime:"アニメ", appear_media_manga:"漫画",
+    appear_media_anime:"アニメ", appear_media_manga:"漫画", appear_media_other:"その他",
+    appear_source_ph:"出典（任意・例：単行本18巻おまけ／雑誌名・号）",
     appear_volume_ph:"単行本 何巻？（任意・例：18）", appear_volume_unit:"巻",
-    appear_edit_media_prompt:"媒体を入力してください（アニメ→a / 漫画→m / 不明なら空欄）：",
+    appear_edit_media_prompt:"媒体を入力してください（アニメ→a / 漫画→m / その他→o / 不明なら空欄）：",
+    appear_edit_source_prompt:"出典を入力してください（任意・例：単行本18巻おまけ）：",
     appear_edit_volume_prompt:"単行本の巻数を入力してください（任意）：",
     appear_filter_all:"すべて", appear_empty_filtered:"このカテゴリの登場回はまだありません。",
     appear_media_product_hint:"タップすると関連商品を探します",
@@ -1040,9 +1045,11 @@ var I18N={
     appear_verify_none:"No passphrase is set for this entry.",
     appear_sort_rank:"🏆 Top ranked", appear_sort_num:"🔢 By number",
     appear_more:"▽ Show more ({n} more)", appear_less:"▲ Show less",
-    appear_media_anime:"Anime", appear_media_manga:"Manga",
+    appear_media_anime:"Anime", appear_media_manga:"Manga", appear_media_other:"Other",
+    appear_source_ph:"Source (optional, e.g. Vol.18 bonus / magazine issue)",
     appear_volume_ph:"Volume # (optional, e.g. 18)", appear_volume_unit:" vol.",
-    appear_edit_media_prompt:"Enter the media type (anime -> a / manga -> m / blank if unknown):",
+    appear_edit_media_prompt:"Enter the media type (anime -> a / manga -> m / other -> o / blank if unknown):",
+    appear_edit_source_prompt:"Enter the source (optional, e.g. Vol.18 bonus):",
     appear_edit_volume_prompt:"Enter the volume number (optional):",
     appear_filter_all:"All", appear_empty_filtered:"No entries in this category yet.",
     appear_media_product_hint:"Tap to find related products",
@@ -1134,9 +1141,11 @@ var I18N={
     appear_verify_none:"이 등장회에는 암호가 설정되어 있지 않습니다.",
     appear_sort_rank:"🏆 랭킹순", appear_sort_num:"🔢 숫자순",
     appear_more:"▽ 더 보기 (그 외 {n}개)", appear_less:"▲ 접기",
-    appear_media_anime:"애니", appear_media_manga:"만화",
+    appear_media_anime:"애니", appear_media_manga:"만화", appear_media_other:"기타",
+    appear_source_ph:"출처 (선택・예: 단행본 18권 부록／잡지명・호)",
     appear_volume_ph:"단행본 몇 권? (선택・예: 18)", appear_volume_unit:"권",
-    appear_edit_media_prompt:"매체를 입력해 주세요 (애니→a / 만화→m / 모르면 공란):",
+    appear_edit_media_prompt:"매체를 입력해 주세요 (애니→a / 만화→m / 기타→o / 모르면 공란):",
+    appear_edit_source_prompt:"출처를 입력해 주세요 (선택・예: 단행본 18권 부록):",
     appear_edit_volume_prompt:"단행본 권수를 입력해 주세요 (선택):",
     appear_filter_all:"전체", appear_empty_filtered:"이 카테고리의 등장회는 아직 없습니다.",
     appear_media_product_hint:"탭하면 관련 상품을 찾아드립니다",
@@ -2504,8 +2513,9 @@ function renderAppearanceBox(charaTag){
       '<div id="appear-media-select-wrap" class="appear-media-select">'+
       '<button type="button" class="appear-media-btn'+(appearanceFormMedia==="anime"?" on":"")+'" data-media="anime" onclick="A.setAppearanceFormMedia(this.dataset.media)">📺 '+t("appear_media_anime")+'</button>'+
       '<button type="button" class="appear-media-btn'+(appearanceFormMedia==="manga"?" on":"")+'" data-media="manga" onclick="A.setAppearanceFormMedia(this.dataset.media)">📖 '+t("appear_media_manga")+'</button>'+
+      '<button type="button" class="appear-media-btn'+(appearanceFormMedia==="other"?" on":"")+'" data-media="other" onclick="A.setAppearanceFormMedia(this.dataset.media)">📌 '+t("appear_media_other")+'</button>'+
       '</div>'+
-      (appearanceFormMedia==="manga"?'<div id="appear-volume-wrap"><input type="text" id="appear-volume-inp" maxlength="20" placeholder="'+esc(t("appear_volume_ph"))+'"></div>':"")+
+      ((appearanceFormMedia==="manga"||appearanceFormMedia==="other")?'<div id="appear-volume-wrap"><input type="text" id="appear-volume-inp" maxlength="40" placeholder="'+esc(t(appearanceFormMedia==="other"?"appear_source_ph":"appear_volume_ph"))+'"></div>':"")+
       '<input type="text" id="appear-note-inp" maxlength="200" placeholder="'+esc(t("appear_note_ph"))+'">'+
       '<input type="text" id="appear-pass-inp" maxlength="40" placeholder="'+esc(t("appear_pass_ph"))+'">'+
       '<div class="appear-pass-help">'+t("appear_pass_help")+'</div>'+
@@ -2528,6 +2538,7 @@ function renderAppearanceBox(charaTag){
       '<button class="appear-sort-btn'+(appearanceMediaFilter==="all"?" on":"")+'" onclick="A.setAppearanceMediaFilter(\'all\')">'+t("appear_filter_all")+'</button>'+
       '<button class="appear-sort-btn'+(appearanceMediaFilter==="manga"?" on":"")+'" onclick="A.setAppearanceMediaFilter(\'manga\')">📖 '+t("appear_media_manga")+'</button>'+
       '<button class="appear-sort-btn'+(appearanceMediaFilter==="anime"?" on":"")+'" onclick="A.setAppearanceMediaFilter(\'anime\')">📺 '+t("appear_media_anime")+'</button>'+
+      '<button class="appear-sort-btn'+(appearanceMediaFilter==="other"?" on":"")+'" onclick="A.setAppearanceMediaFilter(\'other\')">📌 '+t("appear_media_other")+'</button>'+
       '</div>';
     /* 媒体未設定の投稿は、絞り込み上は「漫画」として扱う */
     var filtered=appearanceMediaFilter==="all"?sorted:sorted.filter(function(a){return (a.mediaType||"manga")===appearanceMediaFilter;});
@@ -2546,6 +2557,7 @@ function renderAppearanceBox(charaTag){
       var mediaBadge="";
       if(a.mediaType==="anime") mediaBadge='<span class="appear-media-badge anime" title="'+esc(t("appear_media_product_hint"))+'" onclick="event.stopPropagation();A.openAppearanceProduct(this.dataset.c,this.dataset.v)" data-c="'+esc(charaTag)+'" data-v="">📺 '+t("appear_media_anime")+'</span>';
       else if(a.mediaType==="manga") mediaBadge='<span class="appear-media-badge manga" title="'+esc(t("appear_media_product_hint"))+'" onclick="event.stopPropagation();A.openAppearanceProduct(this.dataset.c,this.dataset.v)" data-c="'+esc(charaTag)+'" data-v="'+esc(a.volume||"")+'">📖 '+t("appear_media_manga")+(a.volume?' '+esc(a.volume)+t("appear_volume_unit"):'')+'</span>';
+      else if(a.mediaType==="other") mediaBadge='<span class="appear-media-badge other">📌 '+t("appear_media_other")+(a.volume?' '+esc(a.volume):'')+'</span>';
       /* 削除依頼が無く、理由入力中でもない通常時は、削除依頼リンクも投票・編集と同じ行に並べる */
       var delTriggerHtml=(!a.delReq&&deleteReqFormOpenFor!==a.id)?
         '<span class="appear-delreq-trigger" onclick="A.toggleDeleteRequestForm(this.dataset.id)" data-id="'+esc(a.id)+'">'+t("appear_delreq_btn")+'</span>':"";
@@ -2669,15 +2681,20 @@ function setAppearanceFormMedia(media){
     else btns[i].classList.remove("on");
   }
   var volWrap=document.getElementById("appear-volume-wrap");
-  if(appearanceFormMedia==="manga"){
+  /* 漫画→「単行本何巻」、その他→「出典(単行本のおまけ・雑誌など)」として同じ欄を使う */
+  if(appearanceFormMedia==="manga"||appearanceFormMedia==="other"){
+    var ph=t(appearanceFormMedia==="other"?"appear_source_ph":"appear_volume_ph");
     if(!volWrap){
       var holder=document.getElementById("appear-media-select-wrap");
       if(holder){
         var div=document.createElement("div");
         div.id="appear-volume-wrap";
-        div.innerHTML='<input type="text" id="appear-volume-inp" maxlength="20" placeholder="'+esc(t("appear_volume_ph"))+'">';
+        div.innerHTML='<input type="text" id="appear-volume-inp" maxlength="40" placeholder="'+esc(ph)+'">';
         holder.insertAdjacentElement("afterend",div);
       }
+    }else{
+      var vi=document.getElementById("appear-volume-inp");
+      if(vi) vi.placeholder=ph;
     }
   }else if(volWrap){
     volWrap.remove();
@@ -2692,7 +2709,7 @@ async function submitAppearance(charaTag){
   var note=noteInp?noteInp.value.trim().slice(0,200):"";
   var pass=passInp?passInp.value.trim().slice(0,40):"";
   var media=appearanceFormMedia||"manga"; /* 媒体を選ばなかった場合は漫画扱いにする */
-  var volume=(media==="manga"&&volInp)?volInp.value.trim().slice(0,20):"";
+  var volume=((media==="manga"||media==="other")&&volInp)?volInp.value.trim().slice(0,40):"";
   if(!label){ alert(t("appear_label_err")); return; }
   if(pass&&pass.length<4){ alert(t("oppass_short")); return; }
   try{
@@ -2823,15 +2840,15 @@ async function editAppearance(id,charaTag){
   var newNote=prompt(t("appear_edit_note_prompt"),item.note||"");
   if(newNote===null) return;
   newNote=newNote.trim().slice(0,200);
-  var mediaIn=prompt(t("appear_edit_media_prompt"),item.mediaType==="anime"?"a":item.mediaType==="manga"?"m":"");
+  var mediaIn=prompt(t("appear_edit_media_prompt"),item.mediaType==="anime"?"a":item.mediaType==="manga"?"m":item.mediaType==="other"?"o":"");
   if(mediaIn===null) return;
   mediaIn=mediaIn.trim().toLowerCase();
-  var newMedia=(mediaIn==="a"||mediaIn==="アニメ"||mediaIn==="anime")?"anime":(mediaIn==="m"||mediaIn==="漫画"||mediaIn==="manga")?"manga":null;
+  var newMedia=(mediaIn==="a"||mediaIn==="アニメ"||mediaIn==="anime")?"anime":(mediaIn==="m"||mediaIn==="漫画"||mediaIn==="manga")?"manga":(mediaIn==="o"||mediaIn==="その他"||mediaIn==="other")?"other":null;
   var newVolume=null;
-  if(newMedia==="manga"){
-    var volIn=prompt(t("appear_edit_volume_prompt"),item.volume||"");
+  if(newMedia==="manga"||newMedia==="other"){
+    var volIn=prompt(t(newMedia==="other"?"appear_edit_source_prompt":"appear_edit_volume_prompt"),item.volume||"");
     if(volIn===null) return;
-    newVolume=volIn.trim().slice(0,20)||null;
+    newVolume=volIn.trim().slice(0,40)||null;
   }
   try{
     var res=await sb.from("chara_appearances").update({label:newLabel,note:newNote||null,media_type:newMedia,volume:newVolume}).eq("id",id);

@@ -112,6 +112,7 @@ module.exports = async function handler(req, res) {
     const mediaTag = (a) => {
       if (a.media_type === "anime") return "📺アニメ";
       if (a.media_type === "manga") return `📖漫画${a.volume ? ` ${a.volume}巻` : ""}`;
+      if (a.media_type === "other") return `📌その他${a.volume ? ` ${a.volume}` : ""}`;
       return "";
     };
     const appearancesHtml = rankedAppearances.length

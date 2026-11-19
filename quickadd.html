@@ -15,7 +15,7 @@ label{display:block;font-size:12px;font-weight:700;color:#888;margin-bottom:4px}
 input[type=text]{width:100%;box-sizing:border-box;font-size:16px;padding:10px;border:1px solid #e0c0a0;border-radius:4px;margin-bottom:12px;font-family:inherit}
 input:focus{outline:none;border-color:#e05a00;box-shadow:0 0 0 2px rgba(224,90,0,.15)}
 .media-row{display:flex;gap:8px;margin-bottom:12px}
-.media-btn{flex:1;font-size:14px;font-weight:700;padding:12px;border:2px solid #e0c0a0;border-radius:6px;background:#fff;color:#888;cursor:pointer}
+.media-btn{flex:1;font-size:13px;font-weight:700;padding:12px 4px;white-space:nowrap;border:2px solid #e0c0a0;border-radius:6px;background:#fff;color:#888;cursor:pointer}
 .media-btn.on{background:#e05a00;color:#fff;border-color:#e05a00}
 #vol-wrap{display:none}
 .section-title{font-size:13px;font-weight:700;color:#c04a00;margin:4px 0 8px;border-bottom:1px dashed #e8d0c0;padding-bottom:4px}
@@ -52,11 +52,12 @@ input:focus{outline:none;border-color:#e05a00;box-shadow:0 0 0 2px rgba(224,90,0
   <div class="media-row">
     <button type="button" class="media-btn on" id="media-anime" onclick="setMedia('anime')">📺 アニメ</button>
     <button type="button" class="media-btn" id="media-manga" onclick="setMedia('manga')">📖 漫画</button>
+    <button type="button" class="media-btn" id="media-other" onclick="setMedia('other')">📌 その他</button>
   </div>
 
   <div id="vol-wrap">
-    <label for="vol-inp">単行本 何巻？</label>
-    <input type="text" id="vol-inp" placeholder="例：18" inputmode="numeric">
+    <label for="vol-inp" id="vol-label">単行本 何巻？</label>
+    <input type="text" id="vol-inp" placeholder="例：18" inputmode="numeric" maxlength="40">
   </div>
 
   <label for="label-inp">登場回</label>
@@ -90,7 +91,12 @@ function setMedia(m){
   currentMedia=m;
   document.getElementById("media-anime").classList.toggle("on",m==="anime");
   document.getElementById("media-manga").classList.toggle("on",m==="manga");
-  document.getElementById("vol-wrap").style.display=(m==="manga")?"block":"none";
+  document.getElementById("media-other").classList.toggle("on",m==="other");
+  /* 漫画→単行本の巻数、その他→出典(単行本のおまけ・雑誌の号など)として同じ欄を使う */
+  document.getElementById("vol-wrap").style.display=(m==="manga"||m==="other")?"block":"none";
+  var vl=document.getElementById("vol-label"), vi=document.getElementById("vol-inp");
+  if(m==="other"){ vl.textContent="出典（任意）"; vi.placeholder="例：単行本18巻おまけ／週刊少年マガジン2026年10号"; vi.inputMode="text"; }
+  else { vl.textContent="単行本 何巻？"; vi.placeholder="例：18"; vi.inputMode="numeric"; }
 }
 
 /* キャラ1人分の入力欄(キャラ名＋ひとことコメント)。何人でも追加できる */
@@ -184,7 +190,8 @@ function renderRecent(){
   box.innerHTML='<h2>今回追加した分（'+recentEntries.length+'件）</h2>'+
     recentEntries.map(function(e,i){
       var mediaBadge=e.mediaType==="anime"?'<span class="media">📺アニメ</span>':
-        (e.mediaType==="manga"?'<span class="media">📖漫画'+(e.volume?' '+esc(e.volume)+'巻':'')+'</span>':'');
+        (e.mediaType==="manga"?'<span class="media">📖漫画'+(e.volume?' '+esc(e.volume)+'巻':'')+'</span>':
+        (e.mediaType==="other"?'<span class="media">📌その他'+(e.volume?' '+esc(e.volume):'')+'</span>':''));
       return '<div class="recent-item">'+
         '<span class="undo-btn" onclick="undoEntry('+i+',this)">取り消す</span>'+
         '<span class="chara">'+esc(e.charaTag)+'</span> '+mediaBadge+
@@ -266,7 +273,7 @@ async function submitEntry(){
   var btn=document.getElementById("submit-btn");
 
   var label=labelInp.value.trim().slice(0,60);
-  var volume=(currentMedia==="manga")?volInp.value.trim().slice(0,20):"";
+  var volume=(currentMedia==="manga"||currentMedia==="other")?volInp.value.trim().slice(0,40):"";
 
   /* キャラ名が入っているブロックだけ投稿対象にする(空ブロックは無視) */
   var blocks=document.querySelectorAll(".chara-block");
