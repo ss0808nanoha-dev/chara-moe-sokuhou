@@ -2154,7 +2154,7 @@ function fillAdsense(){
   }catch(e){ console.error("adsense error:",e); }
 }
 /* 楽天アフィリエイトID。ここに設定すると、サイト内の楽天リンクがすべてアフィリエイトリンクになる(空なら通常リンクのまま) */
-var RAKUTEN_AFF_ID="";
+var RAKUTEN_AFF_ID="54c2b556.715eed90.54c2b557.1f16c205";
 function rakutenAffLink(url){
   if(!RAKUTEN_AFF_ID||!url) return url;
   return "https://hb.afl.rakuten.co.jp/hgc/"+RAKUTEN_AFF_ID+"/?pc="+encodeURIComponent(url)+"&m="+encodeURIComponent(url);
