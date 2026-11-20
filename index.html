@@ -2060,6 +2060,7 @@ function render(){
   if(loading){main.innerHTML='<div class="empty">'+t("loading")+'</div>';updateWatermark();return;}
   ensureTopItems();
   main.innerHTML=st.thread?renderThread():renderList();
+  fillAdsense();
   updateWatermark();
   setTimeout(updateWatermark,60);
 }
@@ -2133,6 +2134,25 @@ var _raktCache={};                 /* keyword -> items(取得済み) */
 var _raktInflight={};              /* keyword -> 実行中のPromise(重複防止) */
 var _raktChain=Promise.resolve();  /* 直列化用のチェーン */
 function _raktDelay(ms){return new Promise(function(r){setTimeout(r,ms);});}
+/* ===== Google AdSense の手動広告枠 =====
+   審査合格後、AdSenseで作った「広告ユニット」の番号(data-ad-slot)をここに入れると表示される。
+   空のままなら今まで通り(スレ内②は楽天の関連商品、登場回リストは広告なし)。 */
+var ADSENSE_CLIENT="ca-pub-6127347344916483";
+var ADSENSE_SLOT_THREAD="";   /* スレ内: 返信一覧の下(今の楽天②の場所) */
+var ADSENSE_SLOT_APPEAR="";   /* 登場回リスト: 10件ごと */
+var ADSENSE_APPEAR_EVERY=10, ADSENSE_APPEAR_MAX=3;
+function adsenseHtml(slot){
+  if(!slot) return "";
+  return '<div class="ad-block adsense-block"><div class="ad-label">'+t("ad_label")+'</div>'+
+    '<ins class="adsbygoogle" style="display:block" data-ad-client="'+ADSENSE_CLIENT+'" data-ad-slot="'+esc(slot)+'" data-ad-format="auto" data-full-width-responsive="true"></ins></div>';
+}
+/* 画面を描き直したあと、まだ中身の入っていない広告枠にだけ広告を読み込ませる */
+function fillAdsense(){
+  try{
+    var list=document.querySelectorAll("ins.adsbygoogle:not([data-adsbygoogle-status])");
+    for(var i=0;i<list.length;i++){ (window.adsbygoogle=window.adsbygoogle||[]).push({}); }
+  }catch(e){ console.error("adsense error:",e); }
+}
 /* 楽天アフィリエイトID。ここに設定すると、サイト内の楽天リンクがすべてアフィリエイトリンクになる(空なら通常リンクのまま) */
 var RAKUTEN_AFF_ID="";
 function rakutenAffLink(url){
@@ -2620,7 +2640,11 @@ function renderAppearanceBox(charaTag){
           '<button class="appear-cancel-btn" onclick="A.toggleDeleteRequestForm(this.dataset.id)" data-id="'+esc(a.id)+'">'+t("appear_delreq_cancel")+'</button>'+
           '</div>';
       }
-      return '<div class="appear-item-wrap">'+itemHtml+subHtml+'</div>';
+      var adAfter="";
+      if(ADSENSE_SLOT_APPEAR&&(i+1)%ADSENSE_APPEAR_EVERY===0&&i+1<shown.length&&(i+1)/ADSENSE_APPEAR_EVERY<=ADSENSE_APPEAR_MAX){
+        adAfter=adsenseHtml(ADSENSE_SLOT_APPEAR);
+      }
+      return '<div class="appear-item-wrap">'+itemHtml+subHtml+'</div>'+adAfter;
     }).join("")+'</div>';
     if(filtered.length>1){
       html+=showAll?
@@ -3084,7 +3108,7 @@ function renderThread(){
     '</div>'+
     renderPollBox(t2)+
     '<div id="posts-wrap">'+posts+'</div>'+
-    autoAdSlot(t2,"autoad_mid_"+t2.id)+
+    (ADSENSE_SLOT_THREAD?adsenseHtml(ADSENSE_SLOT_THREAD):autoAdSlot(t2,"autoad_mid_"+t2.id))+
     /* 完走したスレでは、返信欄を出さずに完走メッセージを表示する(全員一律) */
     (isK
       ? '<div class="kanso-closed">'+t("kanso_closed")+'</div>'
